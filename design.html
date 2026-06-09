@@ -6,13 +6,13 @@
 <title>Design System — Questline</title>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Hanken+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,700&family=Hanken+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
 <style>
 /* ============== TOKENS (mirror DESIGN.md) ============== */
 :root{
-  --bg:#FAF7F2; --surface:#FFFFFF; --surface-2:#F2ECE3; --border:#E7E0D5;
-  --text:#1F1B16; --text-muted:#6B6358; --text-disabled:#A8A092;
-  --accent:#D9542B; --accent-press:#BC4621; --xp:#C8941F;
+  --bg:#F4F2ED; --surface:#FCFBF9; --surface-2:#EAE7E0; --border:#E1DDD5;
+  --text:#1A1814; --text-muted:#726E66; --text-disabled:#A8A399;
+  --accent:#D9542B; --accent-press:#BC4621; --xp:#B8902E;
   --success:#2E9E6B; --danger:#9E2B25; --warning:#B5811A; --info:#3E78A8;
   --ring:#D9542B;
   --ember-glow:0 0 0 4px rgba(217,84,43,.14);
@@ -21,16 +21,16 @@
   --h-ember:#E8743B; --h-amber:#E0B040; --h-fern:#5AA469; --h-teal:#3E9CA8;
   --h-sky:#4F86C6; --h-iris:#7A6CD8; --h-rose:#C85A8E; --h-slate:#8A8F98;
   /* type */
-  --f-display:'Fraunces',Georgia,serif; --f-ui:'Hanken Grotesk',system-ui,sans-serif; --f-data:'JetBrains Mono',ui-monospace,monospace;
+  --f-display:'Bricolage Grotesque',system-ui,sans-serif; --f-ui:'Hanken Grotesk',system-ui,sans-serif; --f-data:'JetBrains Mono',ui-monospace,monospace;
   /* radius */ --r-sm:8px; --r-md:12px; --r-lg:16px; --r-xl:24px; --r-full:999px;
   /* motion */ --d-instant:120ms; --d-micro:180ms; --d-base:240ms; --d-page:350ms;
   --e-standard:cubic-bezier(.2,0,0,1); --e-out:cubic-bezier(.16,1,.3,1);
   --e-spring:cubic-bezier(.34,1.56,.64,1); --e-ember:cubic-bezier(.22,.61,.36,1);
 }
 :root[data-theme="dark"]{
-  --bg:#14130F; --surface:#1C1A15; --surface-2:#26231C; --border:#322E26;
-  --text:#F2EDE4; --text-muted:#A8A091; --text-disabled:#6E665A;
-  --accent:#E2613A; --accent-press:#C8512C; --xp:#E6B645;
+  --bg:#15140F; --surface:#1D1B15; --surface-2:#262319; --border:#322E25;
+  --text:#F2EFE7; --text-muted:#A7A296; --text-disabled:#6E685B;
+  --accent:#E2613A; --accent-press:#C8512C; --xp:#D9AE52;
   --success:#46B98A; --danger:#D7604F; --warning:#D6A23C; --info:#5C97C8; --ring:#E2613A;
   --ember-glow:0 0 0 4px rgba(226,97,58,.18);
   --sh-sm:0 1px 2px rgba(0,0,0,.3); --sh-md:0 4px 16px rgba(0,0,0,.4); --sh-lg:0 12px 32px rgba(0,0,0,.5);
@@ -45,7 +45,7 @@ body{
 }
 /* grain overlay ~4% */
 body::after{
-  content:""; position:fixed; inset:0; pointer-events:none; z-index:9999; opacity:.04;
+  content:""; position:fixed; inset:0; pointer-events:none; z-index:9999; opacity:.03;
   background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 .wrap{max-width:1080px;margin:0 auto;padding:0 24px 96px}
@@ -239,22 +239,22 @@ textarea.input{min-height:84px;resize:vertical}
   <!-- §1 COLOR -->
   <section id="s1">
     <div class="sec-head"><span class="sec-no">§1</span><span class="sec-title">Colour Palette</span>
-      <button class="copy" data-copy="--accent:#D9542B; --xp:#C8941F; --bg:#FAF7F2; --text:#1F1B16;">Copy tokens</button></div>
+      <button class="copy" data-copy="--accent:#D9542B; --xp:#B8902E; --bg:#F4F2ED; --text:#1A1814;">Copy tokens</button></div>
     <div class="rule"></div>
-    <p class="sub">1–3 accents on a warm ground. Ember = aliveness only. Habit colours are the only loud layer.</p>
+    <p class="sub">Near-monochrome warm-grey ground. One ember accent = aliveness. Colour comes from habit data, not chrome.</p>
     <div class="sw-row" style="margin-bottom:28px">
       <div class="sw"><div class="chip" style="background:#D9542B"></div><div class="info"><div class="nm">Accent · Ember</div><div class="hex">#D9542B</div><div class="use">"alive now": CTA, active nav, fill</div></div></div>
-      <div class="sw"><div class="chip" style="background:#C8941F"></div><div class="info"><div class="nm">XP · Gold</div><div class="hex">#C8941F</div><div class="use">XP moments only</div></div></div>
+      <div class="sw"><div class="chip" style="background:#B8902E"></div><div class="info"><div class="nm">XP · Gold</div><div class="hex">#B8902E</div><div class="use">XP numerals only, muted</div></div></div>
       <div class="sw"><div class="chip" style="background:#2E9E6B"></div><div class="info"><div class="nm">Success</div><div class="hex">#2E9E6B</div><div class="use">completion / positive</div></div></div>
       <div class="sw"><div class="chip" style="background:#9E2B25"></div><div class="info"><div class="nm">Danger</div><div class="hex">#9E2B25</div><div class="use">destructive (distinct from ember)</div></div></div>
     </div>
     <p class="t-caption" style="margin-bottom:10px">Neutrals — surfaces &amp; text</p>
     <div class="sw-row" style="margin-bottom:30px">
-      <div class="sw"><div class="chip" style="background:#FAF7F2"></div><div class="info"><div class="nm">BG · Paper</div><div class="hex">#FAF7F2</div></div></div>
-      <div class="sw"><div class="chip" style="background:#FFFFFF"></div><div class="info"><div class="nm">Surface</div><div class="hex">#FFFFFF</div></div></div>
-      <div class="sw"><div class="chip" style="background:#F2ECE3"></div><div class="info"><div class="nm">Surface-2</div><div class="hex">#F2ECE3</div></div></div>
-      <div class="sw"><div class="chip" style="background:#1F1B16"></div><div class="info"><div class="nm">Text</div><div class="hex">#1F1B16</div></div></div>
-      <div class="sw"><div class="chip" style="background:#6B6358"></div><div class="info"><div class="nm">Text-muted</div><div class="hex">#6B6358</div></div></div>
+      <div class="sw"><div class="chip" style="background:#F4F2ED"></div><div class="info"><div class="nm">BG · Bone</div><div class="hex">#F4F2ED</div></div></div>
+      <div class="sw"><div class="chip" style="background:#FCFBF9"></div><div class="info"><div class="nm">Surface</div><div class="hex">#FCFBF9</div></div></div>
+      <div class="sw"><div class="chip" style="background:#EAE7E0"></div><div class="info"><div class="nm">Surface-2</div><div class="hex">#EAE7E0</div></div></div>
+      <div class="sw"><div class="chip" style="background:#1A1814"></div><div class="info"><div class="nm">Text</div><div class="hex">#1A1814</div></div></div>
+      <div class="sw"><div class="chip" style="background:#726E66"></div><div class="info"><div class="nm">Text-muted</div><div class="hex">#726E66</div></div></div>
     </div>
     <p class="t-caption" style="margin-bottom:18px">Habit palette — user-owned, quests inherit</p>
     <div class="dot-wrap">
@@ -272,11 +272,11 @@ textarea.input{min-height:84px;resize:vertical}
   <!-- §2 TYPOGRAPHY -->
   <section id="s2">
     <div class="sec-head"><span class="sec-no">§2</span><span class="sec-title">Typography</span>
-      <button class="copy" data-copy="--f-display:'Fraunces'; --f-ui:'Hanken Grotesk'; --f-data:'JetBrains Mono';">Copy tokens</button></div>
+      <button class="copy" data-copy="--f-display:'Bricolage Grotesque'; --f-ui:'Hanken Grotesk'; --f-data:'JetBrains Mono';">Copy tokens</button></div>
     <div class="rule"></div>
-    <p class="sub">Three typefaces, defined roles. Fraunces (editorial display) · Hanken Grotesk (UI/body) · JetBrains Mono (data). No generic Inter.</p>
-    <div class="type-row"><div class="role">Display XL · Fraunces 40/600 — hero numbers</div><div class="t-display-xl">1,240 XP · 14-day streak</div></div>
-    <div class="type-row"><div class="role">Display · Fraunces 32/600</div><div class="t-display">Your story, one quest at a time</div></div>
+    <p class="sub">Three typefaces, defined roles. Bricolage Grotesque (confident display) · Hanken Grotesk (UI/body) · JetBrains Mono (data). No generic Inter.</p>
+    <div class="type-row"><div class="role">Display XL · Bricolage 40/600 — hero numbers</div><div class="t-display-xl">1,240 XP · 14-day streak</div></div>
+    <div class="type-row"><div class="role">Display · Bricolage 32/600</div><div class="t-display">Your story, one quest at a time</div></div>
     <div class="type-row"><div class="role">Title · Hanken 22/600</div><div class="t-title">Today's quests</div></div>
     <div class="type-row"><div class="role">Section · Hanken 17/600</div><div class="t-section">This week</div></div>
     <div class="type-row"><div class="role">Body · Hanken 15/400</div><div class="t-body">Tap to add one. Hold to finish the whole thing — the card ignites and crests into a burst.</div></div>

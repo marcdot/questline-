@@ -17,47 +17,55 @@ note: >
 
 # Questline — Design Tokens
 
+> **North-star: "Spring/Summer" restraint, warm undertone.** Scandinavian premium = restraint,
+> precision, and space. The chrome is **near-monochrome warm-grey + ink**; colour comes from *content*
+> (the user's habit colours on cards/charts) and **one** ember accent for "aliveness" — never from
+> decorative chrome. (Ref: `brain/Brain/_Claude/handoffs/_design-reference-spring-summer.md`.)
+>
 > **Philosophy in five lines** (full rationale in `DESIGN-SYSTEM.md`):
-> 1. **1–3 accent colours max** on a warm/neutral paper ground; habit colours are the only loud thing.
+> 1. **Near-monochrome warm-grey ground; one ember accent.** Habit colours are the only other colour,
+>    and they belong to data, not chrome. Premium = restraint, not decoration.
 > 2. **Dark is for earned drama** (completion burst, stats hero) — never the default.
-> 3. **Texture before effects** — paper grain ~4%, hairline rules, not heavy shadows/gradients.
-> 4. **Editorial rhythm** — § section numbers, hairlines, generous whitespace (the journal identity).
-> 5. **Every pixel moves** — 180ms micro-interactions, 350ms page transitions, a spring on completion.
+> 3. **Hairlines & whitespace before effects** — a faint ~3% grain at most; structure comes from rules
+>    and generous space, not shadows or gradients.
+> 4. **Big confident type + editorial rhythm** — § section numbers, hairlines, generous whitespace.
+> 5. **Silky, controlled motion** — 180ms micro-interactions, 350ms page transitions; one earned spring
+>    on completion. Restraint everywhere except the completion moment.
 
 ## Token set
 
 ```yaml
 tokens:
   color:
-    # --- LIGHT (default: warm paper) ---
+    # --- LIGHT (default: near-monochrome WARM-GREY, not cream) ---
     light:
-      bg:            "#FAF7F2"   # warm off-white paper — app ground
-      surface:       "#FFFFFF"   # cards, sheets
-      surface_2:     "#F2ECE3"   # insets, chart fills, pressed
-      border:        "#E7E0D5"   # hairline rules
-      text:          "#1F1B16"   # primary ink (warm near-black)
-      text_muted:    "#6B6358"   # secondary
-      text_disabled: "#A8A092"   # disabled
-      accent:        "#D9542B"   # EMBER — the single brand accent = "aliveness" (see signature)
+      bg:            "#F4F2ED"   # warm bone-grey ground (refined, desaturated — not cozy cream)
+      surface:       "#FCFBF9"   # cards, sheets
+      surface_2:     "#EAE7E0"   # insets, chart fills, pressed
+      border:        "#E1DDD5"   # hairline rules (the primary structural device)
+      text:          "#1A1814"   # primary ink (warm near-black)
+      text_muted:    "#726E66"   # secondary (warm grey)
+      text_disabled: "#A8A399"   # disabled
+      accent:        "#D9542B"   # EMBER — the ONE accent = "aliveness" (use sparingly)
       accent_press:  "#BC4621"   # ember pressed
-      xp:            "#C8941F"   # gold — XP moments ONLY
+      xp:            "#B8902E"   # muted gold — XP numerals ONLY, never decoration
       success:       "#2E9E6B"   # completion / positive
       danger:        "#9E2B25"   # destructive (oxblood — kept distinct from ember)
       warning:       "#B5811A"
       info:          "#3E78A8"
-      ring:          "#D9542B"   # focus ring (ember @ 45% in use)
-    # --- DARK (earned drama / dark mode) ---
+      ring:          "#D9542B"   # focus ring (ember)
+    # --- DARK (earned drama / dark mode: refined warm charcoal) ---
     dark:
-      bg:            "#14130F"   # warm near-black (not pure)
-      surface:       "#1C1A15"
-      surface_2:     "#26231C"
-      border:        "#322E26"
-      text:          "#F2EDE4"
-      text_muted:    "#A8A091"
-      text_disabled: "#6E665A"
+      bg:            "#15140F"   # warm near-black (not pure)
+      surface:       "#1D1B15"
+      surface_2:     "#262319"
+      border:        "#322E25"
+      text:          "#F2EFE7"
+      text_muted:    "#A7A296"
+      text_disabled: "#6E685B"
       accent:        "#E2613A"   # ember, brightened for dark
       accent_press:  "#C8512C"
-      xp:            "#E6B645"
+      xp:            "#D9AE52"   # muted gold for dark
       success:       "#46B98A"
       danger:        "#D7604F"
       warning:       "#D6A23C"
@@ -76,9 +84,9 @@ tokens:
 
   typography:
     families:
-      display:  "'Fraunces', Georgia, serif"          # editorial display + hero numbers (characterful)
-      ui:       "'Hanken Grotesk', system-ui, sans-serif" # body + UI (warm humanist, NOT Inter)
-      data:     "'JetBrains Mono', ui-monospace, monospace" # counters, XP, data labels
+      display:  "'Bricolage Grotesque', system-ui, sans-serif" # big confident grotesque (Spring/Summer, warm character)
+      ui:       "'Hanken Grotesk', system-ui, sans-serif"       # body + UI (warm humanist, NOT Inter)
+      data:     "'JetBrains Mono', ui-monospace, monospace"     # counters, XP, data labels
     scale:      # role -> {family, size_px, weight, line, tracking}
       display_xl: { family: display, size: 40, weight: 600, line: 1.05, tracking: "-0.02em" }
       display:    { family: display, size: 32, weight: 600, line: 1.10, tracking: "-0.01em" }
@@ -122,8 +130,8 @@ tokens:
       ember_fill: "cubic-bezier(0.22, 0.61, 0.36, 1)" # SIGNATURE hold-to-complete ignite ramp
 
   texture:
-    grain_opacity: 0.04          # SVG feTurbulence noise over bg
-    hairline: "1px solid border" # the editorial rule
+    grain_opacity: 0.03          # SVG feTurbulence noise over bg (faint — restraint)
+    hairline: "1px solid border" # the primary structural device (Spring/Summer restraint)
 
   a11y:
     min_touch_px: 48             # Android dp / generic

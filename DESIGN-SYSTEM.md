@@ -20,14 +20,20 @@
 both:** a minimal tap/hold core on Home, with a rich Stats surface for the data crowd.
 
 ### Reference design languages (closest to our domain)
-- **Notion** — warm neutral ground, editorial type → our **paper base**.
+- **Spring/Summer** (springsummer.dk, the user's premium north-star) — Scandinavian near-monochrome
+  restraint, big confident type, colour from content not chrome, generous whitespace → our **ground rule**.
+- **Notion** — warm neutral ground, editorial type → our **warm undertone**.
 - **Linear** — precise, fast micro-interactions, restrained accent, dark for drama → our **motion feel**.
 - **Things / Oura** — calm wellness, single accent, generous space → our **restraint**.
+
+> **Direction (locked): "Spring/Summer restraint, warm undertone."** Near-monochrome warm-grey chrome +
+> ink; the only colour is the user's habit data + one ember accent for aliveness. Confident sans display
+> (Bricolage Grotesque), not a cozy serif. Premium = restraint, precision, space.
 
 ### 2025–2026 trends we deliberately rode (and the evidence)
 - **Warm off-whites + nature accents (terracotta/sage/sand)** dominate wellness palettes → our warm
   `#FAF7F2` paper + ember/fern habit colours.
-- **Oversized, characterful letterforms** counter "AI precision" → **Fraunces** display.
+- **Big confident letterforms** counter "AI precision" → **Bricolage Grotesque** display (warm grotesque).
 - **Motion as a primary branding language**, micro → cinematic → our **Ember Fill** signature.
 - Trends we *rejected* as wrong for a calm journal: bold full-bleed gradients, duotone neon,
   glassmorphism. They fight the paper concept.
@@ -39,13 +45,13 @@ both:** a minimal tap/hold core on Home, with a rich Stats surface for the data 
 
 ## 2. Design philosophy
 
-1. **1–3 accent colours max on a warm ground.** The UI is warm ink on paper. The *only* loud colour
-   energy comes from the user's habit colours on quest cards. One brand accent (**ember**) signals
-   "aliveness" and nothing else.
+1. **Near-monochrome warm-grey ground; one ember accent.** The UI is warm ink on warm-grey — restraint,
+   not cosy cream. The *only* colour energy comes from the user's habit colours (content/data); the one
+   brand accent (**ember**) signals "aliveness" and nothing else. Colour never decorates chrome.
 2. **Dark for earned drama.** Default is paper. Dark mode and the dark completion-burst backdrop are
    deliberate moments, not ambient theming.
-3. **Texture before effects.** A ~4% paper grain and hairline rules carry depth — not heavy drop
-   shadows or gradients. Shadows are warm-tinted and subtle.
+3. **Hairlines & whitespace before effects.** Hairline rules and a faint ~3% grain carry depth — not
+   heavy drop shadows or gradients. Shadows are warm-tinted, subtle, and reserved for overlays.
 4. **Editorial rhythm.** Section numbers (§), hairline rules, and generous whitespace make the app read
    like a finely-set journal. This is the visual brand language, applied everywhere (including this
    doc and `design.html`).
@@ -162,7 +168,7 @@ hairline rules**, **accent-only-on-aliveness** colour deployment, and the **pape
 ---
 
 ## 7. Master do's & don'ts
-**Do:** warm paper ground · one ember accent for aliveness · habit colours as the only loud layer ·
+**Do:** near-monochrome warm-grey ground · one ember accent for aliveness · habit colours as the only colour layer ·
 hairlines + whitespace for structure · skeletons over spinners · gracious empty copy · motion on every
 state · AA contrast from the tokens.
 **Don't:** hardcode hex · use ember as decoration · default to dark · neon/duotone/glassmorphism · zebra
