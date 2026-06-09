@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Design System — Questline</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Hanken+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+/* ============== TOKENS (mirror DESIGN.md) ============== */
+:root{
+  --bg:#FAF7F2; --surface:#FFFFFF; --surface-2:#F2ECE3; --border:#E7E0D5;
+  --text:#1F1B16; --text-muted:#6B6358; --text-disabled:#A8A092;
+  --accent:#D9542B; --accent-press:#BC4621; --xp:#C8941F;
+  --success:#2E9E6B; --danger:#9E2B25; --warning:#B5811A; --info:#3E78A8;
+  --ring:#D9542B;
+  --ember-glow:0 0 0 4px rgba(217,84,43,.14);
+  --sh-sm:0 1px 2px rgba(58,44,30,.06); --sh-md:0 4px 16px rgba(58,44,30,.10); --sh-lg:0 12px 32px rgba(58,44,30,.14);
+  /* habit palette */
+  --h-ember:#E8743B; --h-amber:#E0B040; --h-fern:#5AA469; --h-teal:#3E9CA8;
+  --h-sky:#4F86C6; --h-iris:#7A6CD8; --h-rose:#C85A8E; --h-slate:#8A8F98;
+  /* type */
+  --f-display:'Fraunces',Georgia,serif; --f-ui:'Hanken Grotesk',system-ui,sans-serif; --f-data:'JetBrains Mono',ui-monospace,monospace;
+  /* radius */ --r-sm:8px; --r-md:12px; --r-lg:16px; --r-xl:24px; --r-full:999px;
+  /* motion */ --d-instant:120ms; --d-micro:180ms; --d-base:240ms; --d-page:350ms;
+  --e-standard:cubic-bezier(.2,0,0,1); --e-out:cubic-bezier(.16,1,.3,1);
+  --e-spring:cubic-bezier(.34,1.56,.64,1); --e-ember:cubic-bezier(.22,.61,.36,1);
+}
+:root[data-theme="dark"]{
+  --bg:#14130F; --surface:#1C1A15; --surface-2:#26231C; --border:#322E26;
+  --text:#F2EDE4; --text-muted:#A8A091; --text-disabled:#6E665A;
+  --accent:#E2613A; --accent-press:#C8512C; --xp:#E6B645;
+  --success:#46B98A; --danger:#D7604F; --warning:#D6A23C; --info:#5C97C8; --ring:#E2613A;
+  --ember-glow:0 0 0 4px rgba(226,97,58,.18);
+  --sh-sm:0 1px 2px rgba(0,0,0,.3); --sh-md:0 4px 16px rgba(0,0,0,.4); --sh-lg:0 12px 32px rgba(0,0,0,.5);
+}
+/* ============== BASE ============== */
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  font-family:var(--f-ui); background:var(--bg); color:var(--text);
+  line-height:1.55; -webkit-font-smoothing:antialiased; transition:background var(--d-base) var(--e-standard),color var(--d-base) var(--e-standard);
+  position:relative; min-height:100vh;
+}
+/* grain overlay ~4% */
+body::after{
+  content:""; position:fixed; inset:0; pointer-events:none; z-index:9999; opacity:.04;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+.wrap{max-width:1080px;margin:0 auto;padding:0 24px 96px}
+/* header */
+header{
+  position:sticky;top:0;z-index:50;background:color-mix(in srgb,var(--bg) 86%,transparent);
+  backdrop-filter:blur(8px); border-bottom:1px solid var(--border);
+}
+.hbar{max-width:1080px;margin:0 auto;padding:16px 24px;display:flex;align-items:baseline;justify-content:space-between;gap:16px}
+.brand{font-family:var(--f-display);font-weight:600;font-size:22px;letter-spacing:-.01em}
+.brand .em{color:var(--accent)}
+.meta{font-family:var(--f-data);font-size:12px;color:var(--text-muted)}
+.toggle{
+  font-family:var(--f-ui);font-weight:600;font-size:13px;cursor:pointer;border:1px solid var(--border);
+  background:var(--surface);color:var(--text);padding:8px 14px;border-radius:var(--r-full);
+  transition:all var(--d-micro) var(--e-standard);
+}
+.toggle:hover{box-shadow:var(--sh-sm);transform:translateY(-1px)}
+.toggle:focus-visible{outline:2px solid var(--ring);outline-offset:2px;box-shadow:var(--ember-glow)}
+/* section scaffolding (editorial §) */
+section{padding-top:56px}
+.sec-head{display:flex;align-items:center;gap:14px;margin-bottom:8px}
+.sec-no{font-family:var(--f-data);font-size:13px;color:var(--accent);font-weight:600}
+.sec-title{font-family:var(--f-display);font-size:28px;font-weight:600;letter-spacing:-.01em}
+.rule{height:1px;background:var(--border);margin:14px 0 28px}
+.sub{font-size:13px;color:var(--text-muted);margin:-18px 0 22px}
+.grid{display:grid;gap:16px}
+.copy{
+  margin-left:auto;font-family:var(--f-data);font-size:11px;cursor:pointer;border:1px solid var(--border);
+  background:var(--surface);color:var(--text-muted);padding:5px 10px;border-radius:var(--r-sm);transition:all var(--d-micro) var(--e-standard)
+}
+.copy:hover{color:var(--accent);border-color:var(--accent)}
+.copy.ok{color:var(--success);border-color:var(--success)}
+/* ===== §1 color ===== */
+.sw-row{display:flex;flex-wrap:wrap;gap:12px}
+.sw{border-radius:var(--r-md);border:1px solid var(--border);overflow:hidden;width:148px;background:var(--surface)}
+.sw .chip{height:64px}
+.sw .info{padding:8px 10px}
+.sw .nm{font-size:12px;font-weight:600}
+.sw .hex{font-family:var(--f-data);font-size:11px;color:var(--text-muted);text-transform:uppercase}
+.sw .use{font-size:10.5px;color:var(--text-muted);margin-top:2px}
+.dots{display:flex;gap:10px;flex-wrap:wrap}
+.dot{width:44px;height:44px;border-radius:var(--r-full);border:2px solid var(--surface);box-shadow:var(--sh-sm);position:relative}
+.dot span{position:absolute;bottom:-18px;left:50%;transform:translateX(-50%);font-family:var(--f-data);font-size:9px;color:var(--text-muted)}
+.dot-wrap{display:flex;gap:18px;flex-wrap:wrap;padding-bottom:20px}
+/* ===== §2 type ===== */
+.type-row{padding:14px 0;border-bottom:1px solid var(--border)}
+.type-row .role{font-family:var(--f-data);font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px}
+.t-display-xl{font-family:var(--f-display);font-size:40px;font-weight:600;line-height:1.05;letter-spacing:-.02em}
+.t-display{font-family:var(--f-display);font-size:32px;font-weight:600;letter-spacing:-.01em}
+.t-title{font-family:var(--f-ui);font-size:22px;font-weight:600}
+.t-section{font-family:var(--f-ui);font-size:17px;font-weight:600}
+.t-body{font-family:var(--f-ui);font-size:15px}
+.t-caption{font-family:var(--f-ui);font-size:13px;font-weight:500;color:var(--text-muted)}
+.t-data{font-family:var(--f-data);font-size:14px;font-weight:500}
+/* ===== §3 spacing/shape ===== */
+.space-scale{display:flex;align-items:flex-end;gap:14px;flex-wrap:wrap}
+.space-blk{background:var(--accent);border-radius:3px;opacity:.85}
+.space-lbl{font-family:var(--f-data);font-size:10px;color:var(--text-muted);text-align:center;margin-top:6px}
+.shape-row{display:flex;gap:18px;flex-wrap:wrap}
+.shape{width:88px;height:88px;background:var(--surface-2);border:1px solid var(--border);display:flex;align-items:flex-end;justify-content:center;padding:6px}
+.shape span{font-family:var(--f-data);font-size:10px;color:var(--text-muted)}
+/* ===== §4 components ===== */
+.panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);padding:22px}
+.panel + .panel{margin-top:16px}
+.panel h3{font-family:var(--f-ui);font-size:13px;text-transform:uppercase;letter-spacing:.08em;color:var(--text-muted);margin-bottom:16px;font-weight:600}
+.row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+/* buttons */
+.btn{font-family:var(--f-ui);font-weight:600;font-size:14px;border:1px solid transparent;border-radius:var(--r-md);
+  padding:11px 18px;cursor:pointer;transition:transform var(--d-instant) var(--e-standard),box-shadow var(--d-micro) var(--e-standard),background var(--d-micro) var(--e-standard)}
+.btn:active{transform:scale(.97)}
+.btn:focus-visible{outline:2px solid var(--ring);outline-offset:2px;box-shadow:var(--ember-glow)}
+.btn-primary{background:var(--accent);color:#fff}
+.btn-primary:hover{background:var(--accent-press);box-shadow:var(--sh-sm);transform:translateY(-1px)}
+.btn-secondary{background:var(--surface);color:var(--text);border-color:var(--border)}
+.btn-secondary:hover{background:var(--surface-2);transform:translateY(-1px)}
+.btn-ghost{background:transparent;color:var(--text)}
+.btn-ghost:hover{background:var(--surface-2)}
+.btn-danger{background:var(--danger);color:#fff}
+.btn-danger:hover{filter:brightness(1.08);transform:translateY(-1px)}
+.btn:disabled{background:var(--surface-2);color:var(--text-disabled);cursor:not-allowed;transform:none;box-shadow:none;border-color:var(--border)}
+/* inputs */
+.field{display:flex;flex-direction:column;gap:6px;max-width:280px}
+.field label{font-family:var(--f-ui);font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--text-muted)}
+.input{font-family:var(--f-ui);font-size:15px;color:var(--text);background:var(--surface);border:1px solid var(--border);border-radius:var(--r-md);padding:11px 13px;transition:border-color var(--d-micro) var(--e-standard),box-shadow var(--d-micro) var(--e-standard)}
+.input::placeholder{color:var(--text-disabled)}
+.input:focus{outline:none;border-color:var(--accent);box-shadow:var(--ember-glow)}
+.input.error{border-color:var(--danger)}
+.help{font-size:12px;color:var(--text-muted)}
+.help.err{color:var(--danger)}
+textarea.input{min-height:84px;resize:vertical}
+/* cards */
+.cards-demo{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);padding:18px}
+.card.elev{box-shadow:var(--sh-md)}
+.card.inter{cursor:pointer;transition:box-shadow var(--d-micro) var(--e-standard),transform var(--d-micro) var(--e-standard)}
+.card.inter:hover{box-shadow:var(--sh-sm);transform:translateY(-2px)}
+.card .ct{font-family:var(--f-ui);font-weight:600;margin-bottom:4px}
+.card .cd{font-size:13px;color:var(--text-muted)}
+/* nav */
+.bottomnav{display:flex;justify-content:space-between;align-items:center;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-full);padding:8px 10px;max-width:380px}
+.nav-i{display:flex;flex-direction:column;align-items:center;gap:3px;font-size:10px;color:var(--text-muted);padding:6px 10px;border-radius:var(--r-md);cursor:pointer;transition:color var(--d-micro)}
+.nav-i .ic{width:20px;height:20px;border-radius:6px;background:currentColor;opacity:.65}
+.nav-i.active{color:var(--accent)}
+.nav-i.active .ic{opacity:1}
+.fab{width:48px;height:48px;border-radius:var(--r-full);background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-size:24px;box-shadow:var(--sh-md);cursor:pointer;border:none;transition:transform var(--d-instant) var(--e-spring)}
+.fab:active{transform:scale(.92)}
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--border);max-width:420px}
+.tab{font-family:var(--f-ui);font-size:14px;font-weight:600;color:var(--text-muted);background:none;border:none;padding:10px 14px;cursor:pointer;position:relative}
+.tab.active{color:var(--text)}
+.tab.active::after{content:"";position:absolute;left:10px;right:10px;bottom:-1px;height:2px;background:var(--accent);border-radius:2px}
+/* loading */
+.skel{background:linear-gradient(90deg,var(--surface-2) 25%,var(--surface) 50%,var(--surface-2) 75%);background-size:200% 100%;animation:shimmer 1.2s infinite;border-radius:var(--r-sm)}
+@keyframes shimmer{to{background-position:-200% 0}}
+.spinner{width:24px;height:24px;border:3px solid var(--surface-2);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+/* toasts */
+.toast-wrap{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:200;display:flex;flex-direction:column;gap:10px;width:min(360px,90vw)}
+.toast{display:flex;align-items:center;gap:12px;background:var(--surface);border:1px solid var(--border);border-left:4px solid var(--info);border-radius:var(--r-md);padding:12px 14px;box-shadow:var(--sh-lg);font-size:14px;
+  animation:toastin var(--d-base) var(--e-out)}
+.toast.success{border-left-color:var(--success)} .toast.error{border-left-color:var(--danger)}
+.toast.warning{border-left-color:var(--warning)} .toast.info{border-left-color:var(--info)}
+@keyframes toastin{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+/* modal */
+.overlay{position:fixed;inset:0;background:rgba(31,27,22,.4);backdrop-filter:blur(2px);z-index:150;display:none;align-items:center;justify-content:center;padding:20px}
+.overlay.open{display:flex;animation:fade var(--d-base) var(--e-out)}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+.modal{background:var(--surface);border-radius:var(--r-lg);box-shadow:var(--sh-lg);max-width:420px;width:100%;padding:24px;animation:pop var(--d-base) var(--e-out)}
+@keyframes pop{from{opacity:0;transform:scale(.96)}to{opacity:1;transform:none}}
+.modal h4{font-family:var(--f-display);font-size:22px;margin-bottom:8px}
+.modal p{font-size:14px;color:var(--text-muted);margin-bottom:18px}
+/* §5 transitions */
+.micro-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:14px}
+.micro{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-md);padding:20px;text-align:center;font-size:13px;color:var(--text-muted);cursor:pointer;transition:transform var(--d-micro) var(--e-spring),box-shadow var(--d-micro) var(--e-standard),border-color var(--d-micro)}
+.micro:hover{transform:translateY(-4px) scale(1.02);box-shadow:var(--sh-md);border-color:var(--accent);color:var(--text)}
+.reveal{opacity:0;transform:translateY(20px);transition:opacity var(--d-page) var(--e-out),transform var(--d-page) var(--e-out)}
+.reveal.in{opacity:1;transform:none}
+.xfade{position:relative;height:120px;border:1px solid var(--border);border-radius:var(--r-md);overflow:hidden;cursor:pointer}
+.xfade .pg{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:var(--f-display);font-size:24px;transition:opacity var(--d-page) var(--e-out)}
+.xfade .p1{background:var(--surface)} .xfade .p2{background:var(--surface-2);opacity:0}
+.xfade.flip .p1{opacity:0} .xfade.flip .p2{opacity:1}
+/* §6 signature — Ember Fill quest card */
+.quest{position:relative;overflow:hidden;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);
+  padding:18px 18px 18px 22px;max-width:340px;user-select:none;cursor:pointer;touch-action:none;
+  --habit:var(--h-fern); /* this quest's habit colour */ --fill:0}
+.quest::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--habit)}
+.quest .fillbar{position:absolute;inset:0;background:radial-gradient(120% 140% at 12% 50%,var(--accent),var(--habit));
+  transform:scaleX(var(--fill));transform-origin:left;opacity:.18;pointer-events:none}
+.quest.complete .fillbar{opacity:.28}
+.quest .qrow{position:relative;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.quest .qt{font-family:var(--f-ui);font-weight:600;font-size:16px}
+.quest .qsub{font-size:12px;color:var(--text-muted);margin-top:2px}
+.quest .qn{font-family:var(--f-data);font-weight:600;font-size:15px;color:var(--text-muted)}
+.quest .check{width:26px;height:26px;border-radius:var(--r-full);border:2px solid var(--border);display:flex;align-items:center;justify-content:center;transition:border-color var(--d-base)}
+.quest.complete .check{border-color:var(--success);background:var(--success)}
+.quest .check svg{width:14px;height:14px;stroke:#fff;stroke-width:3;fill:none;stroke-dasharray:20;stroke-dashoffset:20;transition:stroke-dashoffset var(--d-base) var(--e-out)}
+.quest.complete .check svg{stroke-dashoffset:0}
+.quest.burst{animation:burst var(--d-base) var(--e-spring)}
+@keyframes burst{0%{transform:scale(1)}40%{transform:scale(1.035)}100%{transform:scale(1)}}
+.flame{position:absolute;top:12px;right:14px;font-family:var(--f-data);font-size:12px;font-weight:600;color:var(--accent);opacity:0;transform:translateY(6px);transition:all var(--d-base) var(--e-out)}
+.quest.complete .flame{opacity:1;transform:none}
+.float-xp{position:absolute;left:50%;top:50%;font-family:var(--f-data);font-weight:600;color:var(--xp);pointer-events:none;opacity:0}
+.float-xp.go{animation:floatxp 900ms var(--e-out)}
+@keyframes floatxp{0%{opacity:0;transform:translate(-50%,-50%) translateY(0)}20%{opacity:1}100%{opacity:0;transform:translate(-50%,-50%) translateY(-46px)}}
+.hint{font-size:12px;color:var(--text-muted);margin-top:14px}
+.hint b{color:var(--accent)}
+/* responsive */
+@media(max-width:640px){
+  .wrap{padding:0 16px 80px}.hbar{padding:14px 16px}
+  .sec-title{font-size:24px}.t-display-xl{font-size:32px}
+}
+@media(prefers-reduced-motion:reduce){
+  *{animation-duration:.01ms !important;transition-duration:.01ms !important}
+  .skel{animation:none}
+}
+</style>
+</head>
+<body>
+<header>
+  <div class="hbar">
+    <div>
+      <div class="brand">Design System — <span class="em">Questline</span></div>
+      <div class="meta">v1.0.0 · updated 2026-06-07 · tokens ← DESIGN.md</div>
+    </div>
+    <button class="toggle" id="themeBtn" aria-label="Toggle dark mode">◐ Dark</button>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <!-- §1 COLOR -->
+  <section id="s1">
+    <div class="sec-head"><span class="sec-no">§1</span><span class="sec-title">Colour Palette</span>
+      <button class="copy" data-copy="--accent:#D9542B; --xp:#C8941F; --bg:#FAF7F2; --text:#1F1B16;">Copy tokens</button></div>
+    <div class="rule"></div>
+    <p class="sub">1–3 accents on a warm ground. Ember = aliveness only. Habit colours are the only loud layer.</p>
+    <div class="sw-row" style="margin-bottom:28px">
+      <div class="sw"><div class="chip" style="background:#D9542B"></div><div class="info"><div class="nm">Accent · Ember</div><div class="hex">#D9542B</div><div class="use">"alive now": CTA, active nav, fill</div></div></div>
+      <div class="sw"><div class="chip" style="background:#C8941F"></div><div class="info"><div class="nm">XP · Gold</div><div class="hex">#C8941F</div><div class="use">XP moments only</div></div></div>
+      <div class="sw"><div class="chip" style="background:#2E9E6B"></div><div class="info"><div class="nm">Success</div><div class="hex">#2E9E6B</div><div class="use">completion / positive</div></div></div>
+      <div class="sw"><div class="chip" style="background:#9E2B25"></div><div class="info"><div class="nm">Danger</div><div class="hex">#9E2B25</div><div class="use">destructive (distinct from ember)</div></div></div>
+    </div>
+    <p class="t-caption" style="margin-bottom:10px">Neutrals — surfaces &amp; text</p>
+    <div class="sw-row" style="margin-bottom:30px">
+      <div class="sw"><div class="chip" style="background:#FAF7F2"></div><div class="info"><div class="nm">BG · Paper</div><div class="hex">#FAF7F2</div></div></div>
+      <div class="sw"><div class="chip" style="background:#FFFFFF"></div><div class="info"><div class="nm">Surface</div><div class="hex">#FFFFFF</div></div></div>
+      <div class="sw"><div class="chip" style="background:#F2ECE3"></div><div class="info"><div class="nm">Surface-2</div><div class="hex">#F2ECE3</div></div></div>
+      <div class="sw"><div class="chip" style="background:#1F1B16"></div><div class="info"><div class="nm">Text</div><div class="hex">#1F1B16</div></div></div>
+      <div class="sw"><div class="chip" style="background:#6B6358"></div><div class="info"><div class="nm">Text-muted</div><div class="hex">#6B6358</div></div></div>
+    </div>
+    <p class="t-caption" style="margin-bottom:18px">Habit palette — user-owned, quests inherit</p>
+    <div class="dot-wrap">
+      <div class="dot" style="background:#E8743B"><span>ember</span></div>
+      <div class="dot" style="background:#E0B040"><span>amber</span></div>
+      <div class="dot" style="background:#5AA469"><span>fern</span></div>
+      <div class="dot" style="background:#3E9CA8"><span>teal</span></div>
+      <div class="dot" style="background:#4F86C6"><span>sky</span></div>
+      <div class="dot" style="background:#7A6CD8"><span>iris</span></div>
+      <div class="dot" style="background:#C85A8E"><span>rose</span></div>
+      <div class="dot" style="background:#8A8F98"><span>slate</span></div>
+    </div>
+  </section>
+
+  <!-- §2 TYPOGRAPHY -->
+  <section id="s2">
+    <div class="sec-head"><span class="sec-no">§2</span><span class="sec-title">Typography</span>
+      <button class="copy" data-copy="--f-display:'Fraunces'; --f-ui:'Hanken Grotesk'; --f-data:'JetBrains Mono';">Copy tokens</button></div>
+    <div class="rule"></div>
+    <p class="sub">Three typefaces, defined roles. Fraunces (editorial display) · Hanken Grotesk (UI/body) · JetBrains Mono (data). No generic Inter.</p>
+    <div class="type-row"><div class="role">Display XL · Fraunces 40/600 — hero numbers</div><div class="t-display-xl">1,240 XP · 14-day streak</div></div>
+    <div class="type-row"><div class="role">Display · Fraunces 32/600</div><div class="t-display">Your story, one quest at a time</div></div>
+    <div class="type-row"><div class="role">Title · Hanken 22/600</div><div class="t-title">Today's quests</div></div>
+    <div class="type-row"><div class="role">Section · Hanken 17/600</div><div class="t-section">This week</div></div>
+    <div class="type-row"><div class="role">Body · Hanken 15/400</div><div class="t-body">Tap to add one. Hold to finish the whole thing — the card ignites and crests into a burst.</div></div>
+    <div class="type-row"><div class="role">Caption · Hanken 13/500</div><div class="t-caption">Last synced 2 minutes ago</div></div>
+    <div class="type-row"><div class="role">Data · JetBrains Mono 14/500</div><div class="t-data">2/3 · 7.5h slept · +14 XP</div></div>
+  </section>
+
+  <!-- §3 SPACING & SHAPES -->
+  <section id="s3">
+    <div class="sec-head"><span class="sec-no">§3</span><span class="sec-title">Spacing &amp; Shapes</span>
+      <button class="copy" data-copy="space:[4,8,12,16,24,32,48,64]; radius: sm8 md12 lg16 xl24 full999;">Copy tokens</button></div>
+    <div class="rule"></div>
+    <p class="sub">4px base scale. Warm-tinted shadows, never pure black.</p>
+    <div class="space-scale" id="spaceScale" style="margin-bottom:36px"></div>
+    <div class="shape-row">
+      <div class="shape" style="border-radius:8px"><span>sm · 8</span></div>
+      <div class="shape" style="border-radius:12px"><span>md · 12</span></div>
+      <div class="shape" style="border-radius:16px"><span>lg · 16</span></div>
+      <div class="shape" style="border-radius:24px"><span>xl · 24</span></div>
+      <div class="shape" style="border-radius:999px;width:88px"><span>full</span></div>
+    </div>
+    <div class="row" style="margin-top:28px">
+      <div class="card" style="box-shadow:var(--sh-sm)">shadow-sm</div>
+      <div class="card" style="box-shadow:var(--sh-md)">shadow-md</div>
+      <div class="card" style="box-shadow:var(--sh-lg)">shadow-lg</div>
+    </div>
+  </section>
+
+  <!-- §4 COMPONENTS -->
+  <section id="s4">
+    <div class="sec-head"><span class="sec-no">§4</span><span class="sec-title">Components</span>
+      <button class="copy" data-copy="See DESIGN-SYSTEM.md §4 for full component specs.">Copy ref</button></div>
+    <div class="rule"></div>
+    <p class="sub">Interactive — hover, focus, open. Every component references tokens, never hardcoded hex.</p>
+
+    <div class="panel"><h3>Buttons</h3>
+      <div class="row">
+        <button class="btn btn-primary">Primary</button>
+        <button class="btn btn-secondary">Secondary</button>
+        <button class="btn btn-ghost">Ghost</button>
+        <button class="btn btn-danger">Delete</button>
+        <button class="btn btn-primary" disabled>Disabled</button>
+      </div></div>
+
+    <div class="panel"><h3>Inputs</h3>
+      <div class="row" style="align-items:flex-start">
+        <div class="field"><label>Habit name</label><input class="input" placeholder="e.g. Run" /><span class="help">Pick a colour next.</span></div>
+        <div class="field"><label>Cadence</label><select class="input"><option>Daily</option><option>Weekly</option><option>Monthly</option><option>Yearly</option></select></div>
+        <div class="field"><label>Hours slept</label><input class="input error" value="26" /><span class="help err">Must be between 0 and 24.</span></div>
+        <div class="field"><label>Note</label><textarea class="input" placeholder="Optional…"></textarea></div>
+      </div></div>
+
+    <div class="panel"><h3>Cards</h3>
+      <div class="cards-demo">
+        <div class="card"><div class="ct">Default</div><div class="cd">Surface + hairline, no shadow.</div></div>
+        <div class="card elev"><div class="ct">Elevated</div><div class="cd">Warm shadow-md for sheets.</div></div>
+        <div class="card inter"><div class="ct">Interactive →</div><div class="cd">Hover lifts. Try me.</div></div>
+      </div></div>
+
+    <div class="panel"><h3>Navigation</h3>
+      <div class="row" style="justify-content:space-between">
+        <div class="bottomnav">
+          <div class="nav-i active"><div class="ic"></div>Home</div>
+          <div class="nav-i"><div class="ic"></div>Habits</div>
+          <button class="fab" aria-label="Add">+</button>
+          <div class="nav-i"><div class="ic"></div>Stats</div>
+          <div class="nav-i"><div class="ic"></div>Profile</div>
+        </div>
+      </div>
+      <div class="tabs" style="margin-top:20px" id="tabs">
+        <button class="tab active">Day</button><button class="tab">Week</button><button class="tab">Month</button><button class="tab">Year</button>
+      </div></div>
+
+    <div class="panel"><h3>Modal / Dialog</h3>
+      <button class="btn btn-secondary" id="openModal">Open dialog</button></div>
+
+    <div class="panel"><h3>Notifications</h3>
+      <div class="row">
+        <button class="btn btn-secondary" data-toast="success">Success</button>
+        <button class="btn btn-secondary" data-toast="error">Error</button>
+        <button class="btn btn-secondary" data-toast="warning">Warning</button>
+        <button class="btn btn-secondary" data-toast="info">Info</button>
+      </div></div>
+
+    <div class="panel"><h3>Loading &amp; Empty states</h3>
+      <div class="row" style="align-items:center">
+        <div class="spinner"></div>
+        <div style="display:flex;flex-direction:column;gap:8px;width:220px">
+          <div class="skel" style="height:14px;width:70%"></div>
+          <div class="skel" style="height:14px;width:90%"></div>
+          <div class="skel" style="height:14px;width:50%"></div>
+        </div>
+        <div class="card" style="flex:1;min-width:200px"><div class="ct">Nothing live yet</div><div class="cd">Plant your first quest → <span style="color:var(--accent);font-weight:600">＋</span></div></div>
+      </div></div>
+  </section>
+
+  <!-- §5 TRANSITIONS -->
+  <section id="s5">
+    <div class="sec-head"><span class="sec-no">§5</span><span class="sec-title">Transitions &amp; Animation</span>
+      <button class="copy" data-copy="micro:180ms page:350ms; ease-spring:cubic-bezier(.34,1.56,.64,1)">Copy tokens</button></div>
+    <div class="rule"></div>
+    <p class="sub">180ms micro · 350ms page · spring on completion.</p>
+    <p class="t-caption" style="margin-bottom:10px">Micro-interactions (hover)</p>
+    <div class="micro-grid" style="margin-bottom:28px">
+      <div class="micro">Hover</div><div class="micro">Hover</div><div class="micro">Hover</div><div class="micro">Hover</div>
+    </div>
+    <p class="t-caption" style="margin-bottom:10px">Page crossfade (click)</p>
+    <div class="xfade" id="xfade" style="margin-bottom:28px"><div class="pg p1">Page A</div><div class="pg p2">Page B</div></div>
+    <p class="t-caption" style="margin-bottom:10px">Scroll reveal</p>
+    <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(140px,1fr))">
+      <div class="card reveal">Fade-up I</div><div class="card reveal">Fade-up II</div><div class="card reveal">Fade-up III</div>
+    </div>
+  </section>
+
+  <!-- §6 SIGNATURE -->
+  <section id="s6">
+    <div class="sec-head"><span class="sec-no">§6</span><span class="sec-title">Signature — Ember Fill</span>
+      <button class="copy" data-copy="--e-ember:cubic-bezier(.22,.61,.36,1); hold-to-complete ignite→crest→burst">Copy curve</button></div>
+    <div class="rule"></div>
+    <p class="sub">The one bold thing that's ours. <b>Tap</b> = +1. <b>Hold</b> = ignite an ember→habit-colour fill that crests into a burst.</p>
+    <div class="quest" id="quest">
+      <div class="fillbar"></div>
+      <div class="flame" id="flame">▲ streak 2</div>
+      <div class="float-xp" id="floatxp">+14</div>
+      <div class="qrow">
+        <div><div class="qt">Go for a run</div><div class="qsub">Run · daily</div></div>
+        <div style="display:flex;align-items:center;gap:12px">
+          <span class="qn" id="qn">0/1</span>
+          <span class="check"><svg viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg></span>
+        </div>
+      </div>
+    </div>
+    <p class="hint">Quick tap → <b>+1</b>. Press and hold → the card <b>ignites and completes</b>. Release early → it recedes. (Respects <code>prefers-reduced-motion</code>.)</p>
+  </section>
+
+</div>
+
+<!-- modal -->
+<div class="overlay" id="overlay">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="mt">
+    <h4 id="mt">Delete habit?</h4>
+    <p>This removes “Run” and its quests. Your logged history stays. This can't be undone.</p>
+    <div class="row" style="justify-content:flex-end">
+      <button class="btn btn-ghost" id="cancelModal">Cancel</button>
+      <button class="btn btn-danger" id="confirmModal">Delete</button>
+    </div>
+  </div>
+</div>
+<div class="toast-wrap" id="toastWrap"></div>
+
+<script>
+/* theme toggle */
+const root=document.documentElement, tBtn=document.getElementById('themeBtn');
+tBtn.addEventListener('click',()=>{
+  const dark=root.getAttribute('data-theme')==='dark';
+  root.setAttribute('data-theme',dark?'light':'dark');
+  tBtn.textContent=dark?'◐ Dark':'◑ Light';
+});
+/* copy buttons */
+document.querySelectorAll('.copy').forEach(b=>b.addEventListener('click',async()=>{
+  try{await navigator.clipboard.writeText(b.dataset.copy);}catch(e){}
+  const o=b.textContent;b.textContent='Copied ✓';b.classList.add('ok');
+  setTimeout(()=>{b.textContent=o;b.classList.remove('ok')},1200);
+}));
+/* spacing scale render */
+const ss=document.getElementById('spaceScale');[4,8,12,16,24,32,48,64].forEach(n=>{
+  const w=document.createElement('div');w.innerHTML=`<div class="space-blk" style="width:${n}px;height:${n}px"></div><div class="space-lbl">${n}</div>`;
+  ss.appendChild(w);
+});
+/* tabs */
+document.getElementById('tabs').addEventListener('click',e=>{
+  if(!e.target.classList.contains('tab'))return;
+  document.querySelectorAll('#tabs .tab').forEach(t=>t.classList.remove('active'));e.target.classList.add('active');
+});
+/* modal */
+const ov=document.getElementById('overlay');
+document.getElementById('openModal').onclick=()=>ov.classList.add('open');
+const closeM=()=>ov.classList.remove('open');
+document.getElementById('cancelModal').onclick=closeM;
+document.getElementById('confirmModal').onclick=()=>{closeM();toast('error','Habit deleted.');};
+ov.addEventListener('click',e=>{if(e.target===ov)closeM();});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeM();});
+/* toasts */
+const tw=document.getElementById('toastWrap');
+const labels={success:'Quest complete · +14 XP',error:'Couldn’t sync — saved offline.',warning:'Streak ends at midnight.',info:'Synced to Google Calendar.'};
+function toast(kind,msg){
+  const t=document.createElement('div');t.className='toast '+kind;t.textContent=msg||labels[kind];
+  tw.appendChild(t);setTimeout(()=>{t.style.opacity='0';t.style.transition='opacity .3s';setTimeout(()=>t.remove(),300);},3600);
+}
+document.querySelectorAll('[data-toast]').forEach(b=>b.onclick=()=>toast(b.dataset.toast));
+/* xfade */
+const xf=document.getElementById('xfade');xf.onclick=()=>xf.classList.toggle('flip');
+/* scroll reveal */
+const io=new IntersectionObserver(es=>es.forEach(en=>{if(en.isIntersecting){en.target.classList.add('in');io.unobserve(en.target);}}),{threshold:.2});
+document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
+
+/* ===== Ember Fill signature ===== */
+const quest=document.getElementById('quest'), qn=document.getElementById('qn'),
+      fx=document.getElementById('floatxp');
+let progress=0, target=1, holding=false, raf=null, startT=0;
+const HOLD_MS=560, TAP_MS=170;
+const easeEmber=t=>{ // approx cubic-bezier(.22,.61,.36,1)
+  return 1-Math.pow(1-t,2.2);
+};
+function setFill(v){quest.style.setProperty('--fill',v);}
+function complete(){
+  if(quest.classList.contains('complete'))return;
+  progress=target;qn.textContent=`${progress}/${target}`;
+  quest.classList.add('complete','burst');setFill(1);
+  fx.classList.add('go');setTimeout(()=>fx.classList.remove('go'),900);
+  setTimeout(()=>quest.classList.remove('burst'),260);
+  toast('success');
+}
+function tapInc(){
+  if(quest.classList.contains('complete'))return;
+  progress=Math.min(progress+1,target);qn.textContent=`${progress}/${target}`;
+  if(progress>=target)complete();
+}
+function loop(){
+  const el=performance.now()-startT;
+  const t=Math.min(el/HOLD_MS,1);
+  setFill(easeEmber(t));
+  if(t>=1){holding=false;complete();return;}
+  if(holding)raf=requestAnimationFrame(loop);
+}
+function down(e){e.preventDefault();if(quest.classList.contains('complete'))return;holding=true;startT=performance.now();raf=requestAnimationFrame(loop);}
+function up(){
+  if(!holding)return;holding=false;cancelAnimationFrame(raf);
+  const el=performance.now()-startT;
+  if(quest.classList.contains('complete'))return;
+  if(el<TAP_MS){setFill(0);tapInc();}        // quick tap → +1
+  else{ // released early → recede
+    const from=parseFloat(getComputedStyle(quest).getPropertyValue('--fill'))||0;
+    let s=performance.now();
+    (function rec(){const k=Math.min((performance.now()-s)/200,1);setFill(from*(1-k));if(k<1)requestAnimationFrame(rec);})();
+  }
+}
+quest.addEventListener('pointerdown',down);
+window.addEventListener('pointerup',up);
+quest.addEventListener('pointercancel',up);
+/* reset on click of completed card for repeat demo */
+quest.addEventListener('dblclick',()=>{
+  quest.classList.remove('complete');progress=0;qn.textContent='0/1';setFill(0);
+});
+</script>
+</body>
+</html>
