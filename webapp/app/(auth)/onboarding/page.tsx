@@ -99,7 +99,7 @@ export default function OnboardingPage() {
       if (!habits || habits.length === 0) throw new Error("No habit found");
 
       // Create the quest
-      const { data: quest, error: questError } = await supabase
+      const { error: questError } = await supabase
         .from("quest")
         .insert({
           user_id: user.id,
