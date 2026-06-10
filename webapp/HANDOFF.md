@@ -6,7 +6,7 @@
 
 <!-- newest entry on top -->
 
-## 🔖 P5 — Stats (re-submit) · commit `1cd0f97` · 2026-06-10
+## 🔖 P5 — Stats (re-submit) · commit `fe43877` · 2026-06-10
 
 **FIX 1 — StatusGrid bins daily instances into weekly/monthly/yearly buckets:**
 
