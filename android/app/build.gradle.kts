@@ -6,6 +6,20 @@ plugins {
     alias(libs.plugins.kotlin.serialization)
 }
 
+import java.util.Properties
+import java.io.File
+
+/** Load local.properties into project properties so buildConfigField can read them. */
+val localProps = Properties()
+val localPropsFile = File(rootProject.projectDir, "local.properties")
+if (localPropsFile.exists()) {
+    localPropsFile.inputStream().use { localProps.load(it) }
+}
+for (key in localProps.propertyNames()) {
+    val k = key as String
+    project.extensions.extraProperties.set(k, localProps.getProperty(k))
+}
+
 android {
     namespace = "com.questline.app"
     compileSdk = 34

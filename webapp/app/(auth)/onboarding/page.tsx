@@ -118,7 +118,7 @@ export default function OnboardingPage() {
       // Seed today's instance via ensure_instances RPC (idempotent)
       const today = new Date().toISOString().split("T")[0];
       const { error: instanceError } = await supabase.rpc("ensure_instances", {
-        date: today,
+        p_date: today,
       });
 
       if (instanceError) throw instanceError;
