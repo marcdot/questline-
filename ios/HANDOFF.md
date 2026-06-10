@@ -40,3 +40,25 @@ How to verify quickly:
 ```
 
 ➡️  PASTE TO LEAD: "Validate Questline ios iP0 against ios/BUILD.md §4 iP0. Reply PASS or a numbered fix list."
+
+**LEAD VERDICT: FIX (2 items, both small)**
+
+Verified by the lead: ran `npx vitest run` fresh → 11/11 pass; read `lib/platform.ts` in full
+(SSR-safe, iPadOS `MacIntel`+`maxTouchPoints` trap correct — good work); manifest is valid JSON,
+correct structure; additive-files-only boundary respected. `lib/` (no `src/`) matches the webapp's
+actual layout — accepted.
+
+1. **FIX — `apple-touch-icon` MUST be PNG; iOS Safari does not support SVG for home-screen
+   icons.** The deviation note ("SVGs are supported by all modern PWA install surfaces") is wrong
+   for exactly the platform this stream exists for: with an SVG apple-touch-icon, iOS falls back
+   to a page screenshot as the icon. This is iP0's core deliverable, not P7 polish. Fix:
+   generate `apple-touch-icon.png` (180×180) + PNG `icon-192.png`/`icon-512.png`; keep the SVGs
+   if you like but the manifest entries and the (iP1) `<link rel="apple-touch-icon">` must point
+   at PNGs. Also: the 512 "maskable" entry currently reuses the plain `icon-512.svg` — a maskable
+   icon needs safe-zone padding; regenerate the maskable variant properly in the same pass.
+2. **FIX (one value) — `theme_color` should be `#F4F2ED` (light bg), not `#1a1814` (ink).** The
+   app shell is warm-light; a dark theme_color makes the installed title-bar/splash chrome clash
+   with the ground. Dark-mode theme-color is handled in iP1 via the media-based meta tag.
+
+Evidence for the re-submit: file listing of the PNGs + updated manifest + `npx vitest run` output.
+Everything else stands — on PASS, iP1 may start (webapp-P0 is committed at `f45be66`).
