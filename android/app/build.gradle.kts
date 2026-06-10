@@ -113,6 +113,9 @@ dependencies {
     // Google Sign-In
     implementation(libs.play.services.auth)
 
+    // Vico charts
+    implementation(libs.vico.m3)
+
     // Testing
     testImplementation(libs.kotlin.test)
     testImplementation(libs.junit)

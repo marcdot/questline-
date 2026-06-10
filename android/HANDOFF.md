@@ -227,6 +227,38 @@ to full PASS on sight.
 - Session restore (relaunch with refresh_token) structural by design via `@supabase/ssr` cookie persistence
 - **→ Full PASS ready on lead's sight of this entry**
 
+## 🔖 P3 — Home + quest interaction · commit awaiting commit · 2026-06-10
+```
+🔖 QUESTLINE — VALIDATION REQUEST
+Platform : android
+Phase    : P3 — Home + quest interaction (core loop)
+Commit   : <pending commit hash>   Branch: master
+Spec refs: BUILD.md §P3, docs/03 §5 (motion, haptic), docs/05 (XP, streaks, §8), docs/07 §P3
+
+Built (what a reviewer can verify):
+- QuestCard.kt: tap=+1 (scale 0.97, light haptic, +1 float), hold=complete (~500ms, burst + success haptic). Habit colour leading bar + progress fill. §8 vector reproduces (14 XP at streak=2).
+- HomeScreen.kt: dashboard with quest cards, mini stats (today, streak, XP pills)
+- SleepChart.kt: Canvas-drawn month sleep chart (no external chart library dependency)
+- HomeViewModel.kt: loads today's instances via ensure_instances, optimistic tap/hold with domain lib preview, offline queue fallback
+- HomeUiState.kt: UI state data classes for the screen
+
+Self-check — fresh output (Iron Law):
+- $ ./gradlew clean assembleDebug → BUILD SUCCESSFUL
+- $ ./gradlew testDebugUnitTest → BUILD SUCCESSFUL (domain tests pass: PeriodKey, StreakCalc, XpCalc)
+- $ ./gradlew lintDebug → BUILD SUCCESSFUL, 0 violations
+- §8 XP: streak=2 → (10 + min(2,7)*2) * 1.0 = 14 ✅ (domain test vector)
+
+Deviations from spec (with reason):
+- Sleep chart uses Canvas rather than Vico library — version API mismatch, Canvas is simpler and avoids a dependency
+
+How to verify quickly:
+- run: ./gradlew installDebug on emulator → authed home with quest cards
+- check: tap → +1, hold → completion burst, stat pills update
+- check: offline queue logs to Logcat under "QuestlineOfflineQueue"
+```
+
+➡️  PASTE TO LEAD: "Validate Questline android P3 against docs/03 §5, docs/05, docs/07 §P3. Tap=+1, hold=complete, Canvas sleep chart, optimistic XP via domain lib. FEEL gate — motion/timing/haptic per design."
+
 **P3 (home + quest interaction — the core loop, hard gate on FEEL) may start NOW.** Same notes as webapp: core loop, gate is FEEL
 per DESIGN.md (Ember Fill timings), §8 optimistic-XP preview must match the server value on
 sync. Google sign-in device-verify still trails to P7 pending the user's GCP client ID.

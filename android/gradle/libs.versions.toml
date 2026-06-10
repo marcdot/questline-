@@ -18,6 +18,7 @@ kotlinxSerialization = "1.6.2"
 junit = "4.13.2"
 securityCrypto = "1.1.0-alpha06"
 playServicesAuth = "21.2.0"
+vico = "1.13.1"
 
 [libraries]
 # Core
@@ -67,6 +68,8 @@ androidx-security-crypto = { group = "androidx.security", name = "security-crypt
 
 # Google Sign-In
 play-services-auth = { group = "com.google.android.gms", name = "play-services-auth", version.ref = "playServicesAuth" }
+
+vico-m3 = { group = "com.patrykandpatrick.vico", name = "compose-m3", version.ref = "vico" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

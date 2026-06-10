@@ -9,6 +9,19 @@
     <string name="home_title">Today</string>
     <string name="home_placeholder">Your quests will appear here</string>
     <string name="home_empty">Nothing live yet. Plant your first quest →</string>
+    <string name="home_today_label">Today</string>
+    <string name="home_streak_label">Streak</string>
+    <string name="home_xp_label">XP</string>
+    <string name="home_quests_title">Today\'s Quests</string>
+    <string name="home_sleep_title">Sleep</string>
+    <string name="home_loading">Loading your quests…</string>
+    <string name="home_error">Couldn\'t load quests</string>
+    <string name="home_retry">Retry</string>
+    <string name="card_completed">Completed</string>
+    <string name="card_progress_format">%d/%d</string>
+    <string name="card_tap_hint">Tap to add 1, hold to complete</string>
+    <string name="xp_today_format">+%d today</string>
+    <string name="streak_format">%d day streak</string>
 
     <!-- Auth screen -->
     <string name="auth_title">Questline</string>

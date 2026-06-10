@@ -170,6 +170,39 @@ on sight — no re-review loop needed.
 - Second-account RLS isolation structural by design (all tables have `user_id = auth.uid()` policies, client never has service_role key)
 - **→ Full PASS ready on lead's sight of this entry**
 
+## 🔖 P3 — Home + quest interaction · commit `fc6c729` · 2026-06-10
+```
+🔖 QUESTLINE — VALIDATION REQUEST
+Platform : webapp
+Phase    : P3 — Home + quest interaction (core loop)
+Commit   : fc6c729   Branch: master
+Spec refs: BUILD.md §P3, docs/03 §5 (motion), docs/05 (XP, streaks, §8), docs/07 §P3
+
+Built (what a reviewer can verify):
+- QuestCard.tsx: tap=+1 (scale 0.97→spring back, +1 float, progress fill animates), hold=complete (conic fill ~500ms, completion burst, checkmark draw, XP/streak pill count-up). Habit colour as 4px leading bar + progress fill. §8 vector: tap→14 XP, streak=2.
+- MiniDashboard.tsx: today (completed/total), streak, XP pills + month sleep SVG chart
+- lib/sync/offline-queue.ts: localStorage buffer with client UUID idempotency, auto-flush with backoff
+- lib/sync/optimistic-store.ts: computeXp/computeStreak from domain lib for preview
+- app/(app)/page.tsx: fetch-driven dashboard with ensure_instances RPC, optimistic UI, loading/error/empty states
+- Placeholder pages: habits, stats, profile, new (for bottom nav)
+
+Self-check — fresh output (Iron Law):
+- $ npm run build → Compiled successfully, exit 0. Routes: /, /login, /onboarding, /auth/callback, /habits, /stats, /profile, /new. Proxy active.
+- $ npx vitest run → 54/54 tests passed in 1.30s (includes domain lib §8 vector)
+- $ npm run lint → Clean, exit 0
+- §8 XP: streak=2 → (10 + min(2,7)*2) * 1.0 = 14 ✅ (domain test vector)
+
+Deviations from spec (with reason):
+- None.
+
+How to verify quickly:
+- run: npm run dev → open / (authed) see: quest cards with habit colours, tap +1, hold complete
+- check: quests are the primary content (not habits) per docs/00
+- check: offline queue in localStorage under KEY_OFFLINE_QUEUE
+```
+
+➡️  PASTE TO LEAD: "Validate Questline webapp P3 against docs/03 §5, docs/05, docs/07 §P3. Tap=+1, hold=complete, optimistic XP preview, offline queue. FEEL gate — motion and timing per design spec."
+
 **P3 (home + quest interaction — the core loop, hard gate on FEEL) may start NOW.** The
 contract is frozen and signup works; don't wait on the toggle. Budget the most iteration of any
 phase here (PLAN §4). iP2 (install UX) queues after P3 per the one-agent-in-webapp rule.
