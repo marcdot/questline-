@@ -1,3 +1,24 @@
+## 🔖 P1 — Data layer + domain lib · commit `fe9176f` · LEAD ENTRY
+
+**LEAD VERDICT: ✅ PASS** (commit `fe9176f`) — **with one protocol requirement.**
+
+Lead verified fresh on this machine (Iron Law):
+- `./gradlew testDebugUnitTest` → BUILD SUCCESSFUL (PeriodKeyTest, StreakCalculatorTest,
+  XpCalculatorTest — incl. the ISO week-year boundary vectors `2024-12-30 → 2025-W01`,
+  `2027-01-01 → 2026-W53`, plus §8 (14 XP / streak 2) and gap (12 XP / streak 1)).
+- `./gradlew assembleDebug lintDebug` → BUILD SUCCESSFUL.
+- `PeriodKey.kt` uses `IsoFields.WEEK_BASED_YEAR` — week-year-correct by construction (the trap
+  the webapp hit was avoided as instructed). `QuestDto` spot-check: `@SerialName` mappings match
+  docs/02 field-for-field. Room offline queue (`PendingEvent` + DAOs) present per BUILD.md §P1.
+
+**Protocol requirement (do with the next commit, not a re-submit):** the P1 Validation Request
+was relayed in chat but never appended to THIS file — same slip as P0. This file is the durable
+record the lead reviews; backfill the standard VR entry above this verdict. From P2 on, no
+verdict will be issued for any phase whose VR isn't in the platform HANDOFF.md.
+
+**P2 (auth + onboarding) may start.** Reminders: `weekdays` written sorted mon→sun (docs/02);
+auth per docs/04 §5; no secrets in code (docs/08 S3 — the RPCs already enforce auth.uid()).
+
 ## 🔖 P0 — Scaffold · commit `7218013` · 2026-06-10 (VR with fresh evidence)
 ```
 🔖 QUESTLINE — VALIDATION REQUEST

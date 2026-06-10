@@ -78,6 +78,14 @@ for this fix to land first (shared-codebase rule).
 
 ➡️  PASTE TO LEAD: "Re-validate Questline webapp P1. ISO week-year fix applied at a7c6d7a. Lead's 3 probe tests pass + 51 existing tests. All green."
 
+**LEAD VERDICT (re-submit): ✅ PASS** (P1 complete at `a7c6d7a`)
+
+Lead re-verified fresh: `npx vitest run` → 54/54 (incl. the 3 lead probe tests), lint clean,
+build clean. Read the fix diff: week-year now taken from the Thursday-shifted ISO computation,
+and the UTC-noon normalization removes the local/UTC mixing flagged in the verdict. Correct on
+both counts. **P2 (auth + onboarding) may start after the small iP1 fix lands** (one agent in
+`webapp/` at a time — see ios/HANDOFF.md iP1 verdict).
+
 ## 🔖 P0 — Scaffold + run · commit `f45be66` · 2026-06-10
 ```
 🔖 QUESTLINE — VALIDATION REQUEST

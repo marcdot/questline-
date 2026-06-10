@@ -36,4 +36,25 @@ How to verify quickly:
 
 ➡️  PASTE TO LEAD: "Validate Questline ios iP1 against ios/BUILD.md §4 iP1. Reply PASS or a numbered fix list."
 
+**LEAD VERDICT: 🔶 FIX (1 item — top safe area)**
+
+What's right (lead re-verified fresh): build/lint/54 tests clean; `layout.tsx` wiring via the
+Next 16 `Metadata`/`Viewport` APIs is correct (manifest link, apple-touch-icon, viewport-fit
+cover, media-query theme-color #f4f2ed/#15140f matching DESIGN.md); `AppShell` standalone
+switch + bottom tab bar + `safe-area-inset-bottom` all correct.
+
+**1. FIX — `statusBarStyle: "black-translucent"` with NO top safe-area padding.** With
+black-translucent, iOS draws WHITE status-bar text over your content, and the content extends
+under the status bar — but `.app-shell`/`.app-shell__content` only pads the bottom
+(`globals.css`). On a real iPhone: white clock/battery text on the warm-light #F4F2ED ground
+(unreadable) and content under the notch. Pick one:
+  (a) simplest: `statusBarStyle: "default"` — opaque bar, content starts below it; or
+  (b) keep black-translucent and add `padding-top: env(safe-area-inset-top, 0px)` to the shell
+      content — but then the white bar text still needs a dark backdrop in light mode, so (a)
+      is the right call for this design until a dark header exists.
+Evidence: build clean + the one-line diff.
+
+On this fix: iP1 PASS → **then webapp P2 takes the repo** (iP2 install UX can follow after P2,
+interleaved per ios/BUILD.md §4).
+
 ## 🔖 iP0 — PWA baseline (re-submit after fixes) · commit `397076a` · 2026-06-10

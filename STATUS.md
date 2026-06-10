@@ -20,24 +20,23 @@
   iPhone app-shell mode. NO native Swift app. Full plan: `ios/BUILD.md` (iP0–iP7, each gated on a
   webapp phase; only iP0 is parallel-safe — additive files only). Code lives in `webapp/`.
 - Verdict board (lead, 2026-06-10 — full verdicts live in each `*/HANDOFF.md`):
-  - ✅ webapp **P0 PASS** (`f45be66`) · ✅ android **P0 PASS** (`7218013`, lead re-ran
-    assembleDebug+lint fresh) · ✅ ios **iP0 PASS** (`397076a`, PNGs + theme_color + lint fixed)
-  - 🔶 webapp **P1 FIX (1)** (`184b79b`): `periodKeyFor('weekly')` uses calendar year, not ISO
-    **week-year** → wrong keys at every year boundary (2024-12-30 → `2024-W01`, should be
-    `2025-W01`). Backend (`IYYY-IW`) is correct → client/server divergence. Failing probe test
-    added by lead: `webapp/lib/domain/__tests__/leadcheck-isoweek.test.ts` — make it pass.
-- Order in `webapp/`: (1) P1 ISO fix → P1 PASS, (2) then ios iP1, then webapp P2 (one agent in
-  webapp/ at a time). android continues independently → P1 (mind the same ISO week-year trap +
-  `weekdays` sorted contract).
+  - webapp: ✅ P0 · ✅ P1 (`a7c6d7a`, ISO week-year fixed, 54/54) → **P2 next** (after iP1 fix)
+  - android: ✅ P0 · ✅ P1 (`fe9176f`, IsoFields week-year correct, tests fresh) → **P2 next**.
+    ⚠ Protocol: P1 VR was never appended to `android/HANDOFF.md` — backfill required; from P2
+    on, no verdict without the VR in the platform HANDOFF.
+  - ios: ✅ iP0 · 🔶 **iP1 FIX (1)** (`4cf5ef6`): `statusBarStyle "black-translucent"` + no top
+    safe-area padding → white status-bar text over light bg + content under the notch on real
+    devices. Fix: `statusBarStyle: "default"` (one line). Then iP1 PASS.
+- Order in `webapp/`: (1) iP1 one-line fix, (2) webapp P2 (auth), (3) iP2 install UX. One agent
+  in webapp/ at a time. android P2 runs freely in parallel.
 
 ## The next step (do this)
-1. Tell Hermes: *"Verdicts in the three HANDOFF.md files: android P0 PASS, ios iP0 PASS, webapp
-   P1 FIX(1) — the ISO week-year bug; a failing lead probe test sits at
-   `webapp/lib/domain/__tests__/leadcheck-isoweek.test.ts`, fix `period-keys.ts` until it's
-   green and re-submit. Then ios iP1, then webapp P2. android may start P1 now (use a
-   week-year-correct ISO implementation — see the android P0 verdict note)."*
+1. Tell Hermes: *"Verdicts in the three HANDOFF.md files: webapp P1 PASS, android P1 PASS (but
+   backfill the P1 VR into android/HANDOFF.md — durable record rule, now enforced), ios iP1
+   FIX(1): statusBarStyle → "default" (or pad top safe-area). Order in webapp/: iP1 fix → webapp
+   P2 → iP2. android P2 may start now."*
 2. From here: one phase → one commit → one VR per stream; lead bulk-reviews additive phases,
-   hard gates (P1 contract fidelity, P3 feel, P6 calendar security) get prompt review.
+   hard gates (P2 auth/RLS, P3 feel, P6 calendar security) get prompt review.
 
 ## How to resume in a FRESH session (paste this)
 > "You are the Questline project lead. The product lives in `C:\Users\Cutom\Desktop\app\questline`.
