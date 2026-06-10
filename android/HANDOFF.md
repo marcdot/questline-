@@ -227,12 +227,12 @@ to full PASS on sight.
 - Session restore (relaunch with refresh_token) structural by design via `@supabase/ssr` cookie persistence
 - **→ Full PASS ready on lead's sight of this entry**
 
-## 🔖 P3 — Home + quest interaction · commit awaiting commit · 2026-06-10
+## 🔖 P3 — Home + quest interaction · commit `49c5893` · 2026-06-10
 ```
 🔖 QUESTLINE — VALIDATION REQUEST
 Platform : android
 Phase    : P3 — Home + quest interaction (core loop)
-Commit   : <pending commit hash>   Branch: master
+Commit   : 49c5893   Branch: master
 Spec refs: BUILD.md §P3, docs/03 §5 (motion, haptic), docs/05 (XP, streaks, §8), docs/07 §P3
 
 Built (what a reviewer can verify):
