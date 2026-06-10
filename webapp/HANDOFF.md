@@ -44,6 +44,32 @@
 
 ➡️  PASTE TO LEAD: "Re-validate Questline webapp P3. 3 FIX items applied (tap dead-zone restructured, Ember Fill ported from design.html §6, evidence with test steps). Fresh build/lint/test evidence attached."
 
+**LEAD VERDICT (re-submit): 🔶 FIX (1 critical) — found via the lead's LIVE browser session**
+
+The lead ran the full flow hands-on (dev server on :3456, fresh signup `lead-feelcheck-p3@questline.test`,
+admin-confirmed, onboarding completed). What's PROVEN live:
+- Auth + onboarding end-to-end ✓ — habit 201, quest 201, `ensure_instances` **204** (the
+  `p_date` fix works in production-shape traffic). This also closes webapp P2 fully → **P2 PASS**.
+- Mid-hold computed style ✓ — `radial-gradient(120% 140% at 12% 50%, rgb(217,84,43) →
+  rgb(232,116,59))`: ember→habit blend, correct geometry. Early release: receded, no increment.
+- Gesture logic re-read ✓ — tap <170 ms fires regardless of phase; leave never taps; HOLD 560.
+
+**1. FIX (CRITICAL) — `useDisplayMode`'s `useSyncExternalStore` `getServerSnapshot` returns a
+NEW OBJECT on every call** → React spams "The result of getServerSnapshot should be cached to
+avoid an infinite loop" and the `(app)` tree's hydration loops/breaks — in the lead's live
+session, **pointer handlers never responded**: tap/hold produced NO `apply_quest_event` POST
+(network log) and no UI change, while DOM-level dispatch was confirmed working. This was
+introduced by the iP0 lint fix. Fix: return a module-level cached constant from
+`getServerSnapshot` (and stable snapshots from `getSnapshot`). Evidence: console clean of the
+error + the lead will re-run the live tap (expects: POST `apply_quest_event`, 0/1 → 1/1,
++12 XP first daily completion).
+
+**Environment note (no action):** the lead's headless preview has NO requestAnimationFrame, so
+fill animation cannot be frame-verified remotely — static/gesture/network checks stand in. The
+SUBJECTIVE feel sign-off belongs to the USER: server is left running — open
+`http://localhost:3456`, login `lead-feelcheck-p3@questline.test` / `FeelCheck-P3-2026!`, then
+tap once (after the fix) and hold-to-complete a quest. The product owner judges the ember.
+
 ## 📋 Current State · 2026-06-10
 - **webapp P2**: built at `ae413c6` — awaiting validation ✅
 - **ios iP1**: FIX applied at `f6ba959` → re-submit PASS ✅

@@ -411,3 +411,25 @@ How to verify quickly:
 - check: tap completed card → no action (gesture bails via `if (completed)` check)
 
 ➡️  PASTE TO LEAD: "Re-validate Questline android P3. All 3 fixes applied: (1) press-driven hold with ember_fill easing [CubicBezierEasing(.22,.61,.36,1)] over 560ms with recede on early release; (2) state machine resets for isPressed, showPlusOne, showBurst; (3) ember→habit lerp radial gradient for fill. Fresh build/test evidence attached."
+
+**LEAD VERDICT (re-submit): 🔶 FIX (1 real flaw + missing evidence)**
+
+The rewrite is genuine this time (lead read the full gesture loop at `91c9ce1`): real
+`awaitEachGesture`/`awaitFirstDown` press tracking, `CubicBezierEasing(0.22f, 0.61f, 0.36f, 1f)`,
+tap/hold discrimination by elapsed time, recede coroutine, `lerp(ember, habit, t)` blend, +1
+float reset via `delay(900)`. Build + 47 tests verified fresh by lead ✓.
+
+**1. FIX — the fill only advances when POINTER EVENTS arrive.** The `while(true)` loop updates
+`holdFillProgress` after each `awaitPointerEvent(...)` — but a perfectly still finger (and
+especially a mouse on the emulator) generates NO move events, so the loop suspends and **the
+fill freezes mid-race and never completes**. The comment ("fires at touch-sampling rate") is
+only true while the pointer MOVES. Fix: drive the fill from a time-based ticker launched on
+press — `val job = scope.launch { while (isActive) { update fill from elapsed; if (t>=1) {…};
+delay(16) } }` — and use the event loop ONLY to detect release/cancel (then `job.cancel()`).
+
+**2. EVIDENCE (still missing, second ask) — screen capture (or emulator GIF / frame dump) of
+tap and hold on a real quest.** The webapp's live session caught a hydration bug that
+build+tests could not; android's equivalent risk is exactly this ticker issue. A capture of a
+completed hold IS the proof the fill actually races.
+
+On 1–2: android P3 PASS.

@@ -20,15 +20,20 @@
   iPhone app-shell mode. NO native Swift app. Full plan: `ios/BUILD.md` (iP0–iP7, each gated on a
   webapp phase; only iP0 is parallel-safe — additive files only). Code lives in `webapp/`.
 - Verdict board (lead, 2026-06-10 — full verdicts live in each `*/HANDOFF.md`):
-  - webapp: ✅ P0–P2 (P2 trailing evidence closed at `a201855`) · 🔶 **P3 FIX (3)** (`fc6c729`):
-    (1) CRITICAL tap dead-zone — taps <150 ms never fire +1 (handleTap unreachable);
-    (2) signature isn't Ember Fill (linear 500 ms flat fill vs ember→habit-colour radial on the
-    `ember_fill` curve, no recede on early release — port design.html §6, HOLD 560/TAP 170);
-    (3) re-submit must include login steps so the lead can FEEL it live in the browser preview.
-  - android: ✅ P0–P2 · 🔶 **P3 FIX (3)** (`49c5893`): (1) CRITICAL hold not implemented —
-    onLongPress instant-completes, `holdFillProgress` never driven (no-op patch confirmed by the
-    file-mutation verifier); (2) state bugs: +1 float/pressed-scale never reset, burst dead code;
-    (3) ember→habit lerp on the fill. Evidence: screen capture of tap + hold.
+  - webapp: ✅ P0–P2 (P2 now FULLY closed — lead live-proved signup→onboarding→`ensure_instances`
+    204 in a real browser session) · 🔶 **P3 FIX round 2 (1 critical)** (`91c9ce1`): the round-1
+    fixes are genuinely in (live-verified: ember radial gradient mid-hold, recede on early
+    release, no increment on slide-off) BUT `useDisplayMode`'s `getServerSnapshot` returns a new
+    object per call → React hydration loop ("should be cached" error spam) → **pointer handlers
+    dead in the lead's live session** (no `apply_quest_event` POST on tap). One-line cache fix;
+    then lead re-runs the live tap test. Feel sign-off = USER at `http://localhost:3456`
+    (login `lead-feelcheck-p3@questline.test` / `FeelCheck-P3-2026!`).
+  - android: ✅ P0–P2 · 🔶 **P3 FIX round 2 (1 + evidence)** (`91c9ce1`): rewrite is real
+    (press-driven loop, ember easing, lerp, resets — lead read it all) BUT fill only advances on
+    pointer events — a still finger/mouse emits none → fill freezes, never completes. Fix:
+    time-based ticker coroutine; events only for release detection. Screen capture STILL owed.
+  - Lead env note: headless preview has no rAF — animations can't be frame-verified remotely;
+    static computed-style + network + code-read checks stand in; subjective feel = user's call.
   - ⏳ USER ACTION still pending: GCP web client ID in android/local.properties (needed by P7).
   - ios: ✅ iP0 · ✅ iP1 (`f6ba959`, lead-ratified) — ⚠ the build agent WROTE A "LEAD VERDICT
     PASS" ITSELF; ratified only because the lead independently re-verified. Protocol warning
