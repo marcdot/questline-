@@ -19,24 +19,23 @@
 - ✅ iOS approach DECIDED (2026-06-10): **web-based** — the webapp as an installable PWA with an
   iPhone app-shell mode. NO native Swift app. Full plan: `ios/BUILD.md` (iP0–iP7, each gated on a
   webapp phase; only iP0 is parallel-safe — additive files only). Code lives in `webapp/`.
-- Client P0 verdicts (lead bulk review, 2026-06-10 — recorded in each `*/HANDOFF.md`):
-  - ✅ **webapp P0 PASS** (`f45be66`; build re-run fresh by lead; tokens match DESIGN.md). → P1 go.
-  - ⏳ **android P0 PENDING EVIDENCE** (`7218013`; static pre-review positive, but NO Validation
-    Request was appended to `android/HANDOFF.md` — Iron Law requires fresh `assembleDebug` output
-    there before PASS).
-  - 🔶 **ios iP0 FIX (3 items)** (`37c8692`): (1) apple-touch-icon must be PNG (iOS ignores SVG
-    home-screen icons) + proper maskable variant; (2) manifest `theme_color` → #F4F2ED;
-    (3) iP0 files lint-clean (7 errors at HEAD are in this stream's files).
-- ⚠️ Webapp P1 work (`lib/domain/`, `lib/types.ts`) sits UNCOMMITTED — started before P0 PASS.
-  Not wasted: commit as the P1 phase with its own VR (incl. docs/05 §8 vector test + lint clean).
-  Contract note now in docs/02: `quest.weekdays` written sorted mon→sun.
+- Verdict board (lead, 2026-06-10 — full verdicts live in each `*/HANDOFF.md`):
+  - ✅ webapp **P0 PASS** (`f45be66`) · ✅ android **P0 PASS** (`7218013`, lead re-ran
+    assembleDebug+lint fresh) · ✅ ios **iP0 PASS** (`397076a`, PNGs + theme_color + lint fixed)
+  - 🔶 webapp **P1 FIX (1)** (`184b79b`): `periodKeyFor('weekly')` uses calendar year, not ISO
+    **week-year** → wrong keys at every year boundary (2024-12-30 → `2024-W01`, should be
+    `2025-W01`). Backend (`IYYY-IW`) is correct → client/server divergence. Failing probe test
+    added by lead: `webapp/lib/domain/__tests__/leadcheck-isoweek.test.ts` — make it pass.
+- Order in `webapp/`: (1) P1 ISO fix → P1 PASS, (2) then ios iP1, then webapp P2 (one agent in
+  webapp/ at a time). android continues independently → P1 (mind the same ISO week-year trap +
+  `weekdays` sorted contract).
 
 ## The next step (do this)
-1. Tell Hermes: *"Lead bulk-reviewed all three P0s — verdicts are in `webapp/HANDOFF.md` (PASS),
-   `android/HANDOFF.md` (PENDING EVIDENCE — append the real VR with fresh assembleDebug output),
-   and `ios/HANDOFF.md` (FIX ×3: PNG icons, theme_color, lint). Do: (a) android VR, (b) ios iP0
-   fixes + re-submit, (c) commit the in-progress webapp P1 as a proper phase with its own VR.
-   webapp may proceed P1 now; ios iP1 after the iP0 PASS."*
+1. Tell Hermes: *"Verdicts in the three HANDOFF.md files: android P0 PASS, ios iP0 PASS, webapp
+   P1 FIX(1) — the ISO week-year bug; a failing lead probe test sits at
+   `webapp/lib/domain/__tests__/leadcheck-isoweek.test.ts`, fix `period-keys.ts` until it's
+   green and re-submit. Then ios iP1, then webapp P2. android may start P1 now (use a
+   week-year-correct ISO implementation — see the android P0 verdict note)."*
 2. From here: one phase → one commit → one VR per stream; lead bulk-reviews additive phases,
    hard gates (P1 contract fidelity, P3 feel, P6 calendar security) get prompt review.
 

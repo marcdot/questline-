@@ -36,3 +36,14 @@ How to verify quickly:
 ```
 
 ➡️  PASTE TO LEAD: "Validate Questline android P0 against the spec. Reply PASS or a numbered fix list."
+
+**LEAD VERDICT: ✅ PASS** (commit `7218013`)
+
+Lead re-ran fresh on this machine: `./gradlew assembleDebug lintDebug` → BUILD SUCCESSFUL; APK
+present at `app/build/outputs/apk/debug/app-debug.apk`. Combined with the earlier static review
+(structure per BUILD.md §P0, `Color.kt` tokens exact vs DESIGN.md, secrets via
+local.properties→BuildConfig, gitignored): P0 is good. **Proceed to P1** (data layer) per
+BUILD.md. P1 reminders: field names per docs/02 incl. the new `weekdays` sorted-mon→sun contract
+note; the §8 + gap vectors must pass in unit tests; AND see the webapp P1 verdict — the ISO
+**week-year** boundary bug found there applies to any hand-rolled ISO week math, so use a
+week-year-correct implementation (test: 2024-12-30 → `2025-W01`, 2027-01-01 → `2026-W53`).

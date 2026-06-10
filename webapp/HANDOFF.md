@@ -43,6 +43,32 @@ How to verify quickly:
 
 ➡️  PASTE TO LEAD: "Validate Questline webapp P1 against the spec. Reply PASS or a numbered fix list."
 
+**LEAD VERDICT: 🔶 FIX (1 item — real, year-boundary-critical)**
+
+What's right (lead re-verified fresh): 49/49 tests pass, lint clean, `lib/types.ts` matches
+docs/02 field-for-field, `xp.ts` is the exact §5 formula, `streaks.ts` matches §6, §8 + gap
+vectors reproduce. Strong phase overall.
+
+**1. FIX — `periodKeyFor('weekly', …)` uses the CALENDAR year, not the ISO week-year**
+(`lib/domain/period-keys.ts:20` — `date.getFullYear()`). Proven with a fresh failing test the
+lead added at `lib/domain/__tests__/leadcheck-isoweek.test.ts`:
+- `2024-12-30` (Mon) → returns `2024-W01`, ISO-correct is **`2025-W01`** — end-of-December maps
+  into the *January week of the wrong year*.
+- `2027-01-01` (Fri) → returns `2027-W53`, ISO-correct is **`2026-W53`**.
+The backend uses Postgres `IYYY-IW` (week-year-correct), so client and server would disagree at
+EVERY year boundary → broken weekly streaks + duplicate/missing instances around New Year.
+`getISOWeek()`'s own docstring even promises a `weekYear` it never returns. Fix:
+- Return `{ weekYear, weekNumber }` from `getISOWeek` (the Thursday-shifted date's
+  `getUTCFullYear()` IS the week-year — one line) and use `weekYear` in `periodKeyFor`.
+- `nextPeriodKey('weekly')` inherits the fix via `periodKeyFor`; while in there, keep the date
+  math consistently UTC (`mondayOfISOWeek` builds UTC dates but then `setDate`/local methods are
+  used — fine in UTC+2, fragile elsewhere; normalize to UTC accessors).
+- Make the lead's probe test pass (rename/move it into your test file if you prefer) and add it
+  to the §1 boundary suite. Evidence: `npx vitest run` all green incl. these 3.
+
+Everything else in P1 stands — on this fix, P1 is PASS and P2 (auth) may start. iOS iP1 waits
+for this fix to land first (shared-codebase rule).
+
 ## 🔖 P0 — Scaffold + run · commit `f45be66` · 2026-06-10
 ```
 🔖 QUESTLINE — VALIDATION REQUEST

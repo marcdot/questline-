@@ -31,6 +31,14 @@ How to verify quickly:
 ```
 
 ➡️  PASTE TO LEAD: "Re-validate Questline ios iP0. Fixes applied per the verdict. Reply PASS or a numbered fix list."
+
+**LEAD VERDICT: ✅ PASS** (commit `397076a`)
+
+Lead re-verified fresh: 4 PNGs present in `public/icons/` (incl. 180×180 apple-touch-icon and a
+dedicated maskable), manifest points at the PNGs with `theme_color #F4F2ED`, `npm run lint` →
+clean, `npx vitest run` → 49/49. All three fix items closed. **iP1 (app-shell wiring) may start
+AFTER the webapp P1 ISO-week fix lands** — one agent in `webapp/` at a time per the
+shared-codebase rule; the P1 fix is small, then iP1 has the repo.
   
 <!-- newest entry on top -->
 
