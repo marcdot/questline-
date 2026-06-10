@@ -8,93 +8,130 @@
  *   yearly:  YYYY            (e.g. "2026")
  *
  * Weeks use ISO-8601 (Monday-start, week 1 contains first Thursday).
- * All functions are pure — no side effects, easy to test.
+ * All ISO-week math uses UTC dates constructed from local components
+ * so that `new Date(y, m, d)` arguments produce the expected result.
  */
 import type { Cadence } from '@/lib/types';
 
+/** Build a UTC noon Date from local year/month/day to avoid timezone drift. */
+function utcNoon(y: number, m: number, d: number): Date {
+  return new Date(Date.UTC(y, m, d, 12, 0, 0));
+}
+function utcNoonFromDate(date: Date): Date {
+  return utcNoon(date.getFullYear(), date.getMonth(), date.getDate());
+}
+
+/* ─── Public API ─── */
+
 /**
  * Return the period key for a given cadence and date.
- * An empty string returns the key for today.
  */
 export function periodKeyFor(cadence: Cadence, date: Date = new Date()): string {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-
   switch (cadence) {
-    case 'daily':
-      return `${year}-${month}-${day}`;
-    case 'weekly': {
-      // ISO week number
-      const isoWeek = getISOWeek(date);
-      return `${year}-W${String(isoWeek).padStart(2, '0')}`;
+    case 'daily': {
+      const y = date.getFullYear();
+      const m = String(date.getMonth() + 1).padStart(2, '0');
+      const d = String(date.getDate()).padStart(2, '0');
+      return `${y}-${m}-${d}`;
     }
-    case 'monthly':
-      return `${year}-${month}`;
+    case 'weekly': {
+      const u = utcNoonFromDate(date);
+      const { weekYear, weekNumber } = getISOWeek(u);
+      return `${weekYear}-W${String(weekNumber).padStart(2, '0')}`;
+    }
+    case 'monthly': {
+      const y = date.getFullYear();
+      const m = String(date.getMonth() + 1).padStart(2, '0');
+      return `${y}-${m}`;
+    }
     case 'yearly':
-      return `${String(year)}`;
+      return String(date.getFullYear());
   }
 }
 
 /**
- * Compute the ISO week number and year for a date.
- * ISO-8601: week 1 contains the first Thursday of the year.
- * Returns { weekYear, weekNumber } where weekYear may differ from the date's year.
+ * Compute the ISO week-year and week number for a date.
+ *
+ * ISO-8601: weeks are Monday-to-Sunday, week 1 contains the first Thursday.
+ * The week-year may differ from the calendar year.
+ *
+ * Accepts any Date (local or UTC) and normalises internally.
+ *
+ * Returns { weekYear, weekNumber }.
  */
-export function getISOWeek(date: Date): number {
-  const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
-  // Thursday of same week
-  const dayNum = d.getUTCDay() || 7; // Mon=1..Sun=7
-  d.setUTCDate(d.getUTCDate() + 4 - dayNum);
-  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
-  return Math.ceil(((d.getTime() - yearStart.getTime()) / 86400000 + 1) / 7);
-}
+export function getISOWeek(date: Date): { weekYear: number; weekNumber: number } {
+  // Normalise to UTC noon from local components to avoid timezone day-shift
+  const d = utcNoon(date.getFullYear(), date.getMonth(), date.getDate());
 
-/**
- * Get the date of the Monday of an ISO week.
- */
-export function mondayOfISOWeek(weekYear: number, weekNumber: number): Date {
-  const simple = new Date(Date.UTC(weekYear, 0, 4)); // Jan 4 is always in week 1
-  const dayNum = simple.getUTCDay() || 7;
-  const mondayOfWeek1 = new Date(simple);
-  mondayOfWeek1.setUTCDate(simple.getUTCDate() - dayNum + 1);
-  const result = new Date(mondayOfWeek1);
-  result.setUTCDate(mondayOfWeek1.getUTCDate() + (weekNumber - 1) * 7);
-  return result;
+  // Move to Thursday of the same ISO week.
+  // Thursday determines which week-year this week belongs to.
+  const dow = d.getUTCDay() || 7; // Mon=1 … Sun=7
+  d.setUTCDate(d.getUTCDate() + 4 - dow);
+  const weekYear = d.getUTCFullYear();
+
+  // Jan 4 of the week-year is always in ISO week 1.
+  const jan4 = new Date(Date.UTC(weekYear, 0, 4, 12, 0, 0));
+  const jan4Dow = jan4.getUTCDay() || 7;
+  // Monday of the week containing Jan 4 (this is day 1 of ISO week 1)
+  const mondayWeek1 = new Date(jan4);
+  mondayWeek1.setUTCDate(jan4.getUTCDate() - (jan4Dow - 1));
+
+  // Find the Monday of the input date's ISO week.
+  const inputDow = d.getUTCDay() || 7;
+  const inputMonday = new Date(d);
+  inputMonday.setUTCDate(d.getUTCDate() - (inputDow - 1));
+
+  // Week number = how many weeks since week-1 Monday (+1).
+  const msPerWeek = 7 * 86400 * 1000;
+  const diff = inputMonday.getTime() - mondayWeek1.getTime();
+  const weekNumber = Math.floor(diff / msPerWeek) + 1;
+
+  return { weekYear, weekNumber };
 }
 
 /**
  * Compute the next period key after a given one for a cadence.
- * Used by idempotent-streak detection.
  */
 export function nextPeriodKey(currentKey: string, cadence: Cadence): string {
   switch (cadence) {
     case 'daily': {
-      const d = new Date(currentKey + 'T00:00:00');
-      d.setDate(d.getDate() + 1);
-      return periodKeyFor('daily', d);
+      const d = new Date(currentKey + 'T12:00:00Z');
+      d.setUTCDate(d.getUTCDate() + 1);
+      return periodKeyFor('daily', new Date(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
     }
     case 'weekly': {
-      // currentKey is "YYYY-WNN"
-      const match = currentKey.match(/^(\d{4})-W(\d{2})$/);
+      const match = currentKey.match(/^(\d{4})-W(\d{2})$/i);
       if (!match) throw new Error(`Invalid weekly period key: ${currentKey}`);
-      const weekYear = parseInt(match[1], 10);
+      const year = parseInt(match[1], 10);
       const weekNum = parseInt(match[2], 10);
-      const monday = mondayOfISOWeek(weekYear, weekNum);
-      monday.setDate(monday.getDate() + 7);
-      return periodKeyFor('weekly', monday);
+      const monday = mondayOfISOWeek(year, weekNum);
+      monday.setUTCDate(monday.getUTCDate() + 7);
+      return periodKeyFor('weekly', new Date(monday.getUTCFullYear(), monday.getUTCMonth(), monday.getUTCDate()));
     }
     case 'monthly': {
       const [y, m] = currentKey.split('-').map(Number);
-      const d = new Date(y, m - 1, 1); // month is 1-indexed in key, 0-indexed in Date
-      d.setMonth(d.getMonth() + 1);
-      return periodKeyFor('monthly', d);
+      const d = new Date(Date.UTC(y, m - 1, 1, 12, 0, 0));
+      d.setUTCMonth(d.getUTCMonth() + 1);
+      return periodKeyFor('monthly', new Date(d.getUTCFullYear(), d.getUTCMonth()));
     }
     case 'yearly': {
       const year = parseInt(currentKey, 10);
       return String(year + 1);
     }
   }
+}
+
+/**
+ * Get the Monday of an ISO week.
+ */
+export function mondayOfISOWeek(weekYear: number, weekNumber: number): Date {
+  const jan4 = new Date(Date.UTC(weekYear, 0, 4, 12, 0, 0));
+  const jan4Dow = jan4.getUTCDay() || 7;
+  const mondayWeek1 = new Date(jan4);
+  mondayWeek1.setUTCDate(jan4.getUTCDate() - (jan4Dow - 1));
+  const result = new Date(mondayWeek1);
+  result.setUTCDate(mondayWeek1.getUTCDate() + (weekNumber - 1) * 7);
+  return result;
 }
 
 /**
@@ -108,7 +145,7 @@ export function detectCadence(periodKey: string): Cadence {
 }
 
 /**
- * Get the ISO weekday index (1=Monday..7=Sunday) for a date.
+ * Get the ISO weekday index (1=Monday..7=Sunday) for a local date.
  */
 export function getISODay(date: Date): number {
   return date.getDay() || 7;

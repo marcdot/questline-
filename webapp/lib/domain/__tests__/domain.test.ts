@@ -50,20 +50,34 @@ describe('periodKeyFor', () => {
 });
 
 describe('getISOWeek', () => {
-  it('returns 1 for 2026-01-01 (Thursday — week 1)', () => {
-    expect(getISOWeek(new Date(2026, 0, 1))).toBe(1);
+  it('returns 1 for 2026-01-01 (Thursday — week 1 of 2026)', () => {
+    const r = getISOWeek(new Date(2026, 0, 1));
+    expect(r.weekNumber).toBe(1);
+    expect(r.weekYear).toBe(2026);
   });
 
   it('returns 24 for 2026-06-10 (Wednesday)', () => {
-    expect(getISOWeek(new Date(2026, 5, 10))).toBe(24);
+    expect(getISOWeek(new Date(2026, 5, 10)).weekNumber).toBe(24);
   });
 
   it('returns 23 for 2026-06-07 (Sunday — still week 23)', () => {
-    expect(getISOWeek(new Date(2026, 5, 7))).toBe(23);
+    expect(getISOWeek(new Date(2026, 5, 7)).weekNumber).toBe(23);
   });
 
   it('returns 24 for 2026-06-08 (Monday — week 24)', () => {
-    expect(getISOWeek(new Date(2026, 5, 8))).toBe(24);
+    expect(getISOWeek(new Date(2026, 5, 8)).weekNumber).toBe(24);
+  });
+
+  it('2024-12-30 (Mon) is ISO 2025-W01 (year boundary)', () => {
+    const r = getISOWeek(new Date(2024, 11, 30));
+    expect(r.weekNumber).toBe(1);
+    expect(r.weekYear).toBe(2025);
+  });
+
+  it('2027-01-01 (Fri) is ISO 2026-W53 (year boundary)', () => {
+    const r = getISOWeek(new Date(2027, 0, 1));
+    expect(r.weekNumber).toBe(53);
+    expect(r.weekYear).toBe(2026);
   });
 });
 
