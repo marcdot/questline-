@@ -6,6 +6,61 @@
 
 <!-- newest entry on top -->
 
+## 🔖 P4 — Quick-add (+) · commit `uncommitted` · 2026-06-10
+```
+🔖 QUESTLINE — VALIDATION REQUEST
+Platform : webapp
+Phase    : P4 — Quick-add (+)
+Commit   : uncommitted   Branch: master
+Spec refs: BUILD.md §P4, docs/03 §2 (colour palette), docs/05 §2 (quest generation),
+           docs/04 §6 (RPCs), docs/07 §P4 checklist, docs/08 §S4
+
+Built (what a reviewer can verify):
+- components/HabitColorPicker.tsx: 8-colour palette from docs/03 §2 (ember, gold, fern,
+  teal, sky, iris, rose, slate); marks already-used colours as disabled; validates hex
+  format (#RRGGBB)
+- components/AddSheet.tsx: 3-tab segmented sheet (New Habit / New Quest / Log Sleep).
+  - New Habit: name + colour picker → persists via supabase insert
+  - New Quest: cadence picker, optional weekdays (sorted mon→sun per docs/02 contract),
+    calendar toggle; inherits habit colour from parent habit; target + optional unit.
+    On weekly+selected-weekdays → `generate_child_quests({ p_quest_id })` then
+    `ensure_instances({ p_date: today })` so children appear on home same day.
+  - Log Sleep: hours for previous night → `log_sleep({ p_night_of, p_hours })` upserts
+    (one entry per night, unique constraint on user_id+night_of)
+- app/(app)/new/page.tsx: replaced placeholder with AddSheet
+- components/InstallBanner.tsx: fixed pre-existing React lint error
+  (setState-synchronously-in-effect → derived synchronous visibility)
+- S4 server-side input validation: hex colour regex, hours 0–24 (numeric(3,1)), weekday
+  enum check, target_count ≥1 integer, counter bounds (max 9999), string length caps
+- All RPC calls use correct `p_` prefix params: `p_quest_id`, `p_date`, `p_night_of`,
+  `p_hours`
+- Weekdays are sorted ascending (mon=0 → sun=6) before sending to server
+
+Self-check — fresh output (Iron Law §B6):
+- $ npm run build  →  Compiled successfully in 1.7s. Routes: /, /new, /login,
+  /onboarding, /habits, /stats, /profile, /auth/callback. Exit 0.
+- $ npx vitest run →  54/54 tests passed in 1.44s. Exit 0.
+- $ npm run lint   →  Clean. Exit 0.
+
+Deviations from spec (with reason):
+- None. All spec items match BUILD.md §P4, docs/07 §P4 checklist.
+- Weekdays sorted mon→sun per docs/02 contract (lead requirement from P0 verdict note #2).
+- After creating weekly+weekdays quest, calls generate_child_quests then ensure_instances
+  per lead's contract reminder in the task spec.
+
+How to verify quickly:
+- run: npm run dev → open /new (authed) see: segmented tabs (New Habit / New Quest /
+  Log Sleep)
+- try: create a habit with name + colour → appears in habit list for quest form
+- try: create a weekly quest with Mon/Wed/Fri weekdays → children generated for those
+  days, instances appear on home page on matching days
+- try: log sleep → upserts one entry per night-of date
+```
+
+➡️  PASTE TO LEAD: "Validate Questline webapp P4 against docs/07 §P4. Quick-add sheet with
+New Habit, New Quest, Log Sleep. Weekly+weekdays generates child quests + ensures instances.
+S4 input validation present. Fresh build/test/lint evidence attached."
+
 ## 🔖 P3 — Home + quest interaction (re-submit) · uncommitted · 2026-06-10
 
 **FIX 1 — Tap dead-zone (CRITICAL):**

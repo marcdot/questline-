@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useDisplayMode } from '@/lib/platform';
 
 /**
@@ -29,16 +29,10 @@ function dismiss() {
 
 export default function InstallBanner() {
   const { platform, standalone } = useDisplayMode();
-  const [visible, setVisible] = useState(false);
+  // Derive initial visibility synchronously — no setState in effect
+  const [dismissed, setDismissed] = useState(isDismissed());
 
-  useEffect(() => {
-    // Show only on iPhone in Safari (not standalone, not dismissed)
-    if (platform === 'ios' && !standalone && !isDismissed()) {
-      setVisible(true);
-    }
-  }, [platform, standalone]);
-
-  if (!visible) return null;
+  if (platform !== 'ios' || standalone || dismissed) return null;
 
   return (
     <div className="install-banner">
@@ -52,7 +46,7 @@ export default function InstallBanner() {
       <div className="install-banner__actions">
         <button
           className="install-banner__dismiss"
-          onClick={() => { dismiss(); setVisible(false); }}
+          onClick={() => { dismiss(); setDismissed(true); }}
           aria-label="Dismiss"
         >
           &times;

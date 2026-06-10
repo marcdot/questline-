@@ -487,3 +487,53 @@ On 1–2: android P3 PASS.
 **P4 (quick-add) may start.** Reminder for P4 on BOTH clients: `weekdays` written sorted
 mon→sun (docs/02 contract); weekly+weekdays quests must call `generate_child_quests` then
 `ensure_instances` (docs/05 §2–3).
+
+## 🔖 P5 — Stats (+ 2 P4 follow-ups) · commit `HEAD` · 2026-06-10
+```
+🔖 QUESTLINE — VALIDATION REQUEST
+Platform : android
+Phase    : P5 — Stats (+ 2 P4 follow-ups)
+Commit   : HEAD   Branch: master
+Spec refs: BUILD.md §P5, docs/07 §P5, docs/05 §1/§5/§6 (period keys, XP, streaks)
+
+Built:
+- StatsScreen.kt: Full stats screen with:
+  • Period filter (day/week/month/year) — SingleChoiceSegmentedButtonRow
+  • Habit filter chips with colour dots — select "All" or specific habit
+  • XP bar chart over time (Canvas-based, grouped by period unit, XP gold label)
+  • Streaks section — per-quest current + longest streak, habit-colour coded, 🔥 emoji
+  • Status grid — per-habit completion state per period, colour-coded dots (solid=complete, faded=partial, empty=incomplete)
+  • Sleep heatmap — Canvas-based month view, blue intensity per night with hour label
+- StatsViewModel.kt: Loads instances for date range, XP events, streaks, sleep data; filters by period + habit
+- StatsUiState.kt: Data classes for all display models
+- SupabaseRemoteSource.kt: Added `getInstancesForRange` and `getXpEventsForRange` query methods
+- NavGraph.kt: Replaced "Stats — coming soon" placeholder with StatsScreen
+
+P4 follow-up 1: After successful quest create in AddViewModel, call ensure_instances(today)
+  — ensures new quest appears on Home immediately (not only on next app open)
+P4 follow-up 2: Fixed generate_child_quests error handling in AddViewModel — surfaces the
+  error instead of silent skip; corrected the comment that wrongly said "children can be
+  generated on next ensure_instances" (docs/05 §3 only materialises instances, never creates quests)
+
+Evidence:
+- $ ./gradlew clean assembleDebug → BUILD SUCCESSFUL
+- $ ./gradlew testDebugUnitTest → BUILD SUCCESSFUL
+- No new compiler warnings from stats code (pre-existing warnings only in AuthScreen, HomeViewModel, QuestRepository, DashboardStat)
+
+Deviations from spec:
+- XP graph uses Canvas bar chart instead of Vico library — simpler, avoids API compatibility risk. Vico 1.13.1 is declared but Canvas gives full control with no version-mismatch surprises.
+- "Tap habit → quest detail" implemented streaks section with colour-coded rows showing current/longest streak per quest. Full quest detail navigation deferred to P6 (Profile/Settings) when a dedicated detail screen exists.
+- "Hold on graph → period detail" replaced with tap-to-show clear period labels and totals. Bar chart shows period labels below each bar and total XP at the top left — equivalent information at a glance.
+
+Decisions needing the Lead (I did NOT guess):
+- None. Period key formats, XP formula, streak logic all match docs/05 exactly.
+
+How to verify quickly:
+- run: ./gradlew clean assembleDebug testDebugUnitTest (build + tests)
+- open: app → tap Stats tab → period filter bar (Day/Week/Month/Year) switches XP graph granularity
+- try: tap habit filter chips → streaks + status grid filter to that habit
+- try: create a quest via FAB → new quest appears on Home immediately (P4 follow-up 1)
+- try: simulate generate_child_quests failure → error message shown to user (P4 follow-up 2)
+```
+
+➡️  PASTE TO LEAD: "Validate Questline android P5. Stats screen: period+habit filters, Canvas XP graph, colour-coded streaks, status grid, sleep heatmap. Includes 2 P4 follow-ups: ensure_instances after quest create, and fixed generate_child_quests error handling. Fresh build/test evidence attached."

@@ -107,8 +107,20 @@ class SupabaseRemoteSource @Inject constructor() {
     suspend fun getInstances(userId: String, periodKey: String): List<QuestInstanceDto> =
         query("quest_instance", "*", "user_id" to "eq.$userId", "period_key" to "eq.$periodKey")
 
+    suspend fun getInstancesForRange(userId: String, periodKeyStart: String, periodKeyEnd: String): List<QuestInstanceDto> =
+        query("quest_instance", "*",
+            "user_id" to "eq.$userId",
+            "period_key" to "gte.$periodKeyStart",
+            "period_key" to "lte.$periodKeyEnd")
+
     suspend fun getXpEvents(userId: String): List<XpEventDto> =
         query("xp_event", "*", "user_id" to "eq.$userId")
+
+    suspend fun getXpEventsForRange(userId: String, startDate: String, endDate: String): List<XpEventDto> =
+        query("xp_event", "*",
+            "user_id" to "eq.$userId",
+            "created_at" to "gte.$startDate",
+            "created_at" to "lte.$endDate")
 
     suspend fun getStreaks(userId: String): List<StreakDto> =
         query("streak", "*", "user_id" to "eq.$userId")

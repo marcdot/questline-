@@ -214,9 +214,28 @@ class AddViewModel @Inject constructor(
                     if (cadence != "daily" && weekdays.isNotEmpty()) {
                         try {
                             remoteSource.generateChildQuests(created.id)
-                        } catch (_: Exception) {
-                            // Non-fatal: children can be generated on next ensure_instances
+                        } catch (e: Exception) {
+                            // Surface the error — ensure_instances does NOT create child quests
+                            // (docs/05 §3 only materialises instances for EXISTING quests).
+                            // If generate_child_quests fails, weekly+ weekdays quests never
+                            // produce daily children. Log and set questError so the user
+                            // can retry.
+                            _uiState.update {
+                                it.copy(
+                                    isCreatingQuest = false,
+                                    questError = "Child quest generation failed: ${e.message}. Please try again.",
+                                )
+                            }
+                            return@launch
                         }
+                    }
+
+                    // P4 follow-up: ensure instances exist for today so the new quest
+                    // appears immediately on Home (not only on next app open).
+                    try {
+                        remoteSource.ensureInstances(java.time.LocalDate.now().toString())
+                    } catch (_: Exception) {
+                        // Non-fatal: instances will be created on next app launch
                     }
 
                     _uiState.update {

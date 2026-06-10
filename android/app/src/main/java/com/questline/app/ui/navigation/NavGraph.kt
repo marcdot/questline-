@@ -13,6 +13,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.questline.app.ui.screens.home.HomeScreen
+import com.questline.app.ui.screens.stats.StatsScreen
 
 @Composable
 fun NavGraph(
@@ -33,7 +34,7 @@ fun NavGraph(
         }
 
         composable(Screen.Stats.route) {
-            PlaceholderScreen(title = "Stats")
+            StatsScreen()
         }
 
         composable(Screen.Profile.route) {
