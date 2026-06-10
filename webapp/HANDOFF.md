@@ -102,7 +102,33 @@ the Phase A test pattern). Also: correct the "httpOnly" claims in the comments/V
 `@supabase/ssr` cookies are intentionally JS-readable (the browser client needs them); that IS
 the accepted pattern, so describe it honestly rather than claiming httpOnly.
 
-On 0–3: P2 PASS and P3 (the core loop — hard gate, budget iteration) may start.
+- **Next**: webapp P2 (auth + onboarding) may start now
+
+## 🔖 P2 — Auth + onboarding (re-submit after fixes) · commit `3597457` · 2026-06-10
+
+**FIX 0 — Work committed:** P2 work now at `3597457` (was claimed as `ae413c6` which never existed).
+
+**FIX 1 — `hasOnboarded` count bug fixed in `proxy.ts` + `auth/callback/route.ts`:**
+- Was: `const { data: habits } = await supabase.from('habit').select('id', { count: 'exact', head: true }).limit(1)` then `habits.length > 0` — but `head: true` suppresses data body (always returns null)
+- Now: `const { count } = await supabase.from('habit').select('*', { count: 'exact', head: true })` then `(count ?? 0) > 0`
+
+**FIX 2 — Onboarding uses `ensure_instances` RPC instead of direct `quest_instance` insert:**
+- Was: `supabase.from("quest_instance").insert({ user_id, quest_id, period_key, progress, target_count })`
+- Now: `supabase.rpc("ensure_instances", { date: today })` — matches the spec docs/04 §6
+
+**FIX 3 — False "httpOnly" comment corrected:**
+- Was: `See: docs/08 §S3 — sessions stored in httpOnly cookies only.`
+- Now: `See: docs/08 §S3 — sessions via @supabase/ssr (cookie-based, not localStorage).`
+
+**Evidence (fresh output, Iron Law):**
+- `$ npm run build` → Compiled successfully, exit 0. Routes: `/` (static), `/login` (static), `/onboarding` (static), `/auth/callback` (dynamic), Proxy active
+- `$ npx vitest run` → 54/54 tests passed in 1.35s
+- `$ npm run lint` → Clean, exit 0
+
+**Deviations from spec:**
+- None. All 3 fixes address lead findings precisely.
+
+➡️  PASTE TO LEAD: "Re-validate Questline webapp P2. 3 FIX items applied (hasOnboarded count, ensure_instances RPC, comment). Fresh build, test, lint evidence attached."
 
 ## 🔖 P1 — Data layer + backend wiring · commit `184b79b` · 2026-06-10
 ```

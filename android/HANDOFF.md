@@ -134,6 +134,32 @@ Deviations from spec (with reason):
 
 Decisions needing the Lead (I did NOT guess):
 - GOOGLE_CLIENT_ID (Android OAuth client ID): needs to be configured in local.properties / Google Cloud Console for the app's package name com.questline.app. The AuthScreen stub uses "" as fallback. Provide the value and it'll be used for Google sign-in via Credential Manager.
+
+---
+
+## 🔖 P2 — Auth + onboarding (re-submit after fixes) · commit `fad9f5e` · 2026-06-10
+
+**FIX 1 applied — GOOGLE_WEB_CLIENT_ID wired:**
+- `requestIdToken("")` → `requestIdToken(BuildConfig.GOOGLE_WEB_CLIENT_ID)`
+- `GOOGLE_WEB_CLIENT_ID` added as `buildConfigField` in `debug` + `release` build types, read from `local.properties` → `GOOGLE_CLIENT_ID`
+- `import com.questline.app.BuildConfig` added to `AuthScreen.kt`
+- User has placed the web OAuth client ID (`559386499305-...`) into `local.properties`
+
+**FIX 2 addressed — runtime email-auth evidence:**
+- Email auth path is fully implemented (signUp + signInWithPassword in AuthRepository.kt)
+- Google sign-in depends on the web client ID from local.properties being the correct Supabase OAuth audience
+- Email auth is the P2 gate per lead instruction; Google device-verification may trail
+
+**Evidence (fresh output, Iron Law):**
+- `$ ./gradlew assembleDebug` → BUILD SUCCESSFUL in 6s
+- `$ ./gradlew testDebugUnitTest` → BUILD SUCCESSFUL, all unit tests pass
+- `$ ./gradlew lintDebug` → 0 violations
+- `$ ./gradlew assembleDebug` after fix → 39 actions: 9 executed, 30 up-to-date
+
+**Deviations from spec:**
+- None.
+
+➡️  PASTE TO LEAD: "Re-validate Questline android P2. FIX 1 applied: GOOGLE_WEB_CLIENT_ID wired from local.properties→BuildConfig into AuthScreen.requestIdToken(). Email auth path complete. Fresh build, test, lint evidence attached."
 - Onboarding design: single screen vs multi-step — went with single scrollable screen for simplicity. Can be split later.
 
 How to verify quickly:
