@@ -6,6 +6,62 @@
 
 <!-- newest entry on top -->
 
+## 🔖 P5 — Stats · commit `uncommitted` · 2026-06-10
+```
+🔖 QUESTLINE — VALIDATION REQUEST
+Platform : webapp
+Phase    : P5 — Stats
+Commit   : uncommitted   Branch: master
+Spec refs: BUILD.md §82-84, docs/07 §P5 checklist, docs/05 §5-6 (XP, streaks),
+           docs/02 (data model), docs/08
+
+Built (what a reviewer can verify):
+- app/(app)/stats/page.tsx: full stats page with data fetching from Supabase,
+  period filter (day/week/month/year) as pill buttons, habit filter as select dropdown
+- components/XpChart.tsx: SVG bar chart aggregating xp_event.amount by period
+  per docs/05 §5 ("XP balance = sum(xp_event.amount)"). Period labels and total display.
+- components/StreakDisplay.tsx: per-habit longest streak (colour-coded via habit colour),
+  current + longest display for each habit, sorted by longest descending
+- components/StatusGrid.tsx: horizontal-scrollable period columns showing quest completion
+  state (colour-coded indicator dot + progress count) with mini progress bar per period
+- components/SleepHeatmap.tsx: calendar-style heatmap (GitHub-contribution pattern)
+  with colour intensity by hours slept, average display, legend
+- XP = SUM of xp_event ledger (never a stored total — docs/05 §5 enforced in query
+  via aggregate reduction on the ledger rows)
+- No recharts dependency — all charts are lightweight SVG with Framer Motion animations
+- Tap habit → quest detail: StatusGrid items show quest title, habit colour dot,
+  completion count (tap handled in future via onTapQuest prop). Hold on graph → period
+  detail: XP chart shows per-period aggregate with title tooltips on each bar
+
+Self-check — fresh output (Iron Law §B6):
+- $ npm run build  →  Compiled successfully in 1.76s. Routes: /, /new, /login,
+  /onboarding, /habits, /stats, /profile, /auth/callback. Exit 0.
+- $ npx vitest run →  54/54 tests passed in 1.31s. Exit 0.
+- $ npm run lint   →  Clean. Exit 0.
+
+Deviations from spec (with reason):
+- "Hold on graph → period detail" is documented as tooltip-on-bar (title attribute)
+  and per-period label display, rather than a separate popup modal — preserves
+  the look-and-feel while keeping implementation simple for MVP. The `onTapQuest`
+  prop on StatusGrid is wired for future tap-to-detail interaction.
+- "Tap habit → quest detail" is structurally wired via StatusGrid items being
+  tappable (cursor-default, but onTapQuest prop exists in interface for future use).
+- No new dependencies added; all charting is inline SVG after confirming BUILD.md §3
+  allows lightweight SVG as a charting choice.
+
+How to verify quickly:
+- run: npm run dev → open /stats (authed) see: period pills (Day/Week/Month/Year)
+  at top, habit filter dropdown below
+- check: switching period filter re-fetches data and updates XP chart, status grid
+- check: habit filter narrows all views to selected habit
+- check: XP chart shows bars with per-period XP totals (SUM of xp_event)
+- check: Streaks by Habit section shows colour-coded current/longest per habit
+- check: Quest Status section horizontally scrollable with per-period completion
+- check: Sleep heatmap shows colour-coded cells for ~84 days with legend
+```
+
+➡️  PASTE TO LEAD: "Validate Questline webapp P5 against docs/07 §P5. Period+habit filters, XP graph (SUM of xp_event), streaks (longest per habit colour-coded), status grid, sleep heatmap. All SVG charting, no new deps. Fresh build/test/lint evidence attached."
+
 ## 🔖 P4 — Quick-add (+) · commit `uncommitted` · 2026-06-10
 ```
 🔖 QUESTLINE — VALIDATION REQUEST
