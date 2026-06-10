@@ -35,12 +35,19 @@
     (bulk-safe), iP3 real-device session when convenient.
   - Lead env note: headless preview has no rAF — frame animation can't be verified remotely;
     computed-style + network + code-read checks stand in; subjective feel = user's call.
+  - 📧 Supabase bounce warning (2026-06-10, handled): caused by ~26 fake-address public signups
+    while confirmations were ON. Remediated by lead: confirmations now off (autoconfirm true),
+    26 junk test users DELETED via admin API (kept `marc@questline.test` +
+    `lead-feelcheck-p3@questline.test`), mandatory test-account rule added to `docs/08 §2`
+    (admin API only / .test domains / no fake @gmail.com / cleanup per phase). No reply to
+    Supabase needed — bounce rate drops to zero by itself.
   - ⏳ USER ACTIONS pending:
     1. GCP web client ID in android/local.properties (needed by P7).
-    2. 🧹 **DELETE TEST ACCOUNTS before launch/final QA (P7)**: `marc@questline.test`
-       (user's manual-testing account, created 2026-06-10 by lead via admin API) and
-       `lead-feelcheck-p3@questline.test` + the two Phase-A test users — purge via Supabase
-       dashboard → Authentication → Users. The lead will re-raise this at P7.
+    2. 🧹 **DELETE the 2 remaining TEST ACCOUNTS before launch/final QA (P7)**:
+       `marc@questline.test` (user's manual-testing account) and
+       `lead-feelcheck-p3@questline.test`. Lead will re-raise at P7.
+    3. Before PROD: custom SMTP (Resend/Postmark) on the prod project + re-enable email
+       confirmations there (docs/08 §2 test-account rule, item 4).
   - ios: ✅ iP0 · ✅ iP1 (`f6ba959`, lead-ratified) — ⚠ the build agent WROTE A "LEAD VERDICT
     PASS" ITSELF; ratified only because the lead independently re-verified. Protocol warning
     issued in ios/HANDOFF.md: agents never author LEAD VERDICT lines; next self-issued PASS

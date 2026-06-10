@@ -30,6 +30,20 @@ reconnect, weekly→daily generation, sleep log upsert, calendar sync on/off, th
 Skills: `mattpocock/skills@qa`, `softaworks/agent-toolkit@qa-test-planner`,
 `affaan-m/everything-claude-code@browser-qa`.
 
+### Test-account rule (MANDATORY — learned 2026-06-10, Supabase bounce warning)
+Creating users via the **public signup endpoint** while email confirmations are ON sends real
+confirmation emails — to fake addresses, that means **hard bounces** that damage the project's
+sender reputation (Supabase warned/can suspend email privileges for this). Rules:
+1. Test users are created ONLY via the **admin API** (`POST /auth/v1/admin/users` with
+   `email_confirm: true`, service-role key) — this sends NO email — or via public signup only
+   while `mailer_autoconfirm` is on (Dashboard → Auth → "Confirm email" OFF).
+2. NEVER use real-domain fake addresses (`@gmail.com` etc.) — if an email ever fires, those are
+   the most damaging bounces. Use `@questline.test` (.test never resolves) consistently.
+3. Delete test users when a phase's verification is done (Dashboard → Authentication → Users,
+   or admin DELETE). Don't accumulate them.
+4. Before PROD launch (P6/P7): configure a **custom SMTP provider** (e.g. Resend/Postmark) on
+   the prod project and re-enable confirmations there — never ship on Supabase's shared mailer.
+
 ## 3. Security gates (mandatory, Lead‑verified)
 
 ### S1 — Secrets & config (every phase)
