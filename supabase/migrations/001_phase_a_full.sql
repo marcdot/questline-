@@ -293,6 +293,7 @@ declare
   v_streak_longest int;
   v_streak_last text;
   v_streak_new_current int;
+  v_streak_quest_id uuid;
   v_event_exists bool;
   v_result jsonb;
 begin
@@ -304,15 +305,19 @@ begin
       'applied', false,
       'instance', row_to_json(qi.*),
       'xp_granted', 0,
-      'streak_after', coalesce((select current from public.streak where quest_id = qi.quest_id), 0)
+      'streak_after', coalesce((select current from public.streak where quest_id = v_streak_quest_id), 0)
     ) into v_result
     from public.quest_instance qi where qi.id = p_instance_id;
     return v_result;
   end if;
 
-  -- Resolve user, quest, and cadence from the instance
-  select qi.user_id, qi.quest_id, q.cadence, qi.progress, qi.target_count, qi.period_key
-    into strict v_user_id, v_quest_id, v_cadence, v_old_progress, v_target, v_period_key
+  -- Resolve user, quest, and cadence from the instance.
+  -- For generated child quests (children of weekly+ parents), use the PARENT quest
+  -- for streak tracking so completions chain across children (docs/05 §6, §8).
+  select qi.user_id, qi.quest_id, q.cadence, qi.progress, qi.target_count, qi.period_key,
+         coalesce(q.generated_parent_id, qi.quest_id) as streak_quest_id
+    into strict v_user_id, v_quest_id, v_cadence, v_old_progress, v_target, v_period_key,
+         v_streak_quest_id
     from public.quest_instance qi
     join public.quest q on q.id = qi.quest_id
     where qi.id = p_instance_id;
@@ -348,10 +353,10 @@ begin
 
   -- On fresh completion: handle XP + streak
   if v_now_completed and p_kind != 'uncomplete' then
-    -- Read or initialise streak for this quest
+    -- Read or initialise streak for this quest (using parent quest for children)
     select current, longest, last_period_key
       into v_streak_current, v_streak_longest, v_streak_last
-      from public.streak where quest_id = v_quest_id;
+      from public.streak where quest_id = v_streak_quest_id;
 
     if v_streak_current is null then
       -- First completion ever for this quest
@@ -373,7 +378,7 @@ begin
     end if;
 
     insert into public.streak (user_id, quest_id, current, longest, last_period_key)
-      values (v_user_id, v_quest_id, v_streak_new_current, v_streak_longest, v_period_key)
+      values (v_user_id, v_streak_quest_id, v_streak_new_current, v_streak_longest, v_period_key)
       on conflict (quest_id) do update set
         current = v_streak_new_current,
         longest = v_streak_longest,
@@ -385,7 +390,7 @@ begin
       values (v_user_id, p_instance_id, v_xp_amount, 'quest_complete');
   else
     select current into v_streak_new_current
-      from public.streak where quest_id = v_quest_id;
+      from public.streak where quest_id = v_streak_quest_id;
     if v_streak_new_current is null then v_streak_new_current := 0; end if;
   end if;
 
