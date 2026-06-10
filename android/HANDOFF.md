@@ -1,3 +1,26 @@
+## 🔖 P4 — Quick-add (+) · commit `13cc7d3` · 2026-06-10
+```
+🔖 QUESTLINE — VALIDATION REQUEST
+Platform : android
+Phase    : P4 — Quick-add (+)
+Commit   : 13cc7d3   Branch: master
+Spec refs: BUILD.md §P4, docs/07 §P4, docs/05 §2 (quest generation)
+
+Built:
+- AddSheet.kt: Bottom-sheet with 3 tabs — New Habit (name + 8-colour picker), New Quest (habit select, title, cadence, weekday chips, calendar toggle), Log Sleep (date, hours slider)
+- AddViewModel.kt: Habit insert, quest create + generate_child_quests RPC for weekly+weekdays, sleep upsert via log_sleep RPC
+- Weekdays sorted mon→sun per docs/02 contract
+- Wired via MainScreen.kt FAB → showAddSheet state toggle
+
+Evidence:
+- $ ./gradlew clean assembleDebug → BUILD SUCCESSFUL
+- $ ./gradlew testDebugUnitTest → BUILD SUCCESSFUL
+
+How to verify: tap FAB → bottom-sheet with 3 tabs. Create habit → name + colour saved. Create quest → cadence picker + weekday chips (weekly+). Log sleep → date + hours upsert.
+```
+
+➡️  PASTE TO LEAD: "Validate Questline android P4. Quick-add bottom-sheet: habit, quest (with generate_child_quests), sleep. Weekdays sorted mon→sun."
+
 ## 🔖 P1 — Data layer + domain lib · commit `fe9176f` · 2026-06-10
 ```
 🔖 QUESTLINE — VALIDATION REQUEST
