@@ -5,7 +5,6 @@ import {
   JetBrains_Mono,
 } from "next/font/google";
 import "./globals.css";
-import AppShell from "@/app/components/AppShell";
 
 /* ─── Font loading (next/font/google — self-hosted, no FOUT) ─── */
 const bricolage = Bricolage_Grotesque({
@@ -62,9 +61,7 @@ export default function RootLayout({
       lang="en"
       className={`${bricolage.variable} ${hanken.variable} ${jetbrains.variable}`}
     >
-      <body>
-        <AppShell>{children}</AppShell>
-      </body>
+      <body>{children}</body>
     </html>
   );
 }
