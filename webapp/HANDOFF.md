@@ -42,6 +42,21 @@ How to verify quickly:
 ➡️  PASTE TO LEAD:  "Validate Questline webapp P0 against the spec. Reply PASS or a numbered fix list."
 ```
 
+**LEAD VERDICT: ✅ PASS** (P0 scope at commit `f45be66`)
+
+Lead re-ran fresh: `npm run build` → compiled clean, static routes `/` + `/_not-found`, exit 0.
+Token spot-check: `globals.css` values match DESIGN.md exactly (#F4F2ED/#FCFBF9/#1A1814/#D9542B/#B8902E).
+`.env.example` anon-only ✓, gitignore ✓. P0 is good — proceed to P1 (data layer) per BUILD.md.
+
+Two notes recorded (NOT P0 blockers):
+1. `npm run lint` at current HEAD shows 7 errors — none in P0 files. They live in the ios-stream
+   iP0 files (added to that stream's FIX list) and in **uncommitted `lib/domain/` + `lib/types.ts`
+   files**, i.e. webapp P1 work started before the P0 PASS. Protocol reminder: one phase at a
+   time, commit + VR per phase. The P1 work isn't wasted — commit it as the P1 phase with its own
+   Validation Request (with the docs/05 §8 vector test passing), and make it lint-clean.
+2. Per docs/02 (updated contract note): `quest.weekdays` must be written sorted mon→sun — applies
+   from P1 onward.
+
 ## (template)
 ```
 🔖 P<n> — <name> · commit <hash> · <date>

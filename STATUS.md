@@ -19,21 +19,26 @@
 - ✅ iOS approach DECIDED (2026-06-10): **web-based** — the webapp as an installable PWA with an
   iPhone app-shell mode. NO native Swift app. Full plan: `ios/BUILD.md` (iP0–iP7, each gated on a
   webapp phase; only iP0 is parallel-safe — additive files only). Code lives in `webapp/`.
-- 🔶 Client P0s: android P0 committed (`7218013`, VR pending lead review). Webapp P0 built but
-  **UNCOMMITTED** (its VR cites a nonexistent commit `987f1a2` — must commit + re-cite first).
-  **ios-iP0 NOT run yet** — Hermes executed the older 2-stream Task 2; the updated handoff has a
-  third stream (PWA baseline, additive files only).
+- Client P0 verdicts (lead bulk review, 2026-06-10 — recorded in each `*/HANDOFF.md`):
+  - ✅ **webapp P0 PASS** (`f45be66`; build re-run fresh by lead; tokens match DESIGN.md). → P1 go.
+  - ⏳ **android P0 PENDING EVIDENCE** (`7218013`; static pre-review positive, but NO Validation
+    Request was appended to `android/HANDOFF.md` — Iron Law requires fresh `assembleDebug` output
+    there before PASS).
+  - 🔶 **ios iP0 FIX (3 items)** (`37c8692`): (1) apple-touch-icon must be PNG (iOS ignores SVG
+    home-screen icons) + proper maskable variant; (2) manifest `theme_color` → #F4F2ED;
+    (3) iP0 files lint-clean (7 errors at HEAD are in this stream's files).
+- ⚠️ Webapp P1 work (`lib/domain/`, `lib/types.ts`) sits UNCOMMITTED — started before P0 PASS.
+  Not wasted: commit as the P1 phase with its own VR (incl. docs/05 §8 vector test + lint clean).
+  Contract note now in docs/02: `quest.weekdays` written sorted mon→sun.
 
 ## The next step (do this)
-1. Tell Hermes: *"Phase A is PASSED & FROZEN (see LEAD VERDICT round 3 in
-   `_Claude/handoffs/questline-backend-PhaseA-RESULT.md`). Housekeeping: (a) commit the webapp P0
-   working tree and update its Validation Request with the real hash; (b) run the missed third
-   stream ios-iP0 per the updated `questline-backend-and-p0.md` (additive files only:
-   manifest.webmanifest, icons, src/lib/platform.ts + tests). Then submit all three P0
-   Validation Requests (webapp/android/ios HANDOFF.md) to the lead for bulk review."*
-2. Lead bulk-reviews the three P0 VRs (P0 is bulk-safe per the cadence table below).
-3. Continue each client P1→P7 per `docs/06` (one phase → commit → Validation Request).
-   ios stream: iP1 may start after webapp-P0 PASS (sequential in webapp/, per `ios/BUILD.md §4`).
+1. Tell Hermes: *"Lead bulk-reviewed all three P0s — verdicts are in `webapp/HANDOFF.md` (PASS),
+   `android/HANDOFF.md` (PENDING EVIDENCE — append the real VR with fresh assembleDebug output),
+   and `ios/HANDOFF.md` (FIX ×3: PNG icons, theme_color, lint). Do: (a) android VR, (b) ios iP0
+   fixes + re-submit, (c) commit the in-progress webapp P1 as a proper phase with its own VR.
+   webapp may proceed P1 now; ios iP1 after the iP0 PASS."*
+2. From here: one phase → one commit → one VR per stream; lead bulk-reviews additive phases,
+   hard gates (P1 contract fidelity, P3 feel, P6 calendar security) get prompt review.
 
 ## How to resume in a FRESH session (paste this)
 > "You are the Questline project lead. The product lives in `C:\Users\Cutom\Desktop\app\questline`.

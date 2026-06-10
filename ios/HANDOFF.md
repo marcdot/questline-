@@ -60,5 +60,12 @@ actual layout — accepted.
    app shell is warm-light; a dark theme_color makes the installed title-bar/splash chrome clash
    with the ground. Dark-mode theme-color is handled in iP1 via the media-based meta tag.
 
-Evidence for the re-submit: file listing of the PNGs + updated manifest + `npx vitest run` output.
-Everything else stands — on PASS, iP1 may start (webapp-P0 is committed at `f45be66`).
+3. **FIX (added after the lead's fresh lint run) — iP0 files must be lint-clean.** `npm run lint`
+   flags: 5× `no-explicit-any` in `lib/__tests__/platform.test.ts`, a `setState`-synchronously-
+   in-effect error at `lib/platform.ts:88` (restructure the hook — e.g. `useSyncExternalStore`,
+   or whatever the repo's lint accepts; mechanical choice is yours), and a `triple-slash-reference`
+   in `vitest.config.ts` (use `import`). Include `npm run lint` → clean in the re-submit evidence.
+
+Evidence for the re-submit: file listing of the PNGs + updated manifest + `npx vitest run` output
++ `npm run lint` clean. Everything else stands — on PASS, iP1 may start (webapp-P0 PASSED at
+`f45be66`).
