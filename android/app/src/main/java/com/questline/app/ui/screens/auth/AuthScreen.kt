@@ -26,6 +26,7 @@ import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.common.api.ApiException
+import com.questline.app.BuildConfig
 
 /**
  * Auth screen with email/password sign-in/sign-up and Google sign-in.
@@ -54,7 +55,7 @@ fun AuthScreen(
     val googleSignInClient: GoogleSignInClient = remember {
         val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
             .requestEmail()
-            .requestIdToken("") // Client ID would come from BuildConfig
+            .requestIdToken(BuildConfig.GOOGLE_WEB_CLIENT_ID) // Web client ID from local.properties
             .build()
         GoogleSignIn.getClient(context, gso)
     }
