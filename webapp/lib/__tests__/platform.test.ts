@@ -10,9 +10,9 @@ import { useDisplayMode } from '../platform';
 describe('getPlatform()', () => {
   it('returns "desktop" when navigator is undefined (SSR)', () => {
     const nav = globalThis.navigator;
-    (globalThis as any).navigator = undefined;
+    Object.defineProperty(globalThis, 'navigator', { value: undefined, configurable: true });
     expect(getPlatform()).toBe('desktop');
-    (globalThis as any).navigator = nav;
+    Object.defineProperty(globalThis, 'navigator', { value: nav, configurable: true });
   });
 
   it('returns "ios" for iPhone user-agent', () => {
@@ -39,14 +39,14 @@ describe('getPlatform()', () => {
 describe('isStandalone()', () => {
   beforeEach(() => {
     // Clean up any stubs
-    delete (window.navigator as any).standalone;
+    Object.defineProperty(window.navigator, 'standalone', { value: undefined, configurable: true });
   });
 
   it('returns false when window is undefined (SSR)', () => {
     const win = globalThis.window;
-    (globalThis as any).window = undefined;
+    Object.defineProperty(globalThis, 'window', { value: undefined, configurable: true });
     expect(isStandalone()).toBe(false);
-    (globalThis as any).window = win;
+    Object.defineProperty(globalThis, 'window', { value: win, configurable: true });
   });
 
   it('returns true when display-mode: standalone matches', () => {

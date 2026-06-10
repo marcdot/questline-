@@ -65,31 +65,45 @@ export function isStandalone(): boolean {
 /*  React hook                                                         */
 /* ------------------------------------------------------------------ */
 
-import { useState, useEffect } from 'react';
+import { useSyncExternalStore } from 'react';
 
 export interface DisplayMode {
   platform: Platform;
   standalone: boolean;
 }
 
+function getServerSnapshot(): DisplayMode {
+  return { platform: 'desktop', standalone: false };
+}
+
+function subscribeToPlatform(cb: () => void): () => void {
+  // Re-evaluate on display-mode changes (installed PWA ↔ browser)
+  const mql = window.matchMedia('(display-mode: standalone)');
+  mql.addEventListener('change', cb);
+  return () => mql.removeEventListener('change', cb);
+}
+
+let cachedSnapshot: DisplayMode | null = null;
+
+function getSnapshot(): DisplayMode {
+  const platform = getPlatform();
+  const standalone = isStandalone();
+  if (
+    !cachedSnapshot ||
+    cachedSnapshot.platform !== platform ||
+    cachedSnapshot.standalone !== standalone
+  ) {
+    cachedSnapshot = { platform, standalone };
+  }
+  return cachedSnapshot;
+}
+
 /**
  * React hook that resolves the current display mode.
  *
- * SSR-safe: defaults to `{ platform: 'desktop', standalone: false }` on
- * the server to avoid hydration mismatches. The true value is set on mount.
+ * SSR-safe via `getServerSnapshot`. Uses `useSyncExternalStore` to avoid
+ * hydration mismatch and the "setState synchronously in useLayout/useEffect" lint.
  */
 export function useDisplayMode(): DisplayMode {
-  const [mode, setMode] = useState<DisplayMode>(() => ({
-    platform: 'desktop',
-    standalone: false,
-  }));
-
-  useEffect(() => {
-    setMode({
-      platform: getPlatform(),
-      standalone: isStandalone(),
-    });
-  }, []);
-
-  return mode;
+  return useSyncExternalStore(subscribeToPlatform, getSnapshot, getServerSnapshot);
 }
