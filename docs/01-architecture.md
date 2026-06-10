@@ -7,8 +7,9 @@
 ```
         ┌─────────────┐   ┌─────────────┐   ┌─────────────┐
         │   webapp    │   │   android   │   │     ios     │
-        │ Next.js 16  │   │ Kotlin/     │   │ Swift/      │
-        │ React 19    │   │ Compose     │   │ SwiftUI     │
+        │ Next.js 16  │   │ Kotlin/     │   │ = webapp as │
+        │ React 19    │   │ Compose     │   │ PWA + app-  │
+        │             │   │             │   │ shell mode  │
         └──────┬──────┘   └──────┬──────┘   └──────┬──────┘
                │  HTTPS (Supabase client SDK / REST + JWT)  │
                └──────────────────┬─────────────────────────┘
@@ -83,4 +84,4 @@ are **additive** within a major version. A breaking change bumps the major and i
 |---|---|---|---|
 | webapp | Next.js 16 + React 19, TypeScript, Tailwind v4 | modern evergreen browsers | `@supabase/supabase-js`, Framer Motion, a charts lib (see `webapp/BUILD.md`) |
 | android | Kotlin, Jetpack Compose | Android 9 (API 28)+ | `supabase-kt`, Compose, DataStore/Room, Vico charts |
-| ios | Swift, SwiftUI | iOS 16+ | `supabase-swift`, SwiftUI, Swift Charts |
+| ios | **Web-based**: the webapp installed as a PWA + iPhone app-shell mode (no Swift) | iOS 17+ Safari (16.4 floor for push) | same codebase as webapp; `ios/BUILD.md` iP0–iP7 |

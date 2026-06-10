@@ -17,14 +17,18 @@
   (1) `generate_child_quests` missing the `auth.uid()` guard (one line);
   (2) non-first-weekday streak check is unbounded in time (must check THIS week's prev weekday
   date, not "ever completed") + add a gap test vector (Mon-wk1 → skip wk2 → Wed-wk3 ⇒ streak 1, XP 12).
-- ⏳ NOT started: client app code (webapp/android) — now cleared to start (P0 only).
+- ✅ iOS approach DECIDED (2026-06-10): **web-based** — the webapp as an installable PWA with an
+  iPhone app-shell mode. NO native Swift app. Full plan: `ios/BUILD.md` (iP0–iP7, each gated on a
+  webapp phase; only iP0 is parallel-safe — additive files only). Code lives in `webapp/`.
+- ⏳ NOT started: client app code (webapp/android/ios-PWA) — now cleared to start (P0/iP0 only).
 
 ## The next step (do this)
 1. Tell Hermes: *"Read `_Claude/handoffs/questline-backend-PhaseA-RESULT.md` → LEAD VERDICT
    (round 2). Apply fixes #1 and #2, re-run §8 + the new gap vector + cross-user
    generate_child_quests test, re-submit. SIMULTANEOUSLY start Task 2:
-   `delegate_task([webapp-P0, android-P0])` per `questline-backend-and-p0.md` — P0 scaffolds
-   don't call write RPCs, so the lead unblocked them."*
+   `delegate_task([webapp-P0, android-P0, ios-iP0])` per the updated
+   `questline-backend-and-p0.md` — three parallel streams; ios-iP0 is additive-files-only in
+   webapp/ (manifest, icons, platform.ts) so it can't collide with webapp-P0."*
 2. Phase A formal PASS gate = §8 ✅ + gap vector ✅ + cross-user generate_child_quests → 42501 ✅.
    Clients may NOT wire write RPCs (P1+) until that PASS.
 3. Continue each client P1→P7 per `docs/06` (one phase → commit → Validation Request).

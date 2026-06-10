@@ -37,12 +37,18 @@ reminders, AI suggestions.
 Phase A  Backend first        → docs/04: create Supabase project, run schema, RLS, OAuth, Calendar fn
 Phase B  Web client           → webapp/  (fastest feedback loop; proves the data model end‑to‑end)
 Phase C  Android client       → android/ (reuses the proven backend; native feel pass)
-Phase D  iOS client           → ios/     (DEFERRED — spec only for now)
+Phase D  iOS client           → ios/     (WEB‑BASED: the webapp as an installable PWA with an
+                                          iPhone app‑shell mode — NO native Swift app. ios/BUILD.md)
 ```
 
 The backend is shared, so build it once (Phase A) before the first client. Each client phase is
 independent after that. The web client is sequenced first because it validates the schema and
 gamification rules with the shortest iteration loop; android then targets a known‑good backend.
+
+**iOS exception to independence:** the iOS stream writes code **inside `webapp/`** (it is a PWA
+layer, phases iP0–iP7 in `ios/BUILD.md`). Only **iP0** (additive files: manifest, icons,
+platform detection) may run in parallel with a webapp phase; iP1+ interleave sequentially between
+webapp phases and are gated on them (iP1←wP0, iP3←wP2, iP4/iP5←wP3, iP6←wP6, iP7←wP7).
 
 ## 4. Per‑platform internal phases (every client follows the same spine)
 

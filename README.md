@@ -32,8 +32,8 @@ questline/
 │   └── TASKS.md                 the checkpoint ledger the agent updates as it goes
 ├── android/                 ← independent client #2 (Kotlin + Jetpack Compose)
 │   ├── PROMPT.md  BUILD.md  TASKS.md
-└── ios/                     ← independent client #3 (Swift + SwiftUI) — NOT built yet
-    ├── PROMPT.md  BUILD.md  TASKS.md   (specced, deferred)
+└── ios/                     ← client #3 — WEB-BASED: the webapp as a PWA + iPhone app-shell mode
+    ├── PROMPT.md  BUILD.md  TASKS.md  HANDOFF.md   (code lives in webapp/; this folder = plan)
 ```
 
 ## How to build a client (the whole point)
@@ -46,8 +46,10 @@ questline/
    against the spec and reply **PASS** or a short fix list. You relay the result back to the build
    agent. Repeat until the platform is done.
 
-> The three clients are independent: you can build webapp without ever touching android. They only
-> agree on two things — the **data model** (`docs/02`) and the **backend API** (`docs/04`).
+> webapp and android are independent: you can build one without touching the other. They only agree
+> on two things — the **data model** (`docs/02`) and the **backend API** (`docs/04`). The iOS stream
+> is the exception: it layers on `webapp/` (PWA), so its phases are gated on webapp phases
+> (`ios/BUILD.md §4`) and only iP0 runs in parallel.
 
 ## Decisions locked (change here, propagates everywhere)
 
@@ -57,7 +59,7 @@ questline/
 | Backend | **Supabase** (Postgres + Auth + Google OAuth) | `docs/04` |
 | Web client | **Next.js 16 + React 19 + Tailwind v4 + Framer Motion** | `webapp/BUILD.md` |
 | Android client | **Kotlin + Jetpack Compose** | `android/BUILD.md` |
-| iOS client | **Swift + SwiftUI** (deferred) | `ios/BUILD.md` |
+| iOS client | **Web-based PWA** — webapp + iPhone app-shell mode, NO native app | `ios/BUILD.md` |
 | Shared language of record | **English** (UI copy can be localised later) | `docs/03` |
 
 To swap a decision (e.g. Firebase instead of Supabase), edit the one file that owns it and the
