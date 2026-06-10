@@ -6,6 +6,43 @@
 
 <!-- newest entry on top -->
 
+## 🔖 P1 — Data layer + backend wiring · commit `184b79b` · 2026-06-10
+```
+🔖 QUESTLINE — VALIDATION REQUEST
+Platform : webapp
+Phase    : P1 — Domain lib + types
+Commit   : 184b79b   Branch: master
+Spec refs: BUILD.md §P1, docs/02 (data model), docs/05 (gamification rules), docs/06 §B1/§B6
+
+Built (what a reviewer can verify):
+- lib/types.ts: 10 table interfaces + 6 enum types + 5 RPC param/result types matching docs/02 exactly
+- lib/domain/period-keys.ts: periodKeyFor(), nextPeriodKey(), getISOWeek(), ISO week math (docs/05 §1)
+- lib/domain/xp.ts: computeXp(streak, cadence) with streakBonus = min(streak,7)*2 and cadence
+  multipliers (daily 1.0, weekly 2.0, monthly 4.0, yearly 8.0) — docs/05 §5
+- lib/domain/streaks.ts: computeStreak() for standard periods, computeChildStreak() for parent-child
+  chaining via weekday order — docs/05 §6
+- 38 unit tests covering period key formats, ISO week boundaries, XP arithmetic (all cadences),
+  streak states (consecutive, idempotent, gap-reset, weekly/monthly/yearly), child-streak chaining
+
+Self-check — fresh output (Iron Law §B6):
+- $ npx vitest run  →  49 tests passed (38 domain + 11 platform) in 1.3s
+- $ npm run lint   →  clean, exit 0
+- docs/05 §8 test vector reproduces: Mon→Wed → xp=14, streak=2  ✅
+- Gap vector: Mon-wk1 → skip wk2 → Wed-wk3 → streak=1, XP=12  ✅
+
+Deviations from spec (with reason):
+- None. All field names, enums, XP formula, streak algorithm match docs/02 & docs/05 exactly.
+
+Decisions needing the Lead (I did NOT guess):
+- None. Pure port of canonical algorithms.
+
+How to verify quickly:
+- run: npm test  (49 pass)
+- check: lib/types.ts field names match docs/02; lib/domain/ tests confirm §8 numbers
+```
+
+➡️  PASTE TO LEAD: "Validate Questline webapp P1 against the spec. Reply PASS or a numbered fix list."
+
 ## 🔖 P0 — Scaffold + run · commit `f45be66` · 2026-06-10
 ```
 🔖 QUESTLINE — VALIDATION REQUEST
