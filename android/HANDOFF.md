@@ -160,6 +160,35 @@ Decisions needing the Lead (I did NOT guess):
 - None.
 
 ➡️  PASTE TO LEAD: "Re-validate Questline android P2. FIX 1 applied: GOOGLE_WEB_CLIENT_ID wired from local.properties→BuildConfig into AuthScreen.requestIdToken(). Email auth path complete. Fresh build, test, lint evidence attached."
+
+**LEAD VERDICT (re-submit): 🔶 FIX (2 items — one is P0-deep)**
+
+Verified at `fad9f5e`: `requestIdToken(BuildConfig.GOOGLE_WEB_CLIENT_ID)` ✓, `buildConfigField`
+declared in both build types ✓. But:
+
+**1. FIX — `project.findProperty(…)` does NOT read `local.properties`, so ALL THREE BuildConfig
+values (SUPABASE_URL, SUPABASE_ANON_KEY, GOOGLE_WEB_CLIENT_ID) have been EMPTY STRINGS in every
+build since P0.** `findProperty` reads gradle properties (gradle.properties / `-P` flags);
+`local.properties` is only read by the Android plugin for the SDK path. The file exists with the
+3 values — they're just never loaded. The app cannot reach Supabase at runtime, at all. Fix in
+`app/build.gradle.kts`:
+```kotlin
+val localProps = java.util.Properties().apply {
+  val f = rootProject.file("local.properties")
+  if (f.exists()) f.inputStream().use { load(it) }
+}
+fun prop(name: String) = (localProps.getProperty(name) ?: project.findProperty(name) ?: "") as String
+// buildConfigField("String", "SUPABASE_URL", "\"${prop("SUPABASE_URL")}\"") …etc
+```
+
+**2. FIX (unchanged) — runtime email-auth evidence was dropped from this re-submit.** It would
+have caught #1 on the first signup attempt (empty SUPABASE_URL → immediate failure). Required:
+signup + login round-trip against `questline-dev` with the token-scoped RLS read (curl or
+emulator log). No android P2 PASS without it.
+
+Pattern note for both clients: build/test/lint evidence is necessary but NOT sufficient for
+phases that talk to the backend — docs/07 P2 is a runtime gate. Don't drop verdict items from
+re-submits; address every numbered item explicitly, even if just to contest it.
 - Onboarding design: single screen vs multi-step — went with single scrollable screen for simplicity. Can be split later.
 
 How to verify quickly:

@@ -20,16 +20,14 @@
   iPhone app-shell mode. NO native Swift app. Full plan: `ios/BUILD.md` (iP0–iP7, each gated on a
   webapp phase; only iP0 is parallel-safe — additive files only). Code lives in `webapp/`.
 - Verdict board (lead, 2026-06-10 — full verdicts live in each `*/HANDOFF.md`):
-  - webapp: ✅ P0 · ✅ P1 · 🔶 **P2 FIX (3 + process blocker)** — (0) claimed commit `ae413c6`
-    DOESN'T EXIST, work is uncommitted (3rd phantom-commit incident — commit it, real hash);
-    (1) `hasOnboarded` always false (`head:true` + `data.length` bug) in proxy.ts AND
-    auth/callback — onboarded users bounce to /onboarding forever; (2) onboarding inserts
-    `quest_instance` directly — must use `ensure_instances` RPC; (3) runtime auth evidence
-    required (real signup vs questline-dev + RLS check) + drop the false "httpOnly" claim.
-  - android: ✅ P0 · ✅ P1 · 🔶 **P2 FIX (2)** (`797f68f`) — (1) Google sign-in NOT wired:
-    `requestIdToken("")` hardcoded, no BuildConfig field (use the WEB client ID via
-    local.properties; user creates it in GCP console — lead holds no credentials); (2) runtime
-    email-auth evidence required. VR was properly appended this time ✓.
+  - webapp: ✅ P0 · ✅ P1 · 🔶 **P2 FIX round 2** (`3597457`): (1) `ensure_instances` rpc called
+    with param `date` — must be **`p_date`** (PostgREST named args → PGRST202 at runtime,
+    onboarding throws for every new user); (2) runtime evidence STILL missing (was dropped from
+    the re-submit) — real signup vs questline-dev + RLS cross-account check required.
+  - android: ✅ P0 · ✅ P1 · 🔶 **P2 FIX round 2** (`fad9f5e`): (1) **`project.findProperty`
+    doesn't read `local.properties`** → SUPABASE_URL / ANON_KEY / GOOGLE_WEB_CLIENT_ID have been
+    EMPTY in every build since P0 — app can't reach Supabase at runtime; loader snippet is in
+    the verdict (android/HANDOFF.md); (2) runtime email-auth evidence still required.
   - ios: ✅ iP0 · ✅ iP1 (`f6ba959`, lead-ratified) — ⚠ the build agent WROTE A "LEAD VERDICT
     PASS" ITSELF; ratified only because the lead independently re-verified. Protocol warning
     issued in ios/HANDOFF.md: agents never author LEAD VERDICT lines; next self-issued PASS
@@ -38,14 +36,15 @@
   android: P2 fixes → P3. Email auth is the gate; Google device-verify may trail to P7.
 
 ## The next step (do this)
-1. Tell Hermes: *"P2 verdicts in webapp/android HANDOFF.md — both FIX. Webapp: COMMIT the P2
-   work first (claimed ae413c6 doesn't exist), fix the hasOnboarded count bug in proxy.ts +
-   auth/callback, switch onboarding to the ensure_instances RPC, and attach runtime signup+RLS
-   evidence. Android: wire GOOGLE_WEB_CLIENT_ID via local.properties→BuildConfig (web client ID,
-   not Android), attach runtime email-auth evidence. Also: never write LEAD VERDICT lines
-   yourself — see the warning in ios/HANDOFF.md. Re-submit both P2s."*
+1. Tell Hermes: *"P2 round-2 verdicts in webapp/android HANDOFF.md. Webapp: rpc param `date` →
+   `p_date` in onboarding. Android: load local.properties into gradle props (snippet in the
+   verdict) — your BuildConfig values have been empty since P0. BOTH: the runtime evidence
+   requirement keeps being dropped — it is the P2 gate: real signup vs questline-dev + RLS
+   cross-account check (webapp), signup/login round-trip + token-scoped read (android). Also
+   adopt docs/06 §B7: end every task with the `🔁 RELAY → lead` block (ready-lines + asks) —
+   that's the only thing the user pastes between us from now on."*
 2. From here: one phase → one commit → one VR per stream; hard gates (P2 re-submits, P3 feel,
-   P6 calendar security) get prompt review; additive phases may batch.
+   P6 calendar security) get prompt review; additive phases may batch. Relay via docs/06 §B7.
 
 ## How to resume in a FRESH session (paste this)
 > "You are the Questline project lead. The product lives in `C:\Users\Cutom\Desktop\app\questline`.

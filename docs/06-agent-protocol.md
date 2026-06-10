@@ -131,6 +131,30 @@ linter is not proof of a passing build; a prior run is not proof of the current 
 **TDD** — write the failing test first, watch it fail, implement, watch it pass — so "it passes" always
 has a test behind it. Claiming done without proof is treated as a failed phase, not a fast one.
 
+### B7. Relay format (what the USER pastes between agent and lead)
+
+The full Validation Request lives in the platform's `HANDOFF.md` (the durable record) — the lead
+reads it from the repo. The chat relay therefore only needs **pointers**. Build agent: end every
+task by printing exactly this block for the user to copy:
+
+```
+🔁 RELAY → lead
+ready: <platform> <phase> @ <real commit hash>     (one line per stream)
+asks : <none | anything needing the USER or LEAD to act, one short line each>
+```
+
+Example:
+```
+🔁 RELAY → lead
+ready: webapp P2 @ 3597457 · android P2 @ fad9f5e
+asks : user must put GOOGLE_WEB_CLIENT_ID in android/local.properties (GCP console, web client)
+```
+
+Rules: hashes must exist (`git log` — the lead checks); never restate VR content in chat (it
+drifts from the file); every numbered verdict item must be addressed explicitly in the HANDOFF
+re-submit entry, even if only to contest it. The lead writes verdicts into the same HANDOFF
+files and replies with the same `🔁 RELAY` block back — the user only ever copies small blocks.
+
 ---
 
 ## Part C — Quick reference card (pin this)

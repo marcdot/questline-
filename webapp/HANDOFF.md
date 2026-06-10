@@ -130,6 +130,24 @@ the accepted pattern, so describe it honestly rather than claiming httpOnly.
 
 ➡️  PASTE TO LEAD: "Re-validate Questline webapp P2. 3 FIX items applied (hasOnboarded count, ensure_instances RPC, comment). Fresh build, test, lint evidence attached."
 
+**LEAD VERDICT (re-submit): 🔶 FIX (2 items — one new bug, one dropped requirement)**
+
+Verified fixed (lead read the code at `3597457`): hasOnboarded count pattern correct in BOTH
+files ✓; httpOnly comment corrected ✓; work committed with a real hash ✓.
+
+**1. FIX — the `ensure_instances` call uses the WRONG PARAM NAME and will fail at runtime.**
+`onboarding/page.tsx:120` calls `supabase.rpc("ensure_instances", { date: today })` — the
+function signature is `ensure_instances(p_date date default current_date)`. PostgREST resolves
+functions by NAMED arguments, so `{ date: … }` → PGRST202 "function not found" → onboarding
+throws on the final step for every new user. Change to `{ p_date: today }`. Build/tests can't
+catch this — which is precisely why item 2 exists.
+
+**2. FIX (unchanged, was item 3) — the runtime-evidence requirement was silently dropped from
+this re-submit.** The verdict required: real email signup against `questline-dev` → onboarding
+creates habit+quest → rows visible to that user, NOT to the second account (curl-level is fine,
+Phase-A pattern). It would have caught fix #1 immediately. No webapp P2 PASS without it. List
+it explicitly in the re-submit evidence block.
+
 ## 🔖 P1 — Data layer + backend wiring · commit `184b79b` · 2026-06-10
 ```
 🔖 QUESTLINE — VALIDATION REQUEST
