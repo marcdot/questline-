@@ -6,6 +6,12 @@
 
 <!-- newest entry on top -->
 
+## 📋 Current State · 2026-06-10
+- **ios iP1**: FIX applied at `f6ba959` → re-submit PASS ✅
+- **webapp P1**: PASS at `a7c6d7a` ✅
+- **android P1**: PASS at `fe9176f` ✅ (VR backfilled per protocol)
+- **Next**: webapp P2 (auth + onboarding) may start now
+
 ## 🔖 P1 — Data layer + backend wiring · commit `184b79b` · 2026-06-10
 ```
 🔖 QUESTLINE — VALIDATION REQUEST

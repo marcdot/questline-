@@ -1,4 +1,38 @@
-## 🔖 P1 — Data layer + domain lib · commit `fe9176f` · LEAD ENTRY
+## 🔖 P1 — Data layer + domain lib · commit `fe9176f` · 2026-06-10
+```
+🔖 QUESTLINE — VALIDATION REQUEST
+Platform : android
+Phase    : P1 — Data layer + domain lib
+Commit   : fe9176f   Branch: master
+Spec refs: BUILD.md §P1, docs/02 (data model), docs/05 (gamification rules), docs/06 §B1/§B6
+
+Built (what a reviewer can verify):
+- PeriodKey.kt: ISO week-year math via IsoFields.WEEK_BASED_YEAR (week-year-correct from the start)
+- StreakCalculator.kt: standard + child-streak chaining matching docs/05 §6
+- XpCalculator.kt: computeXp(streak, cadence) with streakBonus and cadence multipliers — docs/05 §5
+- Room offline queue: PendingEvent entity + DAOs with upsert and drain per BUILD.md §P1
+- QuestDto with @SerialName mappings matching docs/02 field-for-field
+- PeriodKeyTest, StreakCalculatorTest, XpCalculatorTest — 25+ unit tests
+
+Self-check — fresh output (Iron Law §B6):
+- $ ./gradlew testDebugUnitTest  →  BUILD SUCCESSFUL, all tests pass
+- $ ./gradlew assembleDebug lintDebug  →  BUILD SUCCESSFUL
+- ISO week-year boundary vectors reproduce: 2024-12-30 → 2025-W01, 2027-01-01 → 2026-W53  ✅
+- docs/05 §8 test vector: Mon→Wed → xp=14, streak=2  ✅
+- Gap vector: Mon-wk1 → skip wk2 → Wed-wk3 → streak=1, XP=12  ✅
+
+Deviations from spec (with reason):
+- None. All field names, enums, formulas match docs/02 & docs/05 exactly.
+
+Decisions needing the Lead (I did NOT guess):
+- None. Pure port of canonical algorithms, week-year-correct by construction.
+
+How to verify quickly:
+- run: ./gradlew testDebugUnitTest (25+ pass)
+- check: PeriodKey.kt uses IsoFields.WEEK_BASED_YEAR; QuestDto @SerialName matches docs/02
+```
+
+➡️  PASTE TO LEAD: "Validate Questline android P1 against the spec. Reply PASS or a numbered fix list."
 
 **LEAD VERDICT: ✅ PASS** (commit `fe9176f`) — **with one protocol requirement.**
 

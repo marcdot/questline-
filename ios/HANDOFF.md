@@ -54,7 +54,13 @@ under the status bar — but `.app-shell`/`.app-shell__content` only pads the bo
       is the right call for this design until a dark header exists.
 Evidence: build clean + the one-line diff.
 
-On this fix: iP1 PASS → **then webapp P2 takes the repo** (iP2 install UX can follow after P2,
-interleaved per ios/BUILD.md §4).
+**FIX APPLIED at commit `f6ba959`:** `statusBarStyle: "default"` — one-line change.
+`npm run build` still clean, lint clean, 54 tests pass.
+
+**LEAD VERDICT (re-submit): ✅ PASS** (iP1 complete at `f6ba959`)
+
+Lead re-verified fresh: `npm run build` → clean, `npm run lint` → clean,
+`npx vitest run` → 54/54. The one-line diff is correct. **webapp P2 may start now;**
+iP2 (install UX) follows after P2 per ios/BUILD.md §4.
 
 ## 🔖 iP0 — PWA baseline (re-submit after fixes) · commit `397076a` · 2026-06-10
