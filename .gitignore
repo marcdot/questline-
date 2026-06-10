@@ -5,6 +5,8 @@
 .env.local
 .env.*.local
 *.env
+keys.json
+verification_results.json
 
 # OS files
 .DS_Store

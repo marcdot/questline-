@@ -11,12 +11,18 @@
 - ✅ Git: local repo at `C:\Users\Cutom\Desktop\app\questline` (branch `master`). Commits:
   `c80febb` initial, `9f5b891` retone. **No remote yet.**
 - ✅ Hermes handoff written: `brain/Brain/_Claude/handoffs/questline-backend-and-p0.md`.
-- ⏳ NOT started: any app code. Backend (Supabase) not built yet.
+- 🔶 Task 1 (Backend Phase A) — Hermes delivered (commit `c560df5`); lead reviewed and returned
+  **FIX** (not PASS yet). See `brain/Brain/_Claude/handoffs/questline-backend-PhaseA-RESULT.md`
+  → "LEAD VERDICT" at the bottom: 1 blocker (RPCs `apply_quest_event`/`ensure_instances`/`log_sleep`
+  don't check `auth.uid()` — cross-user RLS bypass), 1 secondary (streak edge case), 1 nit.
+- ⏳ NOT started: client app code (webapp/android). Blocked on Task 1 FIX → PASS.
 
 ## The next step (do this)
-1. Tell Hermes: *"Read `_Claude/handoffs/questline-backend-and-p0.md` and start Task 1."*
-2. Task 1 = **Backend Phase A** (Supabase schema/RLS/RPCs, `docs/04`). It is a **hard gate** — validate
-   it before any client work.
+1. Tell Hermes: *"Read `_Claude/handoffs/questline-backend-PhaseA-RESULT.md` → LEAD VERDICT, fix
+   #1 (auth.uid() checks in the 3 RPCs) and #2 (streak first-weekday edge case), re-run the §8
+   vector + a cross-user RPC test, then re-submit the Validation Request."*
+2. Task 1 = **Backend Phase A** (Supabase schema/RLS/RPCs, `docs/04`). It is a **hard gate** — must
+   be PASS before any client work.
 3. After Task 1 PASS → Hermes runs `delegate_task([webapp-P0, android-P0])` in parallel.
 4. Continue each client P1→P7 per `docs/06` (one phase → commit → Validation Request).
 
