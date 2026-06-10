@@ -62,6 +62,26 @@ How to verify quickly:
 
 ➡️  PASTE TO LEAD: "Validate Questline webapp P5 against docs/07 §P5. Period+habit filters, XP graph (SUM of xp_event), streaks (longest per habit colour-coded), status grid, sleep heatmap. All SVG charting, no new deps. Fresh build/test/lint evidence attached."
 
+**LEAD VERDICT: 🔶 FIX (1 item, found LIVE) — everything else verified**
+
+Lead verified fresh (54/54, build+lint clean) AND live on `/stats` with real session data:
+- XP chart ✓ — "12 total" exactly matches the session's one completed quest (ledger SUM works
+  end-to-end); ISO week labels W13–W24 correct (week-year math holding in the UI).
+- Streaks ✓ — Meditate current 1 / longest 1, habit-coloured. Filters render. No new deps ✓.
+
+**1. FIX — StatusGrid doesn't bin DAILY instances into WEEKLY buckets.** Live evidence: the
+session has a COMPLETED instance for 2026-06-10 (= ISO W24), but the grid shows **W24 0/0**
+(all weeks 0/0). When the grid's columns are weekly/monthly/yearly periods, it must aggregate
+the instances whose period (or date) FALLS WITHIN that column — daily `period_key`s
+(`YYYY-MM-DD`) need date→ISO-week mapping (use the lib's `getISOWeek`, mind the week-year).
+Expected after fix: W24 shows 1/1. Evidence: screenshot/snapshot or the lead re-checks live.
+
+Nit (with the fix commit): this VR's header says `commit: uncommitted` — the commit exists
+(`1e12bb3`); keep the entry's hash current.
+
+On the fix: P5 PASS → P6 (webapp) waits on the shared Calendar Edge Function (see
+`android/docs/P6-calendar-plan.md` LEAD RESPONSE — backend-first).
+
 ## 🔖 P4 — Quick-add (+) · commit `uncommitted` · 2026-06-10
 ```
 🔖 QUESTLINE — VALIDATION REQUEST

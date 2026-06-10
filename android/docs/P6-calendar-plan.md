@@ -86,3 +86,57 @@ create policy "own rows - modify" on public.calendar_link
     user_id = auth.uid() OR auth.role() = 'service_role'
   );
 ```
+
+---
+
+## LEAD RESPONSE — plan REVISED, not approved as written (4 points)
+
+Good instinct writing a plan first — that's exactly what the freeze requires. But the plan has
+one fatal assumption and one unnecessary schema change:
+
+**1. ❌ `auth.provider_tokens` DOES NOT EXIST.** Supabase does NOT persist Google provider
+tokens server-side; `provider_token`/`provider_refresh_token` appear ONCE in the client session
+right after OAuth and are never stored — no table, and `getUser()` cannot fetch them later. The
+plan's entire token story collapses on this. **Approved replacement — server-side OAuth code
+flow (refresh token NEVER touches any client):**
+- Edge Function `calendar_oauth` with two routes: `/start` (returns the Google consent URL with
+  `access_type=offline&prompt=consent`, scope `calendar.events`, `state` = signed user ref) and
+  `/callback` (exchanges the code using `GOOGLE_CLIENT_SECRET` from Edge Function secrets,
+  stores the refresh token, redirects back to the app).
+- NEW table (additive migration `006_google_token.sql`, lead pre-approves this draft):
+  ```sql
+  create table public.google_token (
+    user_id uuid primary key references public.user_profile on delete cascade,
+    refresh_token text not null,
+    created_at timestamptz not null default now(),
+    updated_at timestamptz not null default now()
+  );
+  alter table public.google_token enable row level security;
+  -- NO policies at all: invisible to every client role; only service-role (Edge Functions)
+  -- can read/write. This is the docs/04 §5 "secured table".
+  ```
+- `calendar_sync` reads the refresh token from `google_token` with the service-role client,
+  mints an access token, calls Google. On `invalid_grant` (user revoked): delete the row, set
+  `user_settings.google_connected=false`, return an actionable 409 — note: refresh tokens don't
+  "expire on 401"; revocation is the case to handle.
+
+**2. ❌ The `calendar_link` RLS change is REJECTED — it's unnecessary and signals a
+misunderstanding: `service_role` BYPASSES RLS entirely (bypassrls).** The Edge Function can
+already write `calendar_link`. **Approved instead (tightening, additive migration):** drop the
+client "own rows - modify" policy on `calendar_link` entirely — clients read it (select stays),
+ONLY the Edge Function writes it (same model as `xp_event`). Clients toggle `quest.calendar_sync`
+and call the Edge Function; they never touch `calendar_link` rows.
+
+**3. Order (your question 2): BACKEND FIRST.** The Edge Function pair + migration 006 serve all
+clients (webapp P6 needs them too — build once). Then android P6 client work against the real
+function. Note android's in-app flow: opening the `/start` URL in a Custom Tab is fine — the
+code exchange still happens server-side.
+
+**4. PREREQUISITE (user action):** Google Cloud Console — the web OAuth client needs the
+Calendar API enabled, the `calendar.events` scope on the consent screen, and the Edge Function
+callback URL added to authorized redirect URIs. Coordinate with the user before /callback can
+be tested; build + unit-test the function first.
+
+**Verdict: revise per 1–4, then GO. Submit migration 006 + the Edge Function as a backend
+mini-phase (own VR, runtime evidence: a real consent → token stored → event created round-trip
+on a test calendar). S3/S5 gates apply in full.**
