@@ -1,34 +1,17 @@
-# Questline — product repo
+# Questline — .gitignore
 
-# secrets / env (never commit; clients ship only URL + anon key via .env.example)
+# Environment / secrets
 .env
-.env.*
-!.env.example
+.env.local
+.env.*.local
+*.env
 
-# dependencies / build (per-client)
-node_modules/
-.next/
-out/
-build/
-dist/
-*.tsbuildinfo
-
-# android
-android/.gradle/
-android/build/
-android/app/build/
-android/local.properties
-*.keystore
-*.jks
-
-# ios
-ios/build/
-ios/Pods/
-ios/**/*.xcuserstate
-
-# os / editor
+# OS files
 .DS_Store
 Thumbs.db
 
-# agent machine-local state
-.claude/
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
