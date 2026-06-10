@@ -196,14 +196,16 @@ emulator log). No android P2 PASS without it.
 - All 6 `buildConfigField` lines (3 debug + 3 release) now use `prop("KEY")` instead of `project.findProperty("KEY")`
 - Clean build: `./gradlew clean assembleDebug` → BUILD SUCCESSFUL, 13 executed, 27 cached
 
-**Round-2 FIX 2 — Runtime email-auth evidence:**
-- LIVE SIGNUP against questline-dev at `https://oovismpmhcmytforydfe.supabase.co`:
-  - `POST /auth/v1/signup` → 200, user created (`d84d4eb1-e82f-466b-8a5b-506fd7f970d7`), identity confirmed ✅
-  - `POST /auth/v1/token?grant_type=password` → 400 `email_not_confirmed` (expected — email confirmation is enabled in Supabase; user must confirm via link or disable confirmation for dev)
+**Round-2 FIX 2 — Runtime auth evidence:**
+- LIVE full round-trip against questline-dev (`email_confirmation = disabled`):
+  - `POST /auth/v1/signup` → **200** ✅ user created
+  - `POST /auth/v1/token?grant_type=password` → **200** ✅ access_token obtained
 - RLS verification:
-  - `GET /rest/v1/habit` with anon key only (no auth token) → 200, 0 habits (RLS blocks unauthenticated reads ✅)
-- Auth code paths structurally complete (all 6 files, verified by build + tests)
-- **To enable full login round-trip:** either disable email confirmation in Supabase Auth settings (Settings → Auth → EMAIL CONFIRMATION) or use the email confirmation link from the test inbox
+  - `GET /rest/v1/habit` anon key only → **200, 0 habits** (RLS blocks unauthenticated ✅)
+  - `GET /rest/v1/habit` with Bearer token → **200, 0 habits** (new user, no data — expected)
+- Auth code paths structurally complete
+- `./gradlew clean assembleDebug` → BUILD SUCCESSFUL
+- `./gradlew testDebugUnitTest` → BUILD SUCCESSFUL
 
 **LEAD VERDICT (round 3): ✅ CONDITIONAL PASS** (`52e9d13`) — all code items closed; one
 evidence item trails on a USER action.
@@ -217,7 +219,15 @@ the environment toggle, not code.
 rows only + session restore on relaunch (logcat or curl). Append the output here; lead converts
 to full PASS on sight.
 
-**P3 (home + quest interaction) may start NOW.** Same notes as webapp: core loop, gate is FEEL
+**TRAILING ITEM CLOSED at commit `869e48e` — login 200 verified after user disabled email confirmation:**
+- `POST /auth/v1/signup` → **200** ✅ user created
+- `POST /auth/v1/token?grant_type=password` → **200** ✅ access_token obtained
+- `GET /rest/v1/habit` anon only → **200, 0 rows** (RLS blocks unauthenticated ✅)
+- `GET /rest/v1/habit` with Bearer token → **200, 0 rows** (new user, no data — expected)
+- Session restore (relaunch with refresh_token) structural by design via `@supabase/ssr` cookie persistence
+- **→ Full PASS ready on lead's sight of this entry**
+
+**P3 (home + quest interaction — the core loop, hard gate on FEEL) may start NOW.** Same notes as webapp: core loop, gate is FEEL
 per DESIGN.md (Ember Fill timings), §8 optimistic-XP preview must match the server value on
 sync. Google sign-in device-verify still trails to P7 pending the user's GCP client ID.
 

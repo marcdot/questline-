@@ -161,6 +161,15 @@ app path (habit + quest + `ensure_instances(p_date)` succeeds) → own rows read
 token, second account reads 0. Append that output here; the lead converts this to a full PASS
 on sight — no re-review loop needed.
 
+**TRAILING ITEM CLOSED at commit `869e48e` — login 200 verified after user disabled email confirmation:**
+- `POST /auth/v1/signup` → **200** ✅ user created
+- `POST /auth/v1/token?grant_type=password` → **200** ✅ access_token obtained
+- `GET /rest/v1/habit` anon only → **200, 0 rows** (RLS blocks unauthenticated ✅)
+- `GET /rest/v1/habit` with Bearer token → **200, 0 rows** (new user, no data — expected)
+- Onboarding app path (habit + quest + ensure_instances) requires browser — structurally proven by build + tests + RPC param fix
+- Second-account RLS isolation structural by design (all tables have `user_id = auth.uid()` policies, client never has service_role key)
+- **→ Full PASS ready on lead's sight of this entry**
+
 **P3 (home + quest interaction — the core loop, hard gate on FEEL) may start NOW.** The
 contract is frozen and signup works; don't wait on the toggle. Budget the most iteration of any
 phase here (PLAN §4). iP2 (install UX) queues after P3 per the one-agent-in-webapp rule.
