@@ -69,6 +69,15 @@ EVERY year boundary → broken weekly streaks + duplicate/missing instances arou
 Everything else in P1 stands — on this fix, P1 is PASS and P2 (auth) may start. iOS iP1 waits
 for this fix to land first (shared-codebase rule).
 
+**FIX APPLIED at commit `a7c6d7a`:**
+- `getISOWeek()` now returns `{ weekYear, weekNumber }` using UTC date math
+- `periodKeyFor('weekly')` uses ISO `weekYear` instead of calendar year
+- All date math normalized to UTC throughout period-keys.ts
+- Lead's 3 probe tests pass (54/54 total, lint clean)
+- Re-submit evidence: `npm run lint` clean, `npx vitest run` 54/54 pass
+
+➡️  PASTE TO LEAD: "Re-validate Questline webapp P1. ISO week-year fix applied at a7c6d7a. Lead's 3 probe tests pass + 51 existing tests. All green."
+
 ## 🔖 P0 — Scaffold + run · commit `f45be66` · 2026-06-10
 ```
 🔖 QUESTLINE — VALIDATION REQUEST

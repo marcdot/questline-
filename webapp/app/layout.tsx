@@ -1,10 +1,11 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import {
   Bricolage_Grotesque,
   Hanken_Grotesk,
   JetBrains_Mono,
 } from "next/font/google";
 import "./globals.css";
+import AppShell from "@/app/components/AppShell";
 
 /* ─── Font loading (next/font/google — self-hosted, no FOUT) ─── */
 const bricolage = Bricolage_Grotesque({
@@ -25,9 +26,30 @@ const jetbrains = JetBrains_Mono({
   display: "swap",
 });
 
+/* ─── Metadata (includes manifest + iOS PWA links) ─── */
 export const metadata: Metadata = {
   title: "Questline",
   description: "A premium habit tracker — warm, restrained, earned.",
+  manifest: "/manifest.webmanifest",
+  icons: {
+    apple: "/icons/apple-touch-icon.png",
+  },
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+  },
+};
+
+/* ─── Viewport (viewport-fit=cover for safe areas, theme-color light+dark) ─── */
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#f4f2ed" },
+    { media: "(prefers-color-scheme: dark)", color: "#15140f" },
+  ],
+  colorScheme: "light dark",
 };
 
 export default function RootLayout({
@@ -40,7 +62,9 @@ export default function RootLayout({
       lang="en"
       className={`${bricolage.variable} ${hanken.variable} ${jetbrains.variable}`}
     >
-      <body>{children}</body>
+      <body>
+        <AppShell>{children}</AppShell>
+      </body>
     </html>
   );
 }
