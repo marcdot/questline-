@@ -10,15 +10,11 @@ import java.util.Properties
 import java.io.File
 
 /** Load local.properties into project properties so buildConfigField can read them. */
-val localProps = Properties()
-val localPropsFile = File(rootProject.projectDir, "local.properties")
-if (localPropsFile.exists()) {
-    localPropsFile.inputStream().use { localProps.load(it) }
+val localProps = Properties().apply {
+    val f = rootProject.file("local.properties")
+    if (f.exists()) f.inputStream().use { load(it) }
 }
-for (key in localProps.propertyNames()) {
-    val k = key as String
-    project.extensions.extraProperties.set(k, localProps.getProperty(k))
-}
+fun prop(name: String) = (localProps.getProperty(name) ?: project.findProperty(name) ?: "") as String
 
 android {
     namespace = "com.questline.app"
@@ -37,9 +33,9 @@ android {
     buildTypes {
         debug {
             isMinifyEnabled = false
-            buildConfigField("String", "SUPABASE_URL", "\"${project.findProperty("SUPABASE_URL") ?: ""}\"")
-            buildConfigField("String", "SUPABASE_ANON_KEY", "\"${project.findProperty("SUPABASE_ANON_KEY") ?: ""}\"")
-            buildConfigField("String", "GOOGLE_WEB_CLIENT_ID", "\"${project.findProperty("GOOGLE_CLIENT_ID") ?: ""}\"")
+            buildConfigField("String", "SUPABASE_URL", "\"${prop("SUPABASE_URL")}\"")
+            buildConfigField("String", "SUPABASE_ANON_KEY", "\"${prop("SUPABASE_ANON_KEY")}\"")
+            buildConfigField("String", "GOOGLE_WEB_CLIENT_ID", "\"${prop("GOOGLE_CLIENT_ID")}\"")
         }
         release {
             isMinifyEnabled = true
@@ -47,9 +43,9 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
-            buildConfigField("String", "SUPABASE_URL", "\"${project.findProperty("SUPABASE_URL") ?: ""}\"")
-            buildConfigField("String", "SUPABASE_ANON_KEY", "\"${project.findProperty("SUPABASE_ANON_KEY") ?: ""}\"")
-            buildConfigField("String", "GOOGLE_WEB_CLIENT_ID", "\"${project.findProperty("GOOGLE_CLIENT_ID") ?: ""}\"")
+            buildConfigField("String", "SUPABASE_URL", "\"${prop("SUPABASE_URL")}\"")
+            buildConfigField("String", "SUPABASE_ANON_KEY", "\"${prop("SUPABASE_ANON_KEY")}\"")
+            buildConfigField("String", "GOOGLE_WEB_CLIENT_ID", "\"${prop("GOOGLE_CLIENT_ID")}\"")
         }
     }
 

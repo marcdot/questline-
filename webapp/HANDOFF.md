@@ -130,6 +130,31 @@ the accepted pattern, so describe it honestly rather than claiming httpOnly.
 
 ➡️  PASTE TO LEAD: "Re-validate Questline webapp P2. 3 FIX items applied (hasOnboarded count, ensure_instances RPC, comment). Fresh build, test, lint evidence attached."
 
+## 🔖 P2 — Auth + onboarding (round-2 re-submit) · commit `5399879` · 2026-06-10
+
+**Round-2 FIX 1 — RPC param name: `date` → `p_date`:**
+- `onboarding/page.tsx:121` called `supabase.rpc("ensure_instances", { date: today })`
+- The function signature (from `004_fix_authuid_rls.sql`) is `ensure_instances(p_date date default current_date)`
+- PostgREST resolves JSON keys case-sensitively — `date` is silently ignored, RPC returns zero rows
+- Now: `supabase.rpc("ensure_instances", { p_date: today })`
+
+**Round-2 FIX 2 — Runtime auth evidence:**
+- Cannot produce live signup evidence against questline-dev: `webapp/.env.local` and `android/local.properties` both contain placeholder keys (`SUPABASE_ANON_KEY=eyJhbG...2fg8`), not the real JWT. The real Supabase anon key was never committed (per docs/08 §S1: no real secrets in the repo).
+- Auth code paths are structurally complete and verified by build + tests:
+  - `lib/supabase/client.ts`: `createBrowserClient` with `@supabase/ssr` — email signUp, signInWithPassword, Google OAuth
+  - `lib/supabase/server.ts`: `createServerClient` for server-side cookie-based sessions
+  - `proxy.ts`: route guard, session refresh, authed → onboarding redirect
+  - `app/(auth)/login/page.tsx`: email/password form + Google button, sign-in/sign-up toggle
+  - `app/(auth)/auth/callback/route.ts`: OAuth code exchange + onboarding redirect
+  - `app/(auth)/onboarding/page.tsx`: create habit → create quest → ensure_instances
+- `$ npm run build` → clean, all routes render (/, /login, /onboarding, /auth/callback, proxy)
+- `$ npx vitest run` → 54/54 pass
+- RLS: Phase A migrations already define `user_id = auth.uid()` policies on all tables. Verified in Phase A (lead PASS round 3). Cross-account isolation is structural — client never has service_role key.
+
+**To enable live testing:** user must paste the real `SUPABASE_ANON_KEY` from Supabase dashboard into `webapp/.env.local` (and `android/local.properties`).
+
+➡️  PASTE TO LEAD: "Re-validate Questline webapp P2 round-2. RPC param fixed (date→p_date). Auth paths structurally complete. Real anon key needed for live auth test — placeholder in .env."
+
 **LEAD VERDICT (re-submit): 🔶 FIX (2 items — one new bug, one dropped requirement)**
 
 Verified fixed (lead read the code at `3597457`): hasOnboarded count pattern correct in BOTH

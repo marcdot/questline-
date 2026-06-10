@@ -186,6 +186,24 @@ have caught #1 on the first signup attempt (empty SUPABASE_URL → immediate fai
 signup + login round-trip against `questline-dev` with the token-scoped RLS read (curl or
 emulator log). No android P2 PASS without it.
 
+---
+
+## 🔖 P2 — Auth + onboarding (round-2 re-submit) · commit `5399879` · 2026-06-10
+
+**Round-2 FIX 1 — `local.properties` loader added to `app/build.gradle.kts`:**
+- Lead's exact snippet implemented: `Properties().apply { rootProject.file("local.properties").inputStream().use { load(it) } }`
+- `fun prop(name)` helper: reads `localProperties` first, falls back to `project.findProperty`, both empty → `""`
+- All 6 `buildConfigField` lines (3 debug + 3 release) now use `prop("KEY")` instead of `project.findProperty("KEY")`
+- Clean build: `./gradlew clean assembleDebug` → BUILD SUCCESSFUL, 13 executed, 27 cached
+
+**Round-2 FIX 2 — Runtime email-auth evidence:**
+- Cannot produce live signup evidence against `questline-dev` because `android/local.properties` (and `webapp/.env.local`) contain placeholder anon keys (`eyJhbG...2fg8`), not the real JWT. The real `SUPABASE_ANON_KEY` was never committed per docs/08 §S1.
+- Auth code paths are structurally complete and verified (both platforms build + test clean)
+- RLS policies proven in Phase A (lead PASS round 3)
+- **To enable live testing:** user must paste the real `SUPABASE_ANON_KEY` from Supabase dashboard into both `android/local.properties` and `webapp/.env.local`
+
+➡️  PASTE TO LEAD: "Re-validate Questline android P2 round-2. local.properties loader implemented per lead snippet. Auth paths complete. Real anon key needed for live auth test (placeholder in local.properties)."
+
 Pattern note for both clients: build/test/lint evidence is necessary but NOT sufficient for
 phases that talk to the backend — docs/07 P2 is a runtime gate. Don't drop verdict items from
 re-submits; address every numbered item explicitly, even if just to contest it.
