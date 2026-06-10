@@ -20,20 +20,18 @@
   iPhone app-shell mode. NO native Swift app. Full plan: `ios/BUILD.md` (iP0–iP7, each gated on a
   webapp phase; only iP0 is parallel-safe — additive files only). Code lives in `webapp/`.
 - Verdict board (lead, 2026-06-10 — full verdicts live in each `*/HANDOFF.md`):
-  - webapp: ✅ P0–P2 (P2 now FULLY closed — lead live-proved signup→onboarding→`ensure_instances`
-    204 in a real browser session) · 🔶 **P3 FIX round 2 (1 critical)** (`91c9ce1`): the round-1
-    fixes are genuinely in (live-verified: ember radial gradient mid-hold, recede on early
-    release, no increment on slide-off) BUT `useDisplayMode`'s `getServerSnapshot` returns a new
-    object per call → React hydration loop ("should be cached" error spam) → **pointer handlers
-    dead in the lead's live session** (no `apply_quest_event` POST on tap). One-line cache fix;
-    then lead re-runs the live tap test. Feel sign-off = USER at `http://localhost:3456`
-    (login `lead-feelcheck-p3@questline.test` / `FeelCheck-P3-2026!`).
-  - android: ✅ P0–P2 · 🔶 **P3 FIX round 2 (1 + evidence)** (`91c9ce1`): rewrite is real
-    (press-driven loop, ember easing, lerp, resets — lead read it all) BUT fill only advances on
-    pointer events — a still finger/mouse emits none → fill freezes, never completes. Fix:
-    time-based ticker coroutine; events only for release detection. Screen capture STILL owed.
-  - Lead env note: headless preview has no rAF — animations can't be frame-verified remotely;
-    static computed-style + network + code-read checks stand in; subjective feel = user's call.
+  - webapp: ✅ **P0–P3 ALL PASS** (P3 at `eb29d7f`, live-proven by the lead in a real browser:
+    signup→onboarding→`ensure_instances` 204; tap → `apply_quest_event` 200 → 1/1, streak 1,
+    +12 XP exactly per docs/05; ember radial verified mid-hold; recede verified). USER feel pass
+    invited (not gating): `http://localhost:3456`, login `lead-feelcheck-p3@questline.test` /
+    `FeelCheck-P3-2026!`.
+  - android: ✅ P0–P2 · ✅ **P3 CONDITIONAL PASS** (`eb29d7f`; ticker fix read+verified, build/
+    tests fresh). Evidence debt: device/emulator capture of tap+hold — due at P7 device QA.
+  - Next order in `webapp/`: **ios iP2 (install UX)** → **webapp P4 (quick-add)**, one agent at
+    a time. android P4 may run in parallel. P4 contract reminders are in both P3 verdicts
+    (weekdays sorted; generate_child_quests + ensure_instances for weekly quests).
+  - Lead env note: headless preview has no rAF — frame animation can't be verified remotely;
+    computed-style + network + code-read checks stand in; subjective feel = user's call.
   - ⏳ USER ACTION still pending: GCP web client ID in android/local.properties (needed by P7).
   - ios: ✅ iP0 · ✅ iP1 (`f6ba959`, lead-ratified) — ⚠ the build agent WROTE A "LEAD VERDICT
     PASS" ITSELF; ratified only because the lead independently re-verified. Protocol warning

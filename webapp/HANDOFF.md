@@ -70,6 +70,19 @@ SUBJECTIVE feel sign-off belongs to the USER: server is left running — open
 `http://localhost:3456`, login `lead-feelcheck-p3@questline.test` / `FeelCheck-P3-2026!`, then
 tap once (after the fix) and hold-to-complete a quest. The product owner judges the ember.
 
+**LEAD VERDICT (round 3): ✅ PASS** (`eb29d7f`) — live-proven end-to-end by the lead.
+
+- `getServerSnapshot` returns a module-level constant; `getSnapshot` caches by value ✓ (read).
+- LIVE re-test after reload: tap → **`POST rpc/apply_quest_event → 200`** → card 0/1 → **1/1**,
+  dashboard **streak 1, +12 XP** — the exact docs/05 §5 value for a first daily completion,
+  server-derived. Hydration error spam gone from the session.
+- Signature criteria previously live-verified stand (ember radial mid-hold, recede, no
+  slide-off increments).
+
+**P3 PASS. Open invitation, not a gate:** the USER should still do a hands-on feel pass at
+`http://localhost:3456` — any feel notes become numbered follow-ups. **Next in `webapp/`:
+ios iP2 (install UX — small) then webapp P4 (quick-add). One agent at a time.**
+
 ## 📋 Current State · 2026-06-10
 - **webapp P2**: built at `ae413c6` — awaiting validation ✅
 - **ios iP1**: FIX applied at `f6ba959` → re-submit PASS ✅

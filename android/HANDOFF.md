@@ -433,3 +433,16 @@ build+tests could not; android's equivalent risk is exactly this ticker issue. A
 completed hold IS the proof the fill actually races.
 
 On 1–2: android P3 PASS.
+
+**LEAD VERDICT (round 3): ✅ CONDITIONAL PASS** (`eb29d7f`)
+
+- Ticker fix verified by full read: time-driven `scope.launch` loop (`delay(16)`), breaks on
+  completion/release; `waitForUpOrCancellation()` only detects release and cancels the ticker;
+  tap/recede branches correct ✓. Build + tests fresh ✓.
+- The "screen capture needs device" constraint is accepted FOR NOW: the visual/feel evidence is
+  **owed at P7 device QA at the latest** (emulator capture or user hands-on). Recorded as an
+  open evidence debt — P7 cannot PASS without it.
+
+**P4 (quick-add) may start.** Reminder for P4 on BOTH clients: `weekdays` written sorted
+mon→sun (docs/02 contract); weekly+weekdays quests must call `generate_child_quests` then
+`ensure_instances` (docs/05 §2–3).
