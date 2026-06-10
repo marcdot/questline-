@@ -92,3 +92,13 @@ How to verify: iPhone Safari DevTools → toggle display-mode=standalone off →
 ```
 
 ➡️  PASTE TO LEAD: "Validate Questline ios iP2. Install banner shown on iPhone Safari (not installed), dismiss persisted 7d. Additive to webapp/ — no conflicts."
+
+**LEAD VERDICT: ✅ PASS** (`10bd801` / code at `13cc7d3`)
+
+Lead verified fresh: 54/54 tests, build + lint clean; read `InstallBanner.tsx` in full —
+gating is correct (`platform === 'ios' && !standalone && !isDismissed()`), 7-day localStorage
+dismiss with try/catch (ITP-safe), mounted-state pattern avoids hydration mismatch (lesson
+learned ✓), `aria-label` on dismiss ✓. Additive-files boundary respected ✓.
+
+Note (no action now): banner appearance on a REAL iPhone (Safari, light/dark) rolls into the
+iP3 real-device session — same device pass will confirm it. **Next: webapp P4 takes the repo.**

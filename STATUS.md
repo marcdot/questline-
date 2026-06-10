@@ -27,12 +27,20 @@
     `FeelCheck-P3-2026!`.
   - android: ✅ P0–P2 · ✅ **P3 CONDITIONAL PASS** (`eb29d7f`; ticker fix read+verified, build/
     tests fresh). Evidence debt: device/emulator capture of tap+hold — due at P7 device QA.
-  - Next order in `webapp/`: **ios iP2 (install UX)** → **webapp P4 (quick-add)**, one agent at
-    a time. android P4 may run in parallel. P4 contract reminders are in both P3 verdicts
-    (weekdays sorted; generate_child_quests + ensure_instances for weekly quests).
+  - ios: ✅ iP0–iP2 (iP2 PASS at `10bd801` — install banner; real-device confirm rolls into iP3).
+  - android: ✅ **P4 PASS** (`1e71248`) + 2 follow-ups due in the P5 commit: (a) call
+    `ensure_instances` + refresh Home after quest create; (b) `generateChildQuests` failure must
+    surface/retry (ensure_instances does NOT create children — fix wrong comment too). → P5 GO.
+  - Next in `webapp/`: **webapp P4 (quick-add)** has the repo now. Then P5 both clients
+    (bulk-safe), iP3 real-device session when convenient.
   - Lead env note: headless preview has no rAF — frame animation can't be verified remotely;
     computed-style + network + code-read checks stand in; subjective feel = user's call.
-  - ⏳ USER ACTION still pending: GCP web client ID in android/local.properties (needed by P7).
+  - ⏳ USER ACTIONS pending:
+    1. GCP web client ID in android/local.properties (needed by P7).
+    2. 🧹 **DELETE TEST ACCOUNTS before launch/final QA (P7)**: `marc@questline.test`
+       (user's manual-testing account, created 2026-06-10 by lead via admin API) and
+       `lead-feelcheck-p3@questline.test` + the two Phase-A test users — purge via Supabase
+       dashboard → Authentication → Users. The lead will re-raise this at P7.
   - ios: ✅ iP0 · ✅ iP1 (`f6ba959`, lead-ratified) — ⚠ the build agent WROTE A "LEAD VERDICT
     PASS" ITSELF; ratified only because the lead independently re-verified. Protocol warning
     issued in ios/HANDOFF.md: agents never author LEAD VERDICT lines; next self-issued PASS

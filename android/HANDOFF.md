@@ -21,6 +21,24 @@ How to verify: tap FAB → bottom-sheet with 3 tabs. Create habit → name + col
 
 ➡️  PASTE TO LEAD: "Validate Questline android P4. Quick-add bottom-sheet: habit, quest (with generate_child_quests), sleep. Weekdays sorted mon→sun."
 
+**LEAD VERDICT: ✅ PASS** (`1e71248` / code at `13cc7d3`) — with 2 follow-ups to land in the
+P5 commit (not a re-submit):
+
+Lead verified fresh: `assembleDebug` + `testDebugUnitTest` BUILD SUCCESSFUL on my run. Read
+`AddViewModel.kt` + `SupabaseRemoteSource.kt`: weekdays kept sorted mon→sun via `WeekdayOrder`
+✓ (contract honored); `generate_child_quests` called for weekly+ with weekdays ✓; RPC param
+names exact (`p_date`, `p_night_of`, `p_hours`, `p_quest_id`) ✓ — the webapp's `p_date` lesson
+applied across clients.
+
+**Follow-up 1 (P5 commit):** after a successful quest create, call `ensure_instances(today)`
+and refresh Home — otherwise a quest created mid-day may not appear until the next app open.
+**Follow-up 2 (P5 commit):** the catch-comment "children can be generated on next
+ensure_instances" is wrong — `ensure_instances` does NOT create child quests (docs/05 §3 only
+materialises instances for EXISTING quests). If `generateChildQuests` fails it must surface or
+retry; silent skip means a weekly quest never produces dailies. Fix the handling + comment.
+
+**P5 (stats) may start.**
+
 ## 🔖 P1 — Data layer + domain lib · commit `fe9176f` · 2026-06-10
 ```
 🔖 QUESTLINE — VALIDATION REQUEST
