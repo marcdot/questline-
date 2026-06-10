@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Ember circle with Q mark -->
+    <group
+        android:translateX="22"
+        android:translateY="22">
+        <path
+            android:fillColor="#D9542B"
+            android:pathData="M32,0C49.67,0 64,14.33 64,32C64,49.67 49.67,64 32,64C14.33,64 0,49.67 0,32C0,14.33 14.33,0 32,0Z" />
+        <path
+            android:fillColor="#FFFFFF"
+            android:pathData="M30,20C26.5,20 23.5,21.5 21.5,24L25.5,28C26.8,26.5 28.3,25.5 30.5,25.5C33.5,25.5 35.5,27.5 35.5,30C35.5,32.5 33.5,34 31,35.5C28.5,37 26,39 26,43L26,45L33,45L33,43.5C33,41 34.5,39.5 37,38C39.5,36.5 42.5,34 42.5,29.5C42.5,24 36.5,20 30,20ZM26,48L26,54L33,54L33,48L26,48Z" />
+    </group>
+</vector>

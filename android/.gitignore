@@ -1,0 +1,35 @@
+# ── Questline Android ──────────────────────────────────────────────
+# Per docs/08 §S1: only SUPABASE_URL + SUPABASE_ANON_KEY in clients.
+# No service-role key, no Google client secret, no refresh token.
+
+# SDK
+*.iml
+.gradle
+/local.properties
+/.idea
+.DS_Store
+/build
+/captures
+.externalNativeBuild
+.cxx
+local.properties
+
+# App build
+app/build/
+app/release/
+
+# Secrets — never committed
+local.properties
+*.keystore
+*.jks
+secrets.properties
+
+# IDE
+*.swp
+*.swo
+*~
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
