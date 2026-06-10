@@ -11,20 +11,23 @@
 - ✅ Git: local repo at `C:\Users\Cutom\Desktop\app\questline` (branch `master`). Commits:
   `c80febb` initial, `9f5b891` retone. **No remote yet.**
 - ✅ Hermes handoff written: `brain/Brain/_Claude/handoffs/questline-backend-and-p0.md`.
-- 🔶 Task 1 (Backend Phase A) — Hermes delivered (commit `c560df5`); lead reviewed and returned
-  **FIX** (not PASS yet). See `brain/Brain/_Claude/handoffs/questline-backend-PhaseA-RESULT.md`
-  → "LEAD VERDICT" at the bottom: 1 blocker (RPCs `apply_quest_event`/`ensure_instances`/`log_sleep`
-  don't check `auth.uid()` — cross-user RLS bypass), 1 secondary (streak edge case), 1 nit.
-- ⏳ NOT started: client app code (webapp/android). Blocked on Task 1 FIX → PASS.
+- 🔶 Task 1 (Backend Phase A) — Hermes delivered (`c560df5`) + fix round 1 (`47aca68`). Lead
+  round-2 verdict: **FIX (2 small items)** but **Task 2 explicitly UNBLOCKED in parallel**. See
+  `brain/Brain/_Claude/handoffs/questline-backend-PhaseA-RESULT.md` → "LEAD VERDICT (round 2)":
+  (1) `generate_child_quests` missing the `auth.uid()` guard (one line);
+  (2) non-first-weekday streak check is unbounded in time (must check THIS week's prev weekday
+  date, not "ever completed") + add a gap test vector (Mon-wk1 → skip wk2 → Wed-wk3 ⇒ streak 1, XP 12).
+- ⏳ NOT started: client app code (webapp/android) — now cleared to start (P0 only).
 
 ## The next step (do this)
-1. Tell Hermes: *"Read `_Claude/handoffs/questline-backend-PhaseA-RESULT.md` → LEAD VERDICT, fix
-   #1 (auth.uid() checks in the 3 RPCs) and #2 (streak first-weekday edge case), re-run the §8
-   vector + a cross-user RPC test, then re-submit the Validation Request."*
-2. Task 1 = **Backend Phase A** (Supabase schema/RLS/RPCs, `docs/04`). It is a **hard gate** — must
-   be PASS before any client work.
-3. After Task 1 PASS → Hermes runs `delegate_task([webapp-P0, android-P0])` in parallel.
-4. Continue each client P1→P7 per `docs/06` (one phase → commit → Validation Request).
+1. Tell Hermes: *"Read `_Claude/handoffs/questline-backend-PhaseA-RESULT.md` → LEAD VERDICT
+   (round 2). Apply fixes #1 and #2, re-run §8 + the new gap vector + cross-user
+   generate_child_quests test, re-submit. SIMULTANEOUSLY start Task 2:
+   `delegate_task([webapp-P0, android-P0])` per `questline-backend-and-p0.md` — P0 scaffolds
+   don't call write RPCs, so the lead unblocked them."*
+2. Phase A formal PASS gate = §8 ✅ + gap vector ✅ + cross-user generate_child_quests → 42501 ✅.
+   Clients may NOT wire write RPCs (P1+) until that PASS.
+3. Continue each client P1→P7 per `docs/06` (one phase → commit → Validation Request).
 
 ## How to resume in a FRESH session (paste this)
 > "You are the Questline project lead. The product lives in `C:\Users\Cutom\Desktop\app\questline`.
