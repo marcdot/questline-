@@ -11,26 +11,30 @@ import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.engine.okhttp.OkHttp
 import io.ktor.client.request.*
-import io.ktor.client.statement.HttpResponse
+import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
+import io.ktor.http.isSuccess
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
+import javax.inject.Inject
+import javax.inject.Singleton
 
 /**
  * Supabase remote data source using raw Ktor HTTP calls.
  *
- * Calls the Supabase REST API directly (PostgREST + GoTrue Auth).
- * No supabase-kt dependency needed — avoids version/API mismatch issues.
- *
  * Endpoints:
- *   REST:  POST/GET {SUPABASE_URL}/rest/v1/{table}?select=...  (anon key in apikey header)
- *   RPC:   POST {SUPABASE_URL}/rest/v1/rpc/{fn}                 (anon key in apikey header)
- *   Auth:  POST {SUPABASE_URL}/auth/v1/...                      (anon key in apikey header)
+ *   REST:  POST/GET /rest/v1/{table}?select=...  (anon key in apikey header)
+ *   RPC:   POST /rest/v1/rpc/{fn}
+ *   Auth:  POST /auth/v1/...
+ *
+ * When [accessToken] is set (by [AuthRepository] after login), all table/RPC calls
+ * use the authenticated Bearer token so RLS policies apply.
  */
-class SupabaseRemoteSource {
+@Singleton
+class SupabaseRemoteSource @Inject constructor() {
 
     private val json = Json {
         ignoreUnknownKeys = true
@@ -43,10 +47,16 @@ class SupabaseRemoteSource {
     private val baseUrl: String get() = BuildConfig.SUPABASE_URL
     private val anonKey: String get() = BuildConfig.SUPABASE_ANON_KEY
 
+    /**
+     * The Bearer auth token. Set to the user's access token after sign-in.
+     * When null, the anon key is used (unauthenticated requests).
+     */
+    var accessToken: String? = null
+
     /** Default headers for table/RPC calls. */
     private fun HttpRequestBuilder.supaHeaders() {
         header("apikey", anonKey)
-        header("Authorization", "Bearer $anonKey")
+        header("Authorization", "Bearer ${accessToken ?: anonKey}")
         contentType(ContentType.Application.Json)
     }
 
@@ -115,7 +125,64 @@ class SupabaseRemoteSource {
     suspend fun getXpBalance(userId: String): Int =
         getXpEvents(userId).sumOf { it.amount }
 
-    // ── Write paths (RPCs only — never direct table writes) ──
+    // ── Write paths (inserts for onboarding) ──
+
+    /**
+     * Create a new habit. Returns the created [HabitDto] or null on failure.
+     */
+    suspend fun insertHabit(name: String, color: String): HabitDto? {
+        val url = "$baseUrl/rest/v1/habit?select=*"
+        val response = client.post(url) {
+            supaHeaders()
+            setBody("""{"name":"$name","color":"$color"}""")
+        }
+        val text = response.bodyAsText()
+        if (response.status.isSuccess() && text.isNotBlank()) {
+            return try {
+                val list: List<HabitDto> = json.decodeFromString(text)
+                list.firstOrNull()
+            } catch (_: Exception) {
+                json.decodeFromString<HabitDto>(text)
+            }
+        }
+        return null
+    }
+
+    /**
+     * Create a new quest. Returns the created [QuestDto] or null on failure.
+     */
+    suspend fun insertQuest(
+        habitId: String,
+        title: String,
+        cadence: String,
+        targetCount: Int = 1,
+    ): QuestDto? {
+        val url = "$baseUrl/rest/v1/quest?select=*"
+        val today = java.time.LocalDate.now().toString()
+        val body = buildJsonObject {
+            put("habit_id", habitId)
+            put("title", title)
+            put("cadence", cadence)
+            put("target_count", targetCount)
+            put("active_from", today)
+        }
+        val response = client.post(url) {
+            supaHeaders()
+            setBody(body.toString())
+        }
+        val text = response.bodyAsText()
+        if (response.status.isSuccess() && text.isNotBlank()) {
+            return try {
+                val list: List<QuestDto> = json.decodeFromString(text)
+                list.firstOrNull()
+            } catch (_: Exception) {
+                json.decodeFromString<QuestDto>(text)
+            }
+        }
+        return null
+    }
+
+    // ── Write paths (RPCs only) ──
 
     suspend fun applyQuestEvent(
         eventId: String,

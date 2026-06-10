@@ -15,7 +15,7 @@ android {
         minSdk = 28
         targetSdk = 34
         versionCode = 1
-        versionName = "0.1.0-P1"
+        versionName = "0.2.0-P2"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -94,6 +94,12 @@ dependencies {
 
     // Kotlinx Serialization
     implementation(libs.kotlinx.serialization.json)
+
+    // Security (encrypted storage)
+    implementation(libs.androidx.security.crypto)
+
+    // Google Sign-In
+    implementation(libs.play.services.auth)
 
     // Testing
     testImplementation(libs.kotlin.test)

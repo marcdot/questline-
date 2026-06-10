@@ -9,4 +9,28 @@
     <string name="home_title">Today</string>
     <string name="home_placeholder">Your quests will appear here</string>
     <string name="home_empty">Nothing live yet. Plant your first quest →</string>
+
+    <!-- Auth screen -->
+    <string name="auth_title">Questline</string>
+    <string name="auth_subtitle">Turn your habits into quests</string>
+    <string name="auth_sign_in_title">Welcome Back</string>
+    <string name="auth_sign_up_title">Create Account</string>
+    <string name="auth_email_label">Email</string>
+    <string name="auth_password_label">Password</string>
+    <string name="auth_sign_in_action">Sign In</string>
+    <string name="auth_sign_up_action">Sign Up</string>
+    <string name="auth_google_action">Continue with Google</string>
+    <string name="auth_toggle_sign_in">Already have an account? Sign In</string>
+    <string name="auth_toggle_sign_up">Don\'t have an account? Sign Up</string>
+
+    <!-- Onboarding screen -->
+    <string name="onboarding_welcome">Welcome to Questline!</string>
+    <string name="onboarding_subtitle">Let\'s set up your first habit and quest.</string>
+    <string name="onboarding_habit_section">Your First Habit</string>
+    <string name="onboarding_habit_hint">e.g. Read daily, Exercise</string>
+    <string name="onboarding_color_picker">Pick a colour</string>
+    <string name="onboarding_quest_section">Your First Quest</string>
+    <string name="onboarding_quest_hint">e.g. Read for 20 minutes</string>
+    <string name="onboarding_cadence_label">How often?</string>
+    <string name="onboarding_complete_action">Start My Journey</string>
 </resources>

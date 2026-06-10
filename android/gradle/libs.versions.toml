@@ -16,6 +16,8 @@ supabase = "2.6.1"
 ktor = "2.3.10"
 kotlinxSerialization = "1.6.2"
 junit = "4.13.2"
+securityCrypto = "1.1.0-alpha06"
+playServicesAuth = "21.2.0"
 
 [libraries]
 # Core
@@ -59,6 +61,12 @@ kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-
 # Testing
 kotlin-test = { group = "org.jetbrains.kotlin", name = "kotlin-test", version.ref = "kotlin" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
+
+# Security
+androidx-security-crypto = { group = "androidx.security", name = "security-crypto", version.ref = "securityCrypto" }
+
+# Google Sign-In
+play-services-auth = { group = "com.google.android.gms", name = "play-services-auth", version.ref = "playServicesAuth" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

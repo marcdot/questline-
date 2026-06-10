@@ -1,11 +1,14 @@
 package com.questline.app.data.remote
 
+import android.content.Context
+import com.questline.app.data.local.AuthStorage
 import com.questline.app.data.local.AppDatabase
 import com.questline.app.data.local.dao.CacheDao
 import com.questline.app.data.local.dao.OfflineQueueDao
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
+import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 
@@ -20,6 +23,12 @@ object DataModule {
     @Singleton
     fun provideSupabaseRemoteSource(): SupabaseRemoteSource {
         return SupabaseRemoteSource()
+    }
+
+    @Provides
+    @Singleton
+    fun provideAuthStorage(@ApplicationContext context: Context): AuthStorage {
+        return AuthStorage(context)
     }
 
     @Provides
