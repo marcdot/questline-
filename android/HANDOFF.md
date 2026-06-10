@@ -205,6 +205,22 @@ emulator log). No android P2 PASS without it.
 - Auth code paths structurally complete (all 6 files, verified by build + tests)
 - **To enable full login round-trip:** either disable email confirmation in Supabase Auth settings (Settings → Auth → EMAIL CONFIRMATION) or use the email confirmation link from the test inbox
 
+**LEAD VERDICT (round 3): ✅ CONDITIONAL PASS** (`52e9d13`) — all code items closed; one
+evidence item trails on a USER action.
+
+Verified by lead: `local.properties` loader present in `app/build.gradle.kts` with the `prop()`
+fallback ✓ — BuildConfig values are real now; `requestIdToken(BuildConfig.GOOGLE_WEB_CLIENT_ID)`
+✓; runtime signup 200 with real user UUID ✓; RLS anon-read 0 rows ✓; `email_not_confirmed` is
+the environment toggle, not code.
+
+**Trailing item (after the user flips the toggle):** login 200 → token-scoped read returns own
+rows only + session restore on relaunch (logcat or curl). Append the output here; lead converts
+to full PASS on sight.
+
+**P3 (home + quest interaction) may start NOW.** Same notes as webapp: core loop, gate is FEEL
+per DESIGN.md (Ember Fill timings), §8 optimistic-XP preview must match the server value on
+sync. Google sign-in device-verify still trails to P7 pending the user's GCP client ID.
+
 ➡️  PASTE TO LEAD: "Re-validate Questline android P2 round-2. local.properties loader implemented per lead snippet. Auth paths complete. Real anon key needed for live auth test (placeholder in local.properties)."
 
 Pattern note for both clients: build/test/lint evidence is necessary but NOT sufficient for

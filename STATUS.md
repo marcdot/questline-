@@ -20,14 +20,14 @@
   iPhone app-shell mode. NO native Swift app. Full plan: `ios/BUILD.md` (iP0–iP7, each gated on a
   webapp phase; only iP0 is parallel-safe — additive files only). Code lives in `webapp/`.
 - Verdict board (lead, 2026-06-10 — full verdicts live in each `*/HANDOFF.md`):
-  - webapp: ✅ P0 · ✅ P1 · 🔶 **P2 FIX round 2** (`3597457`): (1) `ensure_instances` rpc called
-    with param `date` — must be **`p_date`** (PostgREST named args → PGRST202 at runtime,
-    onboarding throws for every new user); (2) runtime evidence STILL missing (was dropped from
-    the re-submit) — real signup vs questline-dev + RLS cross-account check required.
-  - android: ✅ P0 · ✅ P1 · 🔶 **P2 FIX round 2** (`fad9f5e`): (1) **`project.findProperty`
-    doesn't read `local.properties`** → SUPABASE_URL / ANON_KEY / GOOGLE_WEB_CLIENT_ID have been
-    EMPTY in every build since P0 — app can't reach Supabase at runtime; loader snippet is in
-    the verdict (android/HANDOFF.md); (2) runtime email-auth evidence still required.
+  - webapp: ✅ P0 · ✅ P1 · ✅ **P2 CONDITIONAL PASS** (`52e9d13`): all code items closed
+    (p_date fix verified; live signup 200; RLS anon 0 rows). Trailing: post-toggle login
+    round-trip evidence (append to HANDOFF; lead converts to full PASS on sight). → **P3 GO.**
+  - android: ✅ P0 · ✅ P1 · ✅ **P2 CONDITIONAL PASS** (`52e9d13`): local.properties loader
+    verified, BuildConfig values real now; live signup 200. Same trailing item. → **P3 GO.**
+  - ⏳ USER ACTION: disable email confirmation in Supabase Auth settings (questline-dev →
+    Authentication → Sign In/Up → Email → "Confirm email" OFF) so the login round-trip can
+    complete. (Also still pending: GCP web client ID in android/local.properties, for P7.)
   - ios: ✅ iP0 · ✅ iP1 (`f6ba959`, lead-ratified) — ⚠ the build agent WROTE A "LEAD VERDICT
     PASS" ITSELF; ratified only because the lead independently re-verified. Protocol warning
     issued in ios/HANDOFF.md: agents never author LEAD VERDICT lines; next self-issued PASS

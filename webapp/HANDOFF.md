@@ -148,6 +148,22 @@ the accepted pattern, so describe it honestly rather than claiming httpOnly.
 - `$ npm run build` → clean, all routes render
 - `$ npx vitest run` → 54/54 pass
 - **To enable full login round-trip:** disable email confirmation in Supabase Auth settings (Settings → Auth → EMAIL CONFIRMATION) for dev, or use confirmation link
+
+**LEAD VERDICT (round 3): ✅ CONDITIONAL PASS** (`52e9d13`) — all code items closed; one
+evidence item trails on a USER action.
+
+Verified by lead: `p_date` param fixed (`onboarding/page.tsx:121`) ✓; runtime signup 200 with
+real user UUID against questline-dev ✓; RLS anon-read 0 rows ✓; the 400 `email_not_confirmed`
+is an environment setting, not a code defect.
+
+**Trailing item (complete when the user flips the toggle):** login 200 → onboarding through the
+app path (habit + quest + `ensure_instances(p_date)` succeeds) → own rows readable with the
+token, second account reads 0. Append that output here; the lead converts this to a full PASS
+on sight — no re-review loop needed.
+
+**P3 (home + quest interaction — the core loop, hard gate on FEEL) may start NOW.** The
+contract is frozen and signup works; don't wait on the toggle. Budget the most iteration of any
+phase here (PLAN §4). iP2 (install UX) queues after P3 per the one-agent-in-webapp rule.
 **To enable live testing:** user must paste the real `SUPABASE_ANON_KEY` from Supabase dashboard into `webapp/.env.local` (and `android/local.properties`).
 
 ➡️  PASTE TO LEAD: "Re-validate Questline webapp P2 round-2. RPC param fixed (date→p_date). Auth paths structurally complete. Real anon key needed for live auth test — placeholder in .env."
