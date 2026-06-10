@@ -20,23 +20,32 @@
   iPhone app-shell mode. NO native Swift app. Full plan: `ios/BUILD.md` (iP0–iP7, each gated on a
   webapp phase; only iP0 is parallel-safe — additive files only). Code lives in `webapp/`.
 - Verdict board (lead, 2026-06-10 — full verdicts live in each `*/HANDOFF.md`):
-  - webapp: ✅ P0 · ✅ P1 (`a7c6d7a`, ISO week-year fixed, 54/54) → **P2 next** (after iP1 fix)
-  - android: ✅ P0 · ✅ P1 (`fe9176f`, IsoFields week-year correct, tests fresh) → **P2 next**.
-    ⚠ Protocol: P1 VR was never appended to `android/HANDOFF.md` — backfill required; from P2
-    on, no verdict without the VR in the platform HANDOFF.
-  - ios: ✅ iP0 · 🔶 **iP1 FIX (1)** (`4cf5ef6`): `statusBarStyle "black-translucent"` + no top
-    safe-area padding → white status-bar text over light bg + content under the notch on real
-    devices. Fix: `statusBarStyle: "default"` (one line). Then iP1 PASS.
-- Order in `webapp/`: (1) iP1 one-line fix, (2) webapp P2 (auth), (3) iP2 install UX. One agent
-  in webapp/ at a time. android P2 runs freely in parallel.
+  - webapp: ✅ P0 · ✅ P1 · 🔶 **P2 FIX (3 + process blocker)** — (0) claimed commit `ae413c6`
+    DOESN'T EXIST, work is uncommitted (3rd phantom-commit incident — commit it, real hash);
+    (1) `hasOnboarded` always false (`head:true` + `data.length` bug) in proxy.ts AND
+    auth/callback — onboarded users bounce to /onboarding forever; (2) onboarding inserts
+    `quest_instance` directly — must use `ensure_instances` RPC; (3) runtime auth evidence
+    required (real signup vs questline-dev + RLS check) + drop the false "httpOnly" claim.
+  - android: ✅ P0 · ✅ P1 · 🔶 **P2 FIX (2)** (`797f68f`) — (1) Google sign-in NOT wired:
+    `requestIdToken("")` hardcoded, no BuildConfig field (use the WEB client ID via
+    local.properties; user creates it in GCP console — lead holds no credentials); (2) runtime
+    email-auth evidence required. VR was properly appended this time ✓.
+  - ios: ✅ iP0 · ✅ iP1 (`f6ba959`, lead-ratified) — ⚠ the build agent WROTE A "LEAD VERDICT
+    PASS" ITSELF; ratified only because the lead independently re-verified. Protocol warning
+    issued in ios/HANDOFF.md: agents never author LEAD VERDICT lines; next self-issued PASS
+    voids the phase.
+- Order in `webapp/`: (1) P2 fixes → P2 PASS, (2) webapp P3 (core loop, hard gate), (3) iP2.
+  android: P2 fixes → P3. Email auth is the gate; Google device-verify may trail to P7.
 
 ## The next step (do this)
-1. Tell Hermes: *"Verdicts in the three HANDOFF.md files: webapp P1 PASS, android P1 PASS (but
-   backfill the P1 VR into android/HANDOFF.md — durable record rule, now enforced), ios iP1
-   FIX(1): statusBarStyle → "default" (or pad top safe-area). Order in webapp/: iP1 fix → webapp
-   P2 → iP2. android P2 may start now."*
-2. From here: one phase → one commit → one VR per stream; lead bulk-reviews additive phases,
-   hard gates (P2 auth/RLS, P3 feel, P6 calendar security) get prompt review.
+1. Tell Hermes: *"P2 verdicts in webapp/android HANDOFF.md — both FIX. Webapp: COMMIT the P2
+   work first (claimed ae413c6 doesn't exist), fix the hasOnboarded count bug in proxy.ts +
+   auth/callback, switch onboarding to the ensure_instances RPC, and attach runtime signup+RLS
+   evidence. Android: wire GOOGLE_WEB_CLIENT_ID via local.properties→BuildConfig (web client ID,
+   not Android), attach runtime email-auth evidence. Also: never write LEAD VERDICT lines
+   yourself — see the warning in ios/HANDOFF.md. Re-submit both P2s."*
+2. From here: one phase → one commit → one VR per stream; hard gates (P2 re-submits, P3 feel,
+   P6 calendar security) get prompt review; additive phases may batch.
 
 ## How to resume in a FRESH session (paste this)
 > "You are the Questline project lead. The product lives in `C:\Users\Cutom\Desktop\app\questline`.

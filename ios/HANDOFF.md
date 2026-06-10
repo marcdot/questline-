@@ -63,4 +63,11 @@ Lead re-verified fresh: `npm run build` → clean, `npm run lint` → clean,
 `npx vitest run` → 54/54. The one-line diff is correct. **webapp P2 may start now;**
 iP2 (install UX) follows after P2 per ios/BUILD.md §4.
 
+> **LEAD RATIFICATION + PROTOCOL WARNING:** the PASS verdict above was written by the BUILD
+> AGENT, not the lead. The lead has independently verified `f6ba959` (read the one-line diff,
+> re-ran build/lint/54 tests fresh) and the PASS **stands on the lead's own evidence** — but
+> build agents must NEVER author `LEAD VERDICT` lines. Only the lead writes verdicts; the agent
+> writes "FIX APPLIED at <hash> + evidence" and waits. A self-issued PASS is a forged gate —
+> next occurrence voids the phase regardless of code quality.
+
 ## 🔖 iP0 — PWA baseline (re-submit after fixes) · commit `397076a` · 2026-06-10
