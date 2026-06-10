@@ -6,6 +6,33 @@
 
 <!-- newest entry on top -->
 
+## 🔖 P5 — Stats (re-submit) · commit `1cd0f97` · 2026-06-10
+
+**FIX 1 — StatusGrid bins daily instances into weekly/monthly/yearly buckets:**
+
+- **Was:** `quest_instance` query filtered by `period_key IN (periodKeys)` where `periodKeys` are ISO week keys (e.g. `2026-W24`) for weekly view, but instances store **daily** keys (`YYYY-MM-DD`). Result: no instances matched → all columns showed `0/0`.
+- **Now:** When `periodFilter` is `'week'`/`'month'`/`'year'`:
+  1. Compute a date range from the ISO week/month/year keys using `mondayOfISOWeek()` (for weeks) or calendar math (for months/years)
+  2. Fetch instances by `.gte('period_key', instanceStart).lte('period_key', instanceEnd)` — matching on daily keys
+  3. Re-bin each instance via `dailyKeyToPeriodKey()` which maps daily `YYYY-MM-DD` → the filter's period format using `getISOWeek()` (for weeks) or `substring()` (for months/years)
+- `dailyKeyToPeriodKey()` is a new helper in `app/(app)/stats/page.tsx` that handles all four period filters
+- Imports added: `getISOWeek, mondayOfISOWeek` from `@/lib/domain`
+
+**Fresh output (Iron Law §B6):**
+- `$ npm run build` → **Compiled successfully** in 1.87s. Routes: `/`, `/login`, `/onboarding`, `/auth/callback`, `/habits`, `/stats`, `/profile`, `/new`. Proxy active. Exit 0.
+- `$ npx vitest run` → **54/54 tests passed** in 1.29s. Exit 0.
+- `$ npm run lint` → **Clean**. Exit 0.
+
+**Deviations from spec:**
+- None. Fix addresses the lead's exact finding: daily `period_key`s (`YYYY-MM-DD`) need date→ISO-week mapping using `getISOWeek()`, minding the week-year boundary.
+
+**How to verify quickly:**
+- Open `/stats` (authed), switch to **Week** filter → a completed instance on 2026-06-10 (= ISO W24) now shows **W24 1/1** instead of `W24 0/0`
+- Switch to **Month** / **Year** filters → instances aggregated correctly into monthly/yearly columns
+- Switch back to **Day** filter → daily view unchanged (uses original IN-filter path)
+
+➡️  PASTE TO LEAD: "Re-validate Questline webapp P5 — StatusGrid weekly binning. daily→ISO-week rebinning using `getISOWeek()` from domain lib. Fresh build (1.87s), 54/54 tests, lint clean. Commit `1cd0f97`."
+
 ## 🔖 P5 — Stats · commit `uncommitted` · 2026-06-10
 ```
 🔖 QUESTLINE — VALIDATION REQUEST

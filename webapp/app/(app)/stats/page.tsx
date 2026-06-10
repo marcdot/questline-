@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { createClient } from '@/lib/supabase/client';
-import { periodKeyFor } from '@/lib/domain';
+import { periodKeyFor, getISOWeek, mondayOfISOWeek } from '@/lib/domain';
 import XpChart, { type XpDataPoint } from '@/components/XpChart';
 import StreakDisplay, { type StreakEntry } from '@/components/StreakDisplay';
 import StatusGrid, { type StatusEntry, type StatusItem } from '@/components/StatusGrid';
@@ -123,6 +123,26 @@ function getPeriodLabel(key: string, filter: PeriodFilter): string {
       return getMonthLabel(key);
     case 'year':
       return key;
+  }
+}
+
+/**
+ * Map a daily period_key (YYYY-MM-DD) to the current filter's period format.
+ * Used to re-bin daily quest_instance rows into weekly/monthly/yearly buckets.
+ */
+function dailyKeyToPeriodKey(dailyKey: string, filter: PeriodFilter): string {
+  switch (filter) {
+    case 'day':
+      return dailyKey;
+    case 'week': {
+      const d = new Date(dailyKey + 'T12:00:00');
+      const { weekYear, weekNumber } = getISOWeek(d);
+      return `${weekYear}-W${String(weekNumber).padStart(2, '0')}`;
+    }
+    case 'month':
+      return dailyKey.substring(0, 7); // YYYY-MM
+    case 'year':
+      return dailyKey.substring(0, 4); // YYYY
   }
 }
 
@@ -392,25 +412,74 @@ export default function StatsPage() {
       setStreakEntries(entries);
 
       // 6. Fetch quest_instances for status grid
-      const { data: rawInstances } = await supabase
-        .from('quest_instance')
-        .select('*, quest:quest_id(*)')
-        .eq('user_id', user.id)
-        .in('period_key', periodKeys)
-        .order('period_key', { ascending: true });
+      // When period filter is not 'day', instances have daily period_keys that must
+      // be re-binned into weekly/monthly/yearly buckets.
+      let rawInstances: RawInstance[] | null = null;
+
+      if (periodFilter === 'day') {
+        // Daily: period_keys already match daily format, direct IN filter works
+        const { data } = await supabase
+          .from('quest_instance')
+          .select('*, quest:quest_id(*)')
+          .eq('user_id', user.id)
+          .in('period_key', periodKeys)
+          .order('period_key', { ascending: true });
+        rawInstances = data as unknown as RawInstance[];
+      } else {
+        // Compute date range covering all period columns so we can fetch
+        // instances by their daily period_key, then re-bin below.
+        let instanceStart: string;
+        let instanceEnd: string;
+
+        if (periodFilter === 'week') {
+          const firstMatch = periodKeys[0].match(/^(\d{4})-W(\d{2})$/i);
+          const lastMatch = periodKeys[periodKeys.length - 1].match(/^(\d{4})-W(\d{2})$/i);
+          if (firstMatch && lastMatch) {
+            const firstMonday = mondayOfISOWeek(parseInt(firstMatch[1]), parseInt(firstMatch[2]));
+            instanceStart = formatDateLocal(firstMonday);
+            const lastMonday = mondayOfISOWeek(parseInt(lastMatch[1]), parseInt(lastMatch[2]));
+            const lastSunday = new Date(lastMonday);
+            lastSunday.setDate(lastSunday.getDate() + 6);
+            instanceEnd = formatDateLocal(lastSunday);
+          } else {
+            instanceStart = periodKeys[0];
+            instanceEnd = periodKeys[periodKeys.length - 1];
+          }
+        } else if (periodFilter === 'month') {
+          instanceStart = periodKeys[0] + '-01';
+          const [y, m] = periodKeys[periodKeys.length - 1].split('-').map(Number);
+          const lastDay = new Date(y, m, 0).getDate();
+          instanceEnd = periodKeys[periodKeys.length - 1] + '-' + String(lastDay).padStart(2, '0');
+        } else { // year
+          instanceStart = periodKeys[0] + '-01-01';
+          instanceEnd = periodKeys[periodKeys.length - 1] + '-12-31';
+        }
+
+        const { data } = await supabase
+          .from('quest_instance')
+          .select('*, quest:quest_id(*)')
+          .eq('user_id', user.id)
+          .gte('period_key', instanceStart)
+          .lte('period_key', instanceEnd)
+          .order('period_key', { ascending: true });
+        rawInstances = data as unknown as RawInstance[];
+      }
 
       const instances = (rawInstances ?? []) as unknown as RawInstance[];
 
-      // Group instances by period_key
+      // Group instances by mapped period key (re-bin daily keys into filter periods)
       const instancesByPeriod = new Map<string, RawInstance[]>();
       for (const inst of instances) {
         if (habitFilter) {
           const qHabitId = questHabitMap.get(inst.quest_id);
           if (qHabitId !== habitFilter) continue;
         }
-        const arr = instancesByPeriod.get(inst.period_key);
+        const mappedKey = periodFilter === 'day'
+          ? inst.period_key
+          : dailyKeyToPeriodKey(inst.period_key, periodFilter);
+        const arr = instancesByPeriod.get(mappedKey);
         if (!arr) {
-          instancesByPeriod.set(inst.period_key, [inst]);
+          instancesByPeriod.set(mappedKey, [inst]);
         } else {
           arr.push(inst);
         }
