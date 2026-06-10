@@ -20,14 +20,16 @@
   iPhone app-shell mode. NO native Swift app. Full plan: `ios/BUILD.md` (iP0–iP7, each gated on a
   webapp phase; only iP0 is parallel-safe — additive files only). Code lives in `webapp/`.
 - Verdict board (lead, 2026-06-10 — full verdicts live in each `*/HANDOFF.md`):
-  - webapp: ✅ P0 · ✅ P1 · ✅ **P2 CONDITIONAL PASS** (`52e9d13`): all code items closed
-    (p_date fix verified; live signup 200; RLS anon 0 rows). Trailing: post-toggle login
-    round-trip evidence (append to HANDOFF; lead converts to full PASS on sight). → **P3 GO.**
-  - android: ✅ P0 · ✅ P1 · ✅ **P2 CONDITIONAL PASS** (`52e9d13`): local.properties loader
-    verified, BuildConfig values real now; live signup 200. Same trailing item. → **P3 GO.**
-  - ⏳ USER ACTION: disable email confirmation in Supabase Auth settings (questline-dev →
-    Authentication → Sign In/Up → Email → "Confirm email" OFF) so the login round-trip can
-    complete. (Also still pending: GCP web client ID in android/local.properties, for P7.)
+  - webapp: ✅ P0–P2 (P2 trailing evidence closed at `a201855`) · 🔶 **P3 FIX (3)** (`fc6c729`):
+    (1) CRITICAL tap dead-zone — taps <150 ms never fire +1 (handleTap unreachable);
+    (2) signature isn't Ember Fill (linear 500 ms flat fill vs ember→habit-colour radial on the
+    `ember_fill` curve, no recede on early release — port design.html §6, HOLD 560/TAP 170);
+    (3) re-submit must include login steps so the lead can FEEL it live in the browser preview.
+  - android: ✅ P0–P2 · 🔶 **P3 FIX (3)** (`49c5893`): (1) CRITICAL hold not implemented —
+    onLongPress instant-completes, `holdFillProgress` never driven (no-op patch confirmed by the
+    file-mutation verifier); (2) state bugs: +1 float/pressed-scale never reset, burst dead code;
+    (3) ember→habit lerp on the fill. Evidence: screen capture of tap + hold.
+  - ⏳ USER ACTION still pending: GCP web client ID in android/local.properties (needed by P7).
   - ios: ✅ iP0 · ✅ iP1 (`f6ba959`, lead-ratified) — ⚠ the build agent WROTE A "LEAD VERDICT
     PASS" ITSELF; ratified only because the lead independently re-verified. Protocol warning
     issued in ios/HANDOFF.md: agents never author LEAD VERDICT lines; next self-issued PASS

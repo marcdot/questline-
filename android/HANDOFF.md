@@ -259,6 +259,35 @@ How to verify quickly:
 
 ➡️  PASTE TO LEAD: "Validate Questline android P3 against docs/03 §5, docs/05, docs/07 §P3. Tap=+1, hold=complete, Canvas sleep chart, optimistic XP via domain lib. FEEL gate — motion/timing/haptic per design."
 
+**LEAD VERDICT: 🔶 FIX (3 items — the hold mechanic is not implemented)**
+
+Build + unit tests verified fresh by lead (BUILD SUCCESSFUL). Haptics choices are right
+(TextHandleMove on tap, LongPress on crest). But `QuestCard.kt` does not implement the spec'd
+interaction — and the file-mutation verifier confirms the intended patch was a NO-OP
+(old_string == new_string), so this shipped half-built:
+
+**1. CRITICAL — "hold" is an instant complete, not a fill race.** `detectTapGestures(onLongPress
+= …)` fires at the SYSTEM long-press timeout (~400 ms) and completes immediately.
+`holdFillProgress` is declared but NEVER written — the fill never races, there is no
+release-at-full, no early-release recede. Implement a press-driven gesture
+(`awaitEachGesture`/`awaitFirstDown` + press tracking): drive `holdFillProgress` 0→1 over
+HOLD_MS = 560 with `CubicBezierEasing(0.22f, 0.61f, 0.36f, 1f)` (DESIGN.md
+`motion.easing.ember_fill`); at full → crest haptic + burst + `onHoldComplete()`; released
+early → animate fill back down. design.html §6 is the canonical reference for the curve/timing.
+
+**2. State machine bugs (all visible on second use):** `showPlusOne` is never reset — the +1
+float appears once and never animates again; `isPressed` is never reset — the card stays at
+0.97 scale after the first tap; `showBurst` is never set true anywhere — the burst overlay is
+dead code. (The imported-but-unused `kotlinx.coroutines.delay` betrays the missing reset
+coroutines — add `LaunchedEffect` resets.)
+
+**3. SIGNATURE — same as webapp: the fill must ignite ember (#D9542B / `accent`) and blend to
+the habit colour as it races; currently flat `habitColor.copy(alpha = 0.12f)`. Compose:
+`lerp(emberColor, habitColor, holdFillProgress)` on the fill brush.
+
+Re-submit evidence: build + tests + a short screen-capture (or emulator GIF/frame description)
+of tap and hold on a real quest — feel claims need something the lead can SEE for android.
+
 **P3 (home + quest interaction — the core loop, hard gate on FEEL) may start NOW.** Same notes as webapp: core loop, gate is FEEL
 per DESIGN.md (Ember Fill timings), §8 optimistic-XP preview must match the server value on
 sync. Google sign-in device-verify still trails to P7 pending the user's GCP client ID.

@@ -203,6 +203,33 @@ How to verify quickly:
 
 ➡️  PASTE TO LEAD: "Validate Questline webapp P3 against docs/03 §5, docs/05, docs/07 §P3. Tap=+1, hold=complete, optimistic XP preview, offline queue. FEEL gate — motion and timing per design spec."
 
+**LEAD VERDICT: 🔶 FIX (3 items — one breaks the core loop)**
+
+Build/tests/lint verified fresh by lead (54/54, compile clean). Structure is right (state
+machine, optimistic XP pills, habit-colour bar, mono counters). But:
+
+**1. CRITICAL — normal taps do NOTHING (`QuestCard.tsx`).** `handleTap` is only reachable
+inside `handlePointerUp`'s `phase === 'holding'` branch. The fill (and the `'holding'` phase)
+only starts after the 150 ms timeout — so any tap shorter than 150 ms (i.e., a NORMAL tap,
+~80–120 ms) clears the timeout, finds `phase === 'idle'`, and falls through: **no +1, no float,
+no event**. Tap = +1 is the product's primary interaction. Restructure `handlePointerUp`:
+elapsed < TAP_MS and fill never reached full → `handleTap()`, regardless of phase. Also:
+`handlePointerLeave` must CANCEL only (recede, no tap) — sliding off the card must never
+increment.
+
+**2. SIGNATURE — this is not Ember Fill (DESIGN.md "The signature", design.html §6 is the
+reference implementation).** Required: (a) ramp on `motion.easing.ember_fill =
+cubic-bezier(0.22, 0.61, 0.36, 1)` — currently linear `elapsed/500`; (b) fill IGNITES as ember
+(`--accent` #D9542B) and blends into the habit colour as it races — currently flat habit colour
+at 0.08 opacity; (c) radial from the touch point — currently a left-origin scaleX + a conic ring
+that reads as a loading spinner, not ignition; (d) early release → fill RECEDES (animated) —
+currently snaps to 0. The spring burst on crest is good — keep it. Port design.html §6; it
+already has the working timings (HOLD_MS 560 / TAP_MS 170 — use those, not 500/150/200).
+
+**3. EVIDENCE — the feel gate needs the lead's hands on it.** On re-submit, include: dev-server
+steps + a test login (the toggle is off now) so the lead can tap/hold a real quest in the
+browser preview. The lead will verify feel live before any P3 PASS.
+
 **P3 (home + quest interaction — the core loop, hard gate on FEEL) may start NOW.** The
 contract is frozen and signup works; don't wait on the toggle. Budget the most iteration of any
 phase here (PLAN §4). iP2 (install UX) queues after P3 per the one-agent-in-webapp rule.
