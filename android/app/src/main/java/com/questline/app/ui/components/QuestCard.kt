@@ -160,66 +160,16 @@ fun QuestCard(
                     )
                     var holdCompleted = false
 
-                    // Event loop: awaitPointerEvent fires at touch-sampling
-                    // rate (~60–120 Hz), which is fast enough for smooth fill
-                    // animation. Fill progress is time-driven so it remains
-                    // smooth even with variable event cadence.
-                    while (true) {
-                        val event = awaitPointerEvent(PointerEventPass.Main)
-                        val isUp = event.changes.any { change ->
-                            // Released = pointer no longer pressed
-                            !change.pressed
-                        }
-
-                        if (isUp) {
-                            // ── Finger lifted ──
-                            val elapsedMs =
-                                (System.nanoTime() - downTime) / 1_000_000L
-
-                            if (elapsedMs < viewConfig.longPressTimeoutMillis
-                                && !holdCompleted
-                            ) {
-                                // Quick tap → +1, light haptic, float
-                                holdFillProgress = 0f
-                                haptic.performHapticFeedback(
-                                    HapticFeedbackType.TextHandleMove,
-                                )
-                                showPlusOne = true
-                                onTap()
-                                scope.launch {
-                                    delay(900L)
-                                    showPlusOne = false
-                                }
-                            } else if (!holdCompleted) {
-                                // Early release → recede over ~200ms
-                                val fromProgress = holdFillProgress
-                                scope.launch {
-                                    val recedeStart = System.nanoTime()
-                                    while (true) {
-                                        val recedeMs = (System.nanoTime()
-                                            - recedeStart) / 1_000_000L
-                                        val k = (recedeMs.toFloat() / 200f)
-                                            .coerceIn(0f, 1f)
-                                        holdFillProgress =
-                                            fromProgress * (1f - k)
-                                        if (k >= 1f) break
-                                        delay(16L)
-                                    }
-                                }
-                            }
-                            break
-                        }
-
-                        // ── Update fill progress (time-driven) ──
-                        if (!holdCompleted) {
+                    // Time-based ticker: drives fill independently of touch events
+                    val ticker = scope.launch {
+                        while (true) {
                             val elapsedMs =
                                 (System.nanoTime() - downTime) / 1_000_000L
                             val rawT =
                                 (elapsedMs.toFloat() / HOLD_MS).coerceIn(0f, 1f)
                             holdFillProgress = emberEasing.transform(rawT)
 
-                            if (rawT >= 1f) {
-                                // Full hold → crest haptic + burst + complete
+                            if (rawT >= 1f && !holdCompleted) {
                                 holdCompleted = true
                                 isHolding = true
                                 showBurst = true
@@ -232,12 +182,53 @@ fun QuestCard(
                                     showBurst = false
                                 }
                             }
+                            delay(16L) // ~60fps tick
+                            if (holdCompleted || !isPressed) break
                         }
                     }
 
-                    // Reset press states (FIX 2 — state machine resets)
+                    // Event loop: ONLY detects release
+                    waitForUpOrCancellation()
+
+                    // Cancel ticker
+                    ticker.cancel()
                     isPressed = false
-                    isHolding = false
+
+                    if (holdCompleted) return@awaitEachGesture
+
+                    val elapsedMs =
+                        (System.nanoTime() - downTime) / 1_000_000L
+
+                    if (elapsedMs < viewConfig.longPressTimeoutMillis) {
+                        // Quick tap → +1
+                        holdFillProgress = 0f
+                        haptic.performHapticFeedback(
+                            HapticFeedbackType.TextHandleMove,
+                        )
+                        showPlusOne = true
+                        onTap()
+                        scope.launch {
+                            delay(900L)
+                            showPlusOne = false
+                        }
+                    } else {
+                        // Early release → recede over ~200ms
+                        val fromProgress = holdFillProgress
+                        scope.launch {
+                            val recedeStart = System.nanoTime()
+                            while (true) {
+                                val recedeMs = (System.nanoTime()
+                                    - recedeStart) / 1_000_000L
+                                val k = (recedeMs.toFloat() / 200f)
+                                    .coerceIn(0f, 1f)
+                                holdFillProgress =
+                                    fromProgress * (1f - k)
+                                if (k >= 1f) break
+                                delay(16L)
+                            }
+                            isHolding = false
+                        }
+                    }
                 }
             },
         shape = RoundedCornerShape(12.dp),

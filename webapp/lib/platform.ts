@@ -72,8 +72,11 @@ export interface DisplayMode {
   standalone: boolean;
 }
 
+/** SSR snapshot — cached to avoid React warning. */
+const SERVER_SNAPSHOT: DisplayMode = { platform: 'desktop', standalone: false };
+
 function getServerSnapshot(): DisplayMode {
-  return { platform: 'desktop', standalone: false };
+  return SERVER_SNAPSHOT;
 }
 
 function subscribeToPlatform(cb: () => void): () => void {
