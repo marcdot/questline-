@@ -340,3 +340,74 @@ user prefers to defer the console setup.
 
 On 1–2: P2 PASS and P3 (core loop) may start. Email-auth evidence is the gate; Google
 device-verification may trail until the client ID exists.
+
+---
+
+## 🔖 P3 — Home + quest interaction (re-submit after fixes) · commit `49c5893` · 2026-06-10
+
+**FIX 1 applied — Press-driven hold gesture with ember_fill easing:**
+- Replaced `detectTapGestures(onLongPress = ...)` with custom `awaitEachGesture`/`awaitFirstDown` event-loop
+- `holdFillProgress` is now driven 0→1 over HOLD_MS=560ms using `CubicBezierEasing(0.22f, 0.61f, 0.36f, 1f)` (DESIGN.md `motion.easing.ember_fill`)
+- At full progress → crest haptic (`HapticFeedbackType.LongPress`) + burst overlay (`showBurst = true`) + `onHoldComplete()`
+- Released before `longPressTimeoutMillis` → tap action (+1, light `TextHandleMove` haptic, +1 float)
+- Released early (after long-press timeout but before 560ms) → fill recedes from current back to 0 over ~200ms (launched on outer coroutine scope)
+- System `viewConfiguration.longPressTimeoutMillis` used as tap-vs-hold boundary
+- Uses `AwaitPointerEventScope` members only (`awaitFirstDown`, `awaitPointerEvent`) to avoid restricted-suspend violations; time-driven fill update via `System.nanoTime()`
+
+**FIX 2 applied — State machine resets:**
+- `isPressed` reset to `false` at end of every gesture (card no longer stuck at 0.97 scale)
+- `showPlusOne` auto-resets to `false` after 900ms delay (`scope.launch { delay(900L); showPlusOne = false }`)
+- `showBurst` auto-resets to `false` after 260ms delay (`scope.launch { delay(260L); showBurst = false }`)
+- Both resets use `rememberCoroutineScope()` to avoid conflicting with `AwaitPointerEventScope` restrictions
+
+**FIX 3 applied — Ember→habit colour blend (SIGNATURE):**
+- Fill changed from flat `habitColor.copy(alpha = 0.12f)` to radial gradient using `lerp(emberColor, habitColor, holdFillProgress)`
+- `emberColor = Color(0xFFD9542B)` (design accent)
+- `Brush.radialGradient` with two stops: lerped color at `alpha = 0.28f` and `0.08f`, centered at `Offset(40f, 32f)` with radius `400f` (approximates CSS `radial-gradient(120% 140% at 12% 50%, accent, habit)`)
+- Brush recreated via `remember(holdFillProgress)` so the gradient colours animate with the hold
+
+**Evidence (fresh output, Iron Law):**
+- `$ ./gradlew clean assembleDebug` → BUILD SUCCESSFUL
+- `$ ./gradlew testDebugUnitTest` → BUILD SUCCESSFUL (all domain tests pass)
+- No new compiler errors or lint violations in QuestCard.kt; pre-existing warnings unchanged
+
+**What tap and hold should show (the lead can't see the emulator):**
+
+**Tap (press and release quickly, < ~400ms):**
+1. Card instantly scales to 0.97 (press nudge)
+2. Light `TextHandleMove` haptic fires
+3. `holdFillProgress` stays 0, static progress fill unchanged
+4. "+1" float text appears at top-right (fades in over 300ms), floats upward and fades out (900ms delay + 300ms alpha out)
+5. Card returns to 1.0 scale immediately after release
+6. `onTap()` called → optimistic +1 increment in HomeViewModel
+7. After ~1200ms total, "+1" fully gone — can tap again immediately
+
+**Hold (press and hold for ≥ 560ms):**
+1. Card instantly scales to 0.97 on first contact
+2. Fill bar begins racing from 0→1 over 560ms using `CubicBezierEasing(.22,.61,.36,1)` (eases out — starts fast, decelerates)
+3. Fill colour transitions from ember(#D9542B) toward the quest's habit colour via `lerp()`
+4. At full fill (t=560ms): strong `LongPress` haptic fires, burst overlay flashes for 260ms, `onHoldComplete()` called
+5. `fillRatio = 1f` after completion (animated via 50ms fast-track, then 200ms ease-out)
+6. Card scale returns to 1.0
+
+**Early release (hold for 200-500ms, release before full):**
+1. Fill progress is at some intermediate value (e.g. 30-70%)
+2. Fill smoothly recedes back to 0 over ~200ms
+3. No haptic, no action
+4. `holdFillProgress` returns to 0, static progress takes over
+
+**Deviations from spec:**
+- Radial gradient uses pixel-Offset(40,32) center instead of `FractionalOffset` (not available in this Compose BOM version) — visual effect is equivalent: gradient begins near the left edge just above centre and spans the full card.
+- Recede animation runs on `rememberCoroutineScope()` (outer scope) rather than inline in the gesture loop — same visual result without `@RestrictsSuspension` violations.
+
+**Decisions needing the Lead (I did NOT guess):**
+- None. All timing, easing, haptic types, and colour values match DESIGN.md exact.
+
+How to verify quickly:
+- run: ./gradlew clean assembleDebug testDebugUnitTest (build + tests)
+- open: APK on emulator → quest card responds with fill-race on hold, tap gives +1 float
+- check: hold a card to full → burst overlay + crest haptic, card completes
+- check: quick tap → +1 float animates and fades, card progress updates
+- check: tap completed card → no action (gesture bails via `if (completed)` check)
+
+➡️  PASTE TO LEAD: "Re-validate Questline android P3. All 3 fixes applied: (1) press-driven hold with ember_fill easing [CubicBezierEasing(.22,.61,.36,1)] over 560ms with recede on early release; (2) state machine resets for isPressed, showPlusOne, showBurst; (3) ember→habit lerp radial gradient for fill. Fresh build/test evidence attached."

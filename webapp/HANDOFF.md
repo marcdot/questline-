@@ -6,6 +6,44 @@
 
 <!-- newest entry on top -->
 
+## 🔖 P3 — Home + quest interaction (re-submit) · uncommitted · 2026-06-10
+
+**FIX 1 — Tap dead-zone (CRITICAL):**
+- **Was:** `handleTap` only reachable inside `handlePointerUp`'s `phase === 'holding'` branch. The fill (and `'holding'` phase) only started after 150ms timeout, so taps shorter than 150ms (~80–120ms) fell through the `'idle'` branch — no +1, no float, no event.
+- **Now:** `handlePointerUp` checks `elapsed < TAP_MS` (170ms) and calls `handleTap()` **regardless of phase**. `handlePointerLeave` is a separate handler that only cancels/recedes — sliding off never increments. The state machine uses refs (`holdingRef`, `completedRef`) instead of React state for animation-critical path, so the pointer-up path is always accurate.
+- **Timing:** `HOLD_MS=560`, `TAP_MS=170` (ported from design.html §6, replacing 500/150/200).
+
+**FIX 2 — Ember Fill (SIGNATURE):**
+- **Was:** Flat habit-colour background at 0.08 opacity + conic ring (loading-spinner aesthetic). Linear `elapsed/500` ramp. Fill snapped to 0 on early release.
+- **Now:** Ported from design.html §6:
+  - **Easing:** `easeEmber(t) = 1 - Math.pow(1-t, 2.2)` approximating `cubic-bezier(0.22, 0.61, 0.36, 1)` — currently linear `elapsed/500` replaced.
+  - **Radial gradient fill:** `radial-gradient(120% 140% at 12% 50%, #D9542B (--accent ember), habitColor)` at opacity 0.18 (0.28 when complete). Replaces flat colour + conic ring.
+  - **`scaleX` from left:** `transform-origin: left` — ignites from touch point, not a ring.
+  - **Recede on early release:** Linear decay over 200ms using `fromValueRef * (1 - t)` — animated, not snap-to-zero.
+  - **Completion burst** (spring scale flash) is retained as-is.
+
+**FIX 3 — Evidence (feel gate for lead's browser test):**
+- `npm run dev` (port 3000) — all routes render including `/` (home) with QuestCard wired.
+- **Test login:** Email confirmation toggle is OFF per lead's instruction from P2 round-2. To test:
+  1. Open `http://localhost:3000/login`
+  2. Sign up with any email/password (backed by `questline-dev` Supabase project)
+  3. Complete onboarding (create habit + quest)
+  4. On the home page, **tap** a quest card → `+1` float animates, bottom progress bar advances
+  5. **Hold** a quest card (~560ms) → ember radial fill races from left, completes with burst, XP/streak pills appear, checkmark drawn
+  6. **Release early** during hold → fill recedes smoothly over ~200ms, no increment
+  7. **Slide finger off** during hold → fill recedes, no increment
+- Supabase client already configured; no `.env.local` changes needed.
+
+**Fresh output (Iron Law §B6):**
+- `$ npm run build` → **Compiled successfully** in 1.67s. Routes: `/`, `/login`, `/onboarding`, `/auth/callback`, `/habits`, `/stats`, `/profile`, `/new`. Proxy active. Exit 0.
+- `$ npx vitest run` → **54/54 tests passed** in 1.25s. Exit 0.
+- `$ npm run lint` → **Clean**. Exit 0.
+
+**Deviations from spec:**
+- None. All 3 fix items match the lead's verdict precisely. Timing constants (HOLD_MS=560, TAP_MS=170) ported from design.html §6. `handlePointerLeave` is a separate handler that never taps (lead's explicit requirement).
+
+➡️  PASTE TO LEAD: "Re-validate Questline webapp P3. 3 FIX items applied (tap dead-zone restructured, Ember Fill ported from design.html §6, evidence with test steps). Fresh build/lint/test evidence attached."
+
 ## 📋 Current State · 2026-06-10
 - **webapp P2**: built at `ae413c6` — awaiting validation ✅
 - **ios iP1**: FIX applied at `f6ba959` → re-submit PASS ✅

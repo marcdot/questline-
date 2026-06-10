@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { QuestInstance, Quest, Habit } from '@/lib/types';
 
@@ -10,6 +10,13 @@ const base = 0.2;
 const ease = [0.2, 0, 0, 1] as const;
 const springPop = { stiffness: 420, damping: 30, mass: 0.8 };
 const springNudge = { stiffness: 420, damping: 30, mass: 1 };
+
+/* ─── Ember Fill signature (design.html §6) ─── */
+const HOLD_MS = 560;
+const TAP_MS = 170;
+const RECEDE_MS = 200;
+// cubic-bezier(0.22, 0.61, 0.36, 1) approximation
+const easeEmber = (t: number) => 1 - Math.pow(1 - t, 2.2);
 
 /* ─── Props ─── */
 
@@ -28,13 +35,12 @@ export interface QuestCardProps {
 
 /* ─── Local state machine ───
  * idle       → normal state
- * tapping    → short tap (<200ms), shows +1 float
- * holding    → long-press in progress, fill racing toward full
+ * holding    → long-press in progress, ember fill racing toward full
  * completing → release at full, burst animation playing
  * complete   → already completed
  */
 
-type CardPhase = 'idle' | 'tapping' | 'holding' | 'completing' | 'complete';
+type CardPhase = 'idle' | 'holding' | 'completing' | 'complete';
 
 export default function QuestCard({
   instance,
@@ -47,20 +53,88 @@ export default function QuestCard({
 }: QuestCardProps) {
   const isCompleted = instance.completed || instance.progress >= instance.target_count;
   const habitColor = habit?.color ?? '#8A8F98';
+  const accentColor = '#D9542B'; // --accent ember ignition
   const ratio = instance.progress / Math.max(instance.target_count, 1);
   const progressPct = Math.min(ratio * 100, 100);
 
   const [phase, setPhase] = useState<CardPhase>(isCompleted ? 'complete' : 'idle');
-  const [holdProgress, setHoldProgress] = useState(0);
+  const [fillDisplay, setFillDisplay] = useState(isCompleted ? 1 : 0);
   const [showFloat, setShowFloat] = useState(false);
   const [showBurst, setShowBurst] = useState(false);
   const [xpCountUp, setXpCountUp] = useState(optimisticXp ?? 0);
   const [streakCountUp, setStreakCountUp] = useState(optimisticStreak ?? 0);
 
-  const holdStartRef = useRef<number>(0);
-  const holdAnimRef = useRef<number>(0);
-  const holdCompletedRef = useRef(false);
-  const tapTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  /* ─── Refs for animation loop (not rendered directly) ─── */
+  const fillRef = useRef(isCompleted ? 1 : 0);
+  const holdingRef = useRef(false);
+  const completedRef = useRef(false);
+  const startTRef = useRef(0);
+  const rafRef = useRef(0);
+  const recedeStartRef = useRef(0);
+  const recedingRef = useRef(false);
+  const fromValueRef = useRef(0);
+  // Ref wrappers let callbacks reference themselves without hoisting issues
+  const fillLoopRef = useRef<() => void>(() => {});
+  const recedeLoopRef = useRef<() => void>(() => {});
+  // Stable prop refs for animation callbacks
+  const onCompleteRef = useRef(onComplete);
+  const onIncrementRef = useRef(onIncrement);
+  const instanceIdRef = useRef(instance.id);
+  const instanceProgressRef = useRef(instance.progress);
+  const instanceTargetRef = useRef(instance.target_count);
+  // Keep refs in sync with latest props
+  useEffect(() => { onCompleteRef.current = onComplete; }, [onComplete]);
+  useEffect(() => { onIncrementRef.current = onIncrement; }, [onIncrement]);
+  useEffect(() => { instanceIdRef.current = instance.id; }, [instance.id]);
+  useEffect(() => { instanceProgressRef.current = instance.progress; }, [instance.progress]);
+  useEffect(() => { instanceTargetRef.current = instance.target_count; }, [instance.target_count]);
+
+  /* ─── Sync fillRef → fillDisplay for React rendering ─── */
+  const syncFill = useCallback(() => {
+    setFillDisplay(fillRef.current);
+  }, []);
+
+  /* ─── Main fill loop (ember ignition) ─── */
+  const fillLoop = useCallback(() => {
+    const elapsed = performance.now() - startTRef.current;
+    const t = Math.min(elapsed / HOLD_MS, 1);
+    fillRef.current = easeEmber(t);
+    syncFill();
+
+    if (t >= 1) {
+      holdingRef.current = false;
+      completedRef.current = true;
+      setPhase('completing');
+      setShowBurst(true);
+      onCompleteRef.current?.(instanceIdRef.current, instanceTargetRef.current - instanceProgressRef.current);
+      return;
+    }
+
+    if (holdingRef.current) {
+      rafRef.current = requestAnimationFrame(fillLoopRef.current);
+    }
+  }, [syncFill]);
+
+  /* ─── Recede animation on early release (linear over 200 ms) ─── */
+  const recedeLoop = useCallback(() => {
+    const elapsed = performance.now() - recedeStartRef.current;
+    const t = Math.min(elapsed / RECEDE_MS, 1);
+    fillRef.current = fromValueRef.current * (1 - t);
+    syncFill();
+
+    if (t < 1) {
+      rafRef.current = requestAnimationFrame(recedeLoopRef.current);
+    } else {
+      fillRef.current = 0;
+      syncFill();
+      recedingRef.current = false;
+      setPhase('idle');
+    }
+  }, [syncFill]);
+
+  // Sync animation loop refs so callbacks can reference themselves recursively
+  useEffect(() => { fillLoopRef.current = fillLoop; }, [fillLoop]);
+  useEffect(() => { recedeLoopRef.current = recedeLoop; }, [recedeLoop]);
 
   /* ─── Tap (+1) ─── */
   const handleTap = useCallback(() => {
@@ -74,89 +148,109 @@ export default function QuestCard({
     onIncrement?.(instance.id, 1);
   }, [phase, isCompleted, instance.id, onIncrement]);
 
-  /* ─── Hold (complete) ─── */
-  const handlePointerDown = useCallback(
-    () => {
-      if (phase === 'complete' || isCompleted) return;
+  /* ─── Pointer handlers ─── */
+  const handlePointerDown = useCallback(() => {
+    if (phase === 'complete' || isCompleted) return;
 
-      holdStartRef.current = Date.now();
-      holdCompletedRef.current = false;
-      let fillValue = 0;
+    // Cancel any in-flight animation
+    if (rafRef.current) {
+      cancelAnimationFrame(rafRef.current);
+      rafRef.current = 0;
+    }
 
-      const startFill = () => {
-        holdAnimRef.current = requestAnimationFrame(function tick() {
-          const elapsed = Date.now() - holdStartRef.current;
-          // Fill races toward full over ~500ms
-          fillValue = Math.min(elapsed / 500, 1);
-          setHoldProgress(fillValue);
-          setPhase('holding');
-
-          if (fillValue >= 1) {
-            // Held long enough — mark complete
-            holdCompletedRef.current = true;
-            setPhase('completing');
-            setShowBurst(true);
-            onComplete?.(instance.id, instance.target_count - instance.progress);
-            return;
-          }
-
-          holdAnimRef.current = requestAnimationFrame(tick);
-        });
-      };
-
-      // Delay start of fill to distinguish tap from hold (~150ms)
-      tapTimeoutRef.current = setTimeout(() => {
-        if (!holdCompletedRef.current) {
-          startFill();
-        }
-      }, 150);
-    },
-    [phase, isCompleted, instance.id, instance.progress, instance.target_count, onComplete],
-  );
+    holdingRef.current = true;
+    completedRef.current = false;
+    recedingRef.current = false;
+    startTRef.current = performance.now();
+    fillRef.current = 0;
+    syncFill();
+    setPhase('holding');
+    rafRef.current = requestAnimationFrame(fillLoopRef.current);
+  }, [phase, isCompleted, syncFill]);
 
   const handlePointerUp = useCallback(() => {
-    if (tapTimeoutRef.current) {
-      clearTimeout(tapTimeoutRef.current);
-      tapTimeoutRef.current = null;
+    // Only process if the pointer was actually held on this card
+    if (!holdingRef.current) return;
+
+    // Stop the fill loop
+    if (rafRef.current) {
+      cancelAnimationFrame(rafRef.current);
+      rafRef.current = 0;
     }
 
-    if (holdAnimRef.current) {
-      cancelAnimationFrame(holdAnimRef.current);
-      holdAnimRef.current = 0;
-    }
+    holdingRef.current = false;
 
-    if (phase === 'holding' && !holdCompletedRef.current) {
-      // Released early — fill recedes
-      setHoldProgress(0);
+    // If fill already reached full, completion is handled
+    if (completedRef.current) return;
+
+    const elapsed = performance.now() - startTRef.current;
+
+    if (elapsed < TAP_MS) {
+      // Quick tap (+1) — regardless of phase
+      fillRef.current = 0;
+      syncFill();
       setPhase('idle');
+      handleTap();
+    } else {
+      // Released early → fill recedes (animated)
+      fromValueRef.current = fillRef.current;
+      recedeStartRef.current = performance.now();
+      recedingRef.current = true;
+      rafRef.current = requestAnimationFrame(recedeLoopRef.current);
+    }
+  }, [handleTap, syncFill]);
 
-      // If it was a short tap, trigger +1
-      const elapsed = Date.now() - holdStartRef.current;
-      if (elapsed < 200) {
-        handleTap();
-      }
+  const handlePointerLeave = useCallback(() => {
+    // Only process if the pointer was held on this card
+    if (!holdingRef.current) return;
+
+    // Stop the fill loop
+    if (rafRef.current) {
+      cancelAnimationFrame(rafRef.current);
+      rafRef.current = 0;
     }
 
-    if (holdCompletedRef.current) {
-      // Already transitioning to complete
-    }
-  }, [phase, handleTap]);
+    holdingRef.current = false;
 
-  const handlePointerLeave = handlePointerUp;
+    // If fill already reached full, completion is handled
+    if (completedRef.current) return;
+
+    // Sliding off → ALWAYS recede, NEVER tap
+    const elapsed = performance.now() - startTRef.current;
+    if (elapsed < TAP_MS || fillRef.current < 0.05) {
+      // Barely started — snap reset
+      fillRef.current = 0;
+      syncFill();
+      setPhase('idle');
+    } else {
+      // Fill has visible progress — animated recede
+      fromValueRef.current = fillRef.current;
+      recedeStartRef.current = performance.now();
+      recedingRef.current = true;
+      rafRef.current = requestAnimationFrame(recedeLoopRef.current);
+    }
+  }, [syncFill]);
 
   /* ─── After completion burst finishes ─── */
   const onBurstComplete = useCallback(() => {
     setPhase('complete');
-    setHoldProgress(0);
+    setFillDisplay(1);
     setShowBurst(false);
     setXpCountUp(optimisticXp ?? 0);
     setStreakCountUp(optimisticStreak ?? 0);
   }, [optimisticXp, optimisticStreak]);
 
+  /* ─── Cleanup on unmount ─── */
+  useEffect(() => {
+    return () => {
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    };
+  }, []);
+
   /* ─── Derived ─── */
-  const displayProgress = phase === 'holding'
-    ? Math.max(progressPct, holdProgress * 100) // fill from current to full
-    : phase === 'completing' || phase === 'complete'
+  const displayProgress = phase === 'holding' || phase === 'completing'
+    ? Math.max(progressPct, fillDisplay * 100)
+    : phase === 'complete'
       ? 100
       : progressPct;
 
@@ -171,7 +265,6 @@ export default function QuestCard({
       animate={{
         opacity: 1,
         y: 0,
-        scale: phase === 'tapping' ? 0.97 : 1,
       }}
       transition={{
         type: 'spring',
@@ -181,23 +274,23 @@ export default function QuestCard({
       onPointerDown={handlePointerDown}
       onPointerUp={handlePointerUp}
       onPointerLeave={handlePointerLeave}
-      style={{ touchAction: 'manipulation', cursor: 'pointer' }}
+      style={{ touchAction: 'manipulation', cursor: 'pointer', userSelect: 'none' }}
     >
-      {/* ─── Leading habit-colour bar (3-4px) ─── */}
+      {/* ─── Leading habit-colour bar (4px) ─── */}
       <div
         className="absolute left-0 top-0 bottom-0 w-[4px] rounded-l-[16px]"
         style={{ backgroundColor: habitColor, opacity: isCompleted ? 0.5 : 1 }}
       />
 
-      {/* ─── Progress fill background ─── */}
-      <motion.div
+      {/* ─── Ember Fill — radial gradient from left (design.html §6) ─── */}
+      <div
         className="absolute inset-0 rounded-[16px] origin-left pointer-events-none"
-        style={{ backgroundColor: habitColor, opacity: 0.08 }}
-        animate={{
-          scaleX: phase === 'completing' || phase === 'complete' ? 1 : displayProgress / 100,
-          opacity: phase === 'completing' || phase === 'complete' ? 0.2 : 0.08,
+        style={{
+          background: `radial-gradient(120% 140% at 12% 50%, ${accentColor}, ${habitColor})`,
+          transform: `scaleX(${fillDisplay})`,
+          opacity: phase === 'complete' ? 0.28 : 0.18,
+          transition: 'none',
         }}
-        transition={{ duration: fast, ease }}
       />
 
       {/* ─── Completion burst flash ─── */}
@@ -325,17 +418,6 @@ export default function QuestCard({
           </motion.div>
         )}
       </AnimatePresence>
-
-      {/* ─── Hold fill ring indicator ─── */}
-      {phase === 'holding' && (
-        <motion.div
-          className="absolute inset-0 rounded-[16px] pointer-events-none z-0"
-          style={{
-            background: `conic-gradient(${habitColor} ${holdProgress * 360}deg, transparent ${holdProgress * 360}deg)`,
-            opacity: 0.15,
-          }}
-        />
-      )}
     </motion.div>
   );
 }
