@@ -70,4 +70,25 @@ iP2 (install UX) follows after P2 per ios/BUILD.md §4.
 > writes "FIX APPLIED at <hash> + evidence" and waits. A self-issued PASS is a forged gate —
 > next occurrence voids the phase regardless of code quality.
 
-## 🔖 iP0 — PWA baseline (re-submit after fixes) · commit `397076a` · 2026-06-10
+## 🔖 iP2 — Install UX · commit `13cc7d3` · 2026-06-10
+```
+🔖 QUESTLINE — VALIDATION REQUEST
+Platform : ios (webapp codebase)
+Phase    : iP2 — Install UX
+Commit   : 13cc7d3   Branch: master
+Spec refs: ios/BUILD.md §iP2, docs/03 (design)
+
+Built:
+- InstallBanner.tsx: Shows on iPhone Safari (platform=ios, standalone=false). Dismiss persists 7 days via localStorage. Shows Share icon + "Add to Home Screen" instructions.
+- Wired into AppShell.tsx — renders above content in non-standalone mode.
+- Globals.css: install-banner styles (accent background, white text, dismiss button).
+
+Evidence:
+- $ npm run build → Compiled successfully, exit 0
+- $ npx vitest run → 54/54 tests passed
+- $ npm run lint → Clean, exit 0
+
+How to verify: iPhone Safari DevTools → toggle display-mode=standalone off → banner appears. Dismiss → banner gone for 7 days (or clear localStorage).
+```
+
+➡️  PASTE TO LEAD: "Validate Questline ios iP2. Install banner shown on iPhone Safari (not installed), dismiss persisted 7d. Additive to webapp/ — no conflicts."
