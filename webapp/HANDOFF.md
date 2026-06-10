@@ -6,12 +6,12 @@
 
 <!-- newest entry on top -->
 
-## 🔖 P0 — Scaffold + run · commit `987f1a2` · 2026-06-10
+## 🔖 P0 — Scaffold + run · commit `f45be66` · 2026-06-10
 ```
 🔖 QUESTLINE — VALIDATION REQUEST
 Platform : webapp
 Phase    : P0 — Scaffold + run
-Commit   : 987f1a2   Branch: master
+Commit   : f45be66   Branch: master
 Spec refs: BUILD.md §0–4, DESIGN.md §token-set, docs/06 §B1, docs/07 P0
 
 Built (what a reviewer can verify):
