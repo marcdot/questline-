@@ -46,4 +46,45 @@
     <string name="onboarding_quest_hint">e.g. Read for 20 minutes</string>
     <string name="onboarding_cadence_label">How often?</string>
     <string name="onboarding_complete_action">Start My Journey</string>
+
+    <!-- Add sheet (P4) -->
+    <string name="add_habit_tab">Habit</string>
+    <string name="add_quest_tab">Quest</string>
+    <string name="add_sleep_tab">Sleep</string>
+    <string name="add_habit_title">New Habit</string>
+    <string name="add_habit_name_label">Habit name</string>
+    <string name="add_habit_name_placeholder">e.g. Read daily, Exercise</string>
+    <string name="add_habit_color_label">Colour</string>
+    <string name="add_habit_create">Create Habit</string>
+    <string name="add_habit_creating">Creating…</string>
+    <string name="add_habit_error_name">Name is required</string>
+    <string name="add_habit_created">\"%s\" created</string>
+    <string name="add_habit_switch_to_quest">Switch to Quest tab to add a quest for it.</string>
+    <string name="add_habit_add_quest">Add Quest</string>
+    <string name="add_quest_title">New Quest</string>
+    <string name="add_quest_habit_label">Habit</string>
+    <string name="add_quest_title_label">Quest title</string>
+    <string name="add_quest_title_placeholder">e.g. Go for a run</string>
+    <string name="add_quest_cadence_label">Cadence</string>
+    <string name="add_quest_weekdays_label">Weekdays</string>
+    <string name="add_quest_target_label">Target</string>
+    <string name="add_quest_unit_label">Unit (optional)</string>
+    <string name="add_quest_unit_placeholder">km, pages…</string>
+    <string name="add_quest_calendar_sync">Calendar sync</string>
+    <string name="add_quest_calendar_sync_desc">Sync quests to Google Calendar</string>
+    <string name="add_quest_create">Create Quest</string>
+    <string name="add_quest_creating">Creating…</string>
+    <string name="add_quest_created">Quest created!</string>
+    <string name="add_quest_children_desc">Child quests will appear on selected days.</string>
+    <string name="add_quest_daily_desc">It will appear on your Home screen.</string>
+    <string name="add_quest_error_title">Title is required</string>
+    <string name="add_quest_error_habit">Select a habit</string>
+    <string name="add_sleep_title">Log Sleep</string>
+    <string name="add_sleep_night_of">Night of (date)</string>
+    <string name="add_sleep_hours_label">Hours slept</string>
+    <string name="add_sleep_log">Log Sleep</string>
+    <string name="add_sleep_saving">Saving…</string>
+    <string name="add_sleep_logged">Sleep logged!</string>
+    <string name="general_cancel">Cancel</string>
+    <string name="general_done">Done</string>
 </resources>

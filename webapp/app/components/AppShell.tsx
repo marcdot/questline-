@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useDisplayMode } from '@/lib/platform';
+import InstallBanner from '@/components/InstallBanner';
 
 /* ─── Bottom-tab definition ─── */
 interface Tab {
@@ -32,7 +33,12 @@ export default function AppShell({
   /* In non-standalone (browser, desktop) render content directly — the
      shell is only needed in installed-PWA / app mode. */
   if (!standalone) {
-    return <>{children}</>;
+    return (
+      <>
+        <InstallBanner />
+        {children}
+      </>
+    );
   }
 
   return (

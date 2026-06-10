@@ -13,10 +13,14 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.questline.app.ui.components.AddSheet
 import com.questline.app.ui.components.BottomNavBar
 import com.questline.app.ui.navigation.NavGraph
 import com.questline.app.ui.navigation.Screen
@@ -32,6 +36,7 @@ fun MainScreen() {
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
+    var showAddSheet by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
@@ -61,7 +66,7 @@ fun MainScreen() {
         },
         floatingActionButton = {
             FloatingActionButton(
-                onClick = { /* TODO: P4 — show Add sheet */ },
+                onClick = { showAddSheet = !showAddSheet },
                 containerColor = MaterialTheme.colorScheme.primary,
                 contentColor = MaterialTheme.colorScheme.onPrimary,
             ) {
@@ -76,6 +81,13 @@ fun MainScreen() {
         NavGraph(
             navController = navController,
             modifier = Modifier.padding(innerPadding),
+        )
+    }
+
+    // Quick-add bottom sheet
+    if (showAddSheet) {
+        AddSheet(
+            onDismiss = { showAddSheet = false },
         )
     }
 }

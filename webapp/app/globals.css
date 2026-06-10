@@ -183,6 +183,51 @@ body::before {
   margin-top: -8px;
 }
 
+/* ────── iOS Install Banner ────── */
+.install-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 16px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 14px;
+  font-family: var(--font-body);
+}
+.install-banner__content {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.install-banner__icon {
+  font-size: 22px;
+}
+.install-banner__text p {
+  margin: 0;
+  font-size: 12px;
+  opacity: 0.85;
+}
+.install-banner__glyph {
+  font-size: 15px;
+}
+.install-banner__actions {
+  flex-shrink: 0;
+}
+.install-banner__dismiss {
+  background: none;
+  border: none;
+  color: #fff;
+  font-size: 22px;
+  cursor: pointer;
+  opacity: 0.7;
+  padding: 0 4px;
+  line-height: 1;
+}
+.install-banner__dismiss:hover {
+  opacity: 1;
+}
+
 .app-tab__icon--plus {
   display: flex;
   align-items: center;

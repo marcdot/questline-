@@ -17,8 +17,11 @@ import io.ktor.http.contentType
 import io.ktor.http.isSuccess
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
+import kotlinx.serialization.json.putJsonArray
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -150,12 +153,17 @@ class SupabaseRemoteSource @Inject constructor() {
 
     /**
      * Create a new quest. Returns the created [QuestDto] or null on failure.
+     *
+     * Supports optional [weekdays] (sorted mon→sun), [calendarSync], [targetCount], [unit].
      */
     suspend fun insertQuest(
         habitId: String,
         title: String,
         cadence: String,
         targetCount: Int = 1,
+        unit: String? = null,
+        weekdays: List<String> = emptyList(),
+        calendarSync: Boolean = false,
     ): QuestDto? {
         val url = "$baseUrl/rest/v1/quest?select=*"
         val today = java.time.LocalDate.now().toString()
@@ -164,7 +172,14 @@ class SupabaseRemoteSource @Inject constructor() {
             put("title", title)
             put("cadence", cadence)
             put("target_count", targetCount)
+            if (unit != null) put("unit", unit)
             put("active_from", today)
+            if (weekdays.isNotEmpty()) {
+                putJsonArray("weekdays") {
+                    weekdays.forEach { add(JsonPrimitive(it)) }
+                }
+            }
+            put("calendar_sync", calendarSync)
         }
         val response = client.post(url) {
             supaHeaders()
@@ -207,5 +222,14 @@ class SupabaseRemoteSource @Inject constructor() {
         rpc("log_sleep", buildJsonObject {
             put("p_night_of", nightOf)
             put("p_hours", hours)
+        })
+
+    /**
+     * Call generate_child_quests RPC for a weekly+ quest with weekdays.
+     * Creates/updates daily child quests for each weekday per docs/05 §2.
+     */
+    suspend fun generateChildQuests(questId: String): JsonObject? =
+        rpc("generate_child_quests", buildJsonObject {
+            put("p_quest_id", questId)
         })
 }
