@@ -11,27 +11,29 @@
 - ✅ Git: local repo at `C:\Users\Cutom\Desktop\app\questline` (branch `master`). Commits:
   `c80febb` initial, `9f5b891` retone. **No remote yet.**
 - ✅ Hermes handoff written: `brain/Brain/_Claude/handoffs/questline-backend-and-p0.md`.
-- 🔶 Task 1 (Backend Phase A) — Hermes delivered (`c560df5`) + fix round 1 (`47aca68`). Lead
-  round-2 verdict: **FIX (2 small items)** but **Task 2 explicitly UNBLOCKED in parallel**. See
-  `brain/Brain/_Claude/handoffs/questline-backend-PhaseA-RESULT.md` → "LEAD VERDICT (round 2)":
-  (1) `generate_child_quests` missing the `auth.uid()` guard (one line);
-  (2) non-first-weekday streak check is unbounded in time (must check THIS week's prev weekday
-  date, not "ever completed") + add a gap test vector (Mon-wk1 → skip wk2 → Wed-wk3 ⇒ streak 1, XP 12).
+- ✅ Task 1 (Backend Phase A) — **PASSED & FROZEN** (lead verdict round 3, 2026-06-10). Commits
+  `c560df5` + `47aca68` + `622bbee` (migrations 001–005). All 4 definer RPCs auth.uid()-guarded;
+  §8 + gap vector + cross-user evidence verified. Contract note added to `docs/02`: `weekdays`
+  stored sorted mon→sun. Schema changes from now on: additive migrations w/ lead approval only.
+  Clients may wire write RPCs (P1+).
 - ✅ iOS approach DECIDED (2026-06-10): **web-based** — the webapp as an installable PWA with an
   iPhone app-shell mode. NO native Swift app. Full plan: `ios/BUILD.md` (iP0–iP7, each gated on a
   webapp phase; only iP0 is parallel-safe — additive files only). Code lives in `webapp/`.
-- ⏳ NOT started: client app code (webapp/android/ios-PWA) — now cleared to start (P0/iP0 only).
+- 🔶 Client P0s: android P0 committed (`7218013`, VR pending lead review). Webapp P0 built but
+  **UNCOMMITTED** (its VR cites a nonexistent commit `987f1a2` — must commit + re-cite first).
+  **ios-iP0 NOT run yet** — Hermes executed the older 2-stream Task 2; the updated handoff has a
+  third stream (PWA baseline, additive files only).
 
 ## The next step (do this)
-1. Tell Hermes: *"Read `_Claude/handoffs/questline-backend-PhaseA-RESULT.md` → LEAD VERDICT
-   (round 2). Apply fixes #1 and #2, re-run §8 + the new gap vector + cross-user
-   generate_child_quests test, re-submit. SIMULTANEOUSLY start Task 2:
-   `delegate_task([webapp-P0, android-P0, ios-iP0])` per the updated
-   `questline-backend-and-p0.md` — three parallel streams; ios-iP0 is additive-files-only in
-   webapp/ (manifest, icons, platform.ts) so it can't collide with webapp-P0."*
-2. Phase A formal PASS gate = §8 ✅ + gap vector ✅ + cross-user generate_child_quests → 42501 ✅.
-   Clients may NOT wire write RPCs (P1+) until that PASS.
+1. Tell Hermes: *"Phase A is PASSED & FROZEN (see LEAD VERDICT round 3 in
+   `_Claude/handoffs/questline-backend-PhaseA-RESULT.md`). Housekeeping: (a) commit the webapp P0
+   working tree and update its Validation Request with the real hash; (b) run the missed third
+   stream ios-iP0 per the updated `questline-backend-and-p0.md` (additive files only:
+   manifest.webmanifest, icons, src/lib/platform.ts + tests). Then submit all three P0
+   Validation Requests (webapp/android/ios HANDOFF.md) to the lead for bulk review."*
+2. Lead bulk-reviews the three P0 VRs (P0 is bulk-safe per the cadence table below).
 3. Continue each client P1→P7 per `docs/06` (one phase → commit → Validation Request).
+   ios stream: iP1 may start after webapp-P0 PASS (sequential in webapp/, per `ios/BUILD.md §4`).
 
 ## How to resume in a FRESH session (paste this)
 > "You are the Questline project lead. The product lives in `C:\Users\Cutom\Desktop\app\questline`.

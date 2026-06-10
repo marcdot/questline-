@@ -71,7 +71,7 @@ xp_display    = simple | detailed
 | cadence | cadence | daily/weekly/monthly/yearly |
 | target_count | int | n in "n/n"; default 1 |
 | unit | text? | optional label e.g. "km", "pages", "min" |
-| weekdays | weekday[] | only meaningful for cadence ≥ weekly; empty = aggregate only |
+| weekdays | weekday[] | only meaningful for cadence ≥ weekly; empty = aggregate only. **CONTRACT: stored sorted chronologically mon→sun** — backend streak logic reads array order as week order; every client sorts before writing |
 | generated_parent_id | uuid? (FK→quest) | set on auto‑generated daily children; null on the parent |
 | calendar_sync | bool | per‑quest opt‑in; default false |
 | reminder_time | time? | optional local reminder |
