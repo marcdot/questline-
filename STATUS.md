@@ -27,12 +27,14 @@
     `FeelCheck-P3-2026!`.
   - android: ✅ P0–P2 · ✅ **P3 CONDITIONAL PASS** (`eb29d7f`; ticker fix read+verified, build/
     tests fresh). Evidence debt: device/emulator capture of tap+hold — due at P7 device QA.
-  - ios: ✅ iP0–iP2 (iP2 PASS at `10bd801` — install banner; real-device confirm rolls into iP3).
-  - android: ✅ **P4 PASS** (`1e71248`) + 2 follow-ups due in the P5 commit: (a) call
-    `ensure_instances` + refresh Home after quest create; (b) `generateChildQuests` failure must
-    surface/retry (ensure_instances does NOT create children — fix wrong comment too). → P5 GO.
-  - Next in `webapp/`: **webapp P4 (quick-add)** has the repo now. Then P5 both clients
-    (bulk-safe), iP3 real-device session when convenient.
+  - ios: ✅ iP0–iP2 (real-device confirm rolls into iP3).
+  - webapp: ✅ **P0–P4 ALL PASS** (P4 at `aa42b61`: AddSheet live-rendered, RPC order + params
+    + sorted weekdays verified). → P5 (stats) GO — XP must be SUM of xp_event ledger.
+  - android: ✅ **P0–P5 ALL PASS** (P5 at `aa42b61`: both P4 follow-ups landed, ledger-summed
+    XP, stats filters/chart/heatmap). → **P6 is a HARD GATE** (Calendar OAuth/token security,
+    docs/08 S2/S5); the Calendar Edge Function is backend work — coordinate with lead first.
+  - Next in `webapp/`: webapp P5 (stats). Then iP3 real-device session when the user has
+    iPhone time (install banner + standalone auth + Ember feel on device).
   - Lead env note: headless preview has no rAF — frame animation can't be verified remotely;
     computed-style + network + code-read checks stand in; subjective feel = user's call.
   - 📧 Supabase bounce warning (2026-06-10, handled): caused by ~26 fake-address public signups

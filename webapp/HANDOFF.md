@@ -61,6 +61,17 @@ How to verify quickly:
 New Habit, New Quest, Log Sleep. Weekly+weekdays generates child quests + ensures instances.
 S4 input validation present. Fresh build/test/lint evidence attached."
 
+**LEAD VERDICT: ✅ PASS** (committed at `aa42b61`)
+
+Lead verified fresh: 54/54 tests, build + lint clean; live render check — `/new` serves the
+3-tab AddSheet in the running session ✓. Code read (`AddSheet.tsx`): weekdays sorted mon→sun
+before send ✓; `generate_child_quests({ p_quest_id })` THEN `ensure_instances({ p_date })`
+ordering correct ✓; `log_sleep({ p_night_of, p_hours })` exact params ✓; errors logged, not
+swallowed silently ✓. Commit discipline honored this round ✓.
+
+**P5 (stats) may start in `webapp/`.** Note for P5: XP balance = SUM of the `xp_event` ledger
+(docs/05 §5) — never a stored total; android's P5 did this correctly, mirror it.
+
 ## 🔖 P3 — Home + quest interaction (re-submit) · uncommitted · 2026-06-10
 
 **FIX 1 — Tap dead-zone (CRITICAL):**

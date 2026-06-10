@@ -537,3 +537,15 @@ How to verify quickly:
 ```
 
 ➡️  PASTE TO LEAD: "Validate Questline android P5. Stats screen: period+habit filters, Canvas XP graph, colour-coded streaks, status grid, sleep heatmap. Includes 2 P4 follow-ups: ensure_instances after quest create, and fixed generate_child_quests error handling. Fresh build/test evidence attached."
+
+**LEAD VERDICT: ✅ PASS** (`aa42b61`)
+
+Lead verified fresh: `assembleDebug testDebugUnitTest lintDebug` → BUILD SUCCESSFUL on my run.
+Code read: BOTH P4 follow-ups properly landed — `ensureInstances(today)` after quest create ✓,
+`generateChildQuests` failure now surfaces into `questError` with the corrected comment ✓.
+StatsViewModel sums XP from the `xp_event` ledger (`sumOf { it.amount }`) per docs/05 §5 —
+never a stored total ✓. Period/habit filters + Canvas chart + heatmap structure per BUILD.md §P5.
+
+**P6 (profile/settings + Calendar sync) may start — NOTE: P6 is a HARD GATE (docs/08 S2/S5:
+OAuth scopes, server-side token storage, no tokens in the client). The Calendar Edge Function
+is backend work — coordinate with the lead before implementing it (it was stubbed in Phase A).**
