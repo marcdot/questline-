@@ -1,0 +1,125 @@
+@import "tailwindcss";
+
+/* ─── Tailwind theme tokens (DESIGN.md §token-set) ─── */
+@theme {
+  /* Typography (linked to next/font/google CSS vars) */
+  --font-display: var(--font-display-loaded), "Bricolage Grotesque", system-ui, sans-serif;
+  --font-body: var(--font-ui-loaded), "Hanken Grotesk", system-ui, sans-serif;
+  --font-mono: var(--font-data-loaded), "JetBrains Mono", ui-monospace, monospace;
+
+  /* Colour — these map to CSS vars so they switch with :root/.dark */
+  --color-page: var(--page-bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-line: var(--line);
+  --color-ink: var(--ink);
+  --color-ink-muted: var(--ink-muted);
+  --color-ink-disabled: var(--ink-disabled);
+  --color-accent: var(--accent);
+  --color-accent-press: var(--accent-press);
+  --color-xp: var(--xp);
+  --color-success: var(--success);
+  --color-danger: var(--danger);
+  --color-warning: var(--warning);
+  --color-info: var(--info);
+
+  /* Habit palette (static — doesn't change with theme) */
+  --color-habit-ember: #e8743b;
+  --color-habit-amber: #e0b040;
+  --color-habit-fern: #5aa469;
+  --color-habit-teal: #3e9ca8;
+  --color-habit-sky: #4f86c6;
+  --color-habit-iris: #7a6cd8;
+  --color-habit-rose: #c85a8e;
+  --color-habit-slate: #8a8f98;
+
+  /* Spacing scale (4 px base) */
+  --space-inline: 4px;
+  --space-stack: 4px;
+
+  /* Radius */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --radius-full: 999px;
+
+  /* Shadows (warm-tinted) */
+  --shadow-sm: 0 1px 2px rgba(58, 44, 30, 0.06);
+  --shadow-md: 0 4px 16px rgba(58, 44, 30, 0.1);
+  --shadow-lg: 0 12px 32px rgba(58, 44, 30, 0.14);
+}
+
+/* ─── LIGHT theme (default) ─── */
+:root {
+  --page-bg: #f4f2ed;
+  --surface: #fcfbf9;
+  --surface-2: #eae7e0;
+  --line: #e1ddd5;
+  --ink: #1a1814;
+  --ink-muted: #726e66;
+  --ink-disabled: #a8a399;
+  --accent: #d9542b;
+  --accent-press: #bc4621;
+  --xp: #b8902e;
+  --success: #2e9e6b;
+  --danger: #9e2b25;
+  --warning: #b5811a;
+  --info: #3e78a8;
+}
+
+/* ─── DARK theme (earned drama) ─── */
+.dark {
+  --page-bg: #15140f;
+  --surface: #1d1b15;
+  --surface-2: #262319;
+  --line: #322e25;
+  --ink: #f2efe7;
+  --ink-muted: #a7a296;
+  --ink-disabled: #6e685b;
+  --accent: #e2613a;
+  --accent-press: #c8512c;
+  --xp: #d9ae52;
+  --success: #46b98a;
+  --danger: #d7604f;
+  --warning: #d6a23c;
+  --info: #5c97c8;
+}
+
+/* ─── Base body styling ─── */
+body {
+  background-color: var(--page-bg);
+  color: var(--ink);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ─── Paper grain texture (faint ~3%) ─── */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  opacity: 0.03;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  pointer-events: none;
+  z-index: 9999;
+}
+
+/* ─── Selection ─── */
+::selection {
+  background-color: #d6cbb8;
+  color: #1e293b;
+}
+
+/* ─── Reduced motion ─── */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
