@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase/client';
 import HabitColorPicker, { isValidHexColor } from '@/components/HabitColorPicker';
 import { periodKeyFor } from '@/lib/domain';
 import type { Habit, Cadence, Weekday } from '@/lib/types';
+import { syncQuestToCalendar } from '@/lib/supabase/edge-functions';
 
 /* ─── Motion tokens (docs/03 §5) ─── */
 const ease = [0.2, 0, 0, 1] as const;
@@ -258,6 +259,10 @@ export default function AddSheet() {
       }
 
       setSuccess(`Quest "${titleTrimmed}" created`);
+      /* If calendar sync was requested, fire the Edge Function */
+      if (questCalendar) {
+        syncQuestToCalendar(newQuestId, 'create').catch(console.error);
+      }
       /* Reset quest form */
       setQuestTitle('');
       setQuestCadence('daily');

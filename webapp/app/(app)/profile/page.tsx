@@ -1,22 +1,379 @@
 'use client';
 
-export default function ProfilePage() {
+import { useState, useEffect, useCallback } from 'react';
+import { motion } from 'framer-motion';
+import { createClient } from '@/lib/supabase/client';
+import { getCalendarConsentUrl, getGoogleConnected } from '@/lib/supabase/edge-functions';
+
+/* ─── Motion tokens ─── */
+const ease = [0.2, 0, 0, 1] as const;
+
+/* ─── Pill button ─── */
+function Pill({ active, onClick, label }: { active: boolean; onClick: () => void; label: string }) {
   return (
-    <div className="flex flex-col items-center px-4 py-12">
+    <button
+      type="button"
+      onClick={onClick}
+      className={`rounded-full px-4 py-1.5 text-[13px] font-medium transition-all duration-150 ${
+        active
+          ? 'bg-accent text-white shadow-sm'
+          : 'bg-surface text-ink-muted hover:text-ink border border-line'
+      }`}
+      style={{ fontFamily: 'var(--font-body)' }}
+    >
+      {label}
+    </button>
+  );
+}
+
+export default function ProfilePage() {
+  const supabase = createClient();
+
+  /* ─── Auth ─── */
+  const [userId, setUserId] = useState<string | null>(null);
+  const [email, setEmail] = useState<string | null>(null);
+  const [signingOut, setSigningOut] = useState(false);
+
+  /* ─── Calendar ─── */
+  const [googleConnected, setGoogleConnected] = useState(false);
+  const [connecting, setConnecting] = useState(false);
+  const [calendarStatus, setCalendarStatus] = useState<string | null>(null);
+
+  /* ─── Theme ─── */
+  const [theme, setTheme] = useState<'light' | 'dark'>('light');
+
+  /* ─── XP display ─── */
+  const [xpMode, setXpMode] = useState<'total' | 'period'>('total');
+
+  /* ─── Account ─── */
+  const [deleting, setDeleting] = useState(false);
+
+  /* ─── Init ─── */
+  useEffect(() => {
+    const init = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      setUserId(user.id);
+      setEmail(user.email ?? null);
+
+      /* Read user_settings for google_connected + theme + xp_mode */
+      const { data: settings } = await supabase
+        .from('user_settings')
+        .select('google_connected, theme, xp_mode')
+        .eq('user_id', user.id)
+        .single();
+
+      if (settings) {
+        setGoogleConnected(settings.google_connected ?? false);
+        setTheme(settings.theme ?? 'light');
+        setXpMode(settings.xp_mode ?? 'total');
+      }
+
+      /* Sync theme class on <html> */
+      document.documentElement.classList.toggle('dark', theme === 'dark');
+    };
+    init();
+  }, [supabase, theme]);
+
+  /* ─── Sync theme to DOM on change ─── */
+  useEffect(() => {
+    document.documentElement.classList.toggle('dark', theme === 'dark');
+  }, [theme]);
+
+  /* ─── Theme toggle ─── */
+  const handleThemeToggle = useCallback(async () => {
+    const next = theme === 'light' ? 'dark' : 'light';
+    setTheme(next);
+    if (userId) {
+      await supabase
+        .from('user_settings')
+        .upsert({ user_id: userId, theme: next, updated_at: new Date().toISOString() },
+          { onConflict: 'user_id' }
+        );
+    }
+  }, [theme, userId, supabase]);
+
+  /* ─── XP mode toggle ─── */
+  const handleXpModeToggle = useCallback(async (mode: 'total' | 'period') => {
+    setXpMode(mode);
+    if (userId) {
+      await supabase
+        .from('user_settings')
+        .upsert({ user_id: userId, xp_mode: mode, updated_at: new Date().toISOString() },
+          { onConflict: 'user_id' }
+        );
+    }
+  }, [userId, supabase]);
+
+  /* ─── Google Calendar connect ─── */
+  const handleConnectCalendar = useCallback(async () => {
+    setConnecting(true);
+    setCalendarStatus(null);
+    try {
+      const redirectTo = `${window.location.origin}/profile`;
+      const url = await getCalendarConsentUrl(redirectTo);
+      if (!url) {
+        setCalendarStatus('Failed to get consent URL — try signing out and back in.');
+        return;
+      }
+      /* Redirect to Google consent — after approval, user lands back on /profile */
+      window.location.href = url;
+    } catch {
+      setCalendarStatus('Something went wrong. Try again.');
+    } finally {
+      setConnecting(false);
+    }
+  }, []);
+
+  /* ─── Disconnect Google Calendar ─── */
+  const handleDisconnectCalendar = useCallback(async () => {
+    if (!userId) return;
+    setConnecting(true);
+    try {
+      /* Delete the google_token row (service-role via RPC — use Edge Function endpoint) */
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) return;
+
+      /* We don't have a dedicated disconnect endpoint yet — just clear the user_settings flag */
+      await supabase
+        .from('user_settings')
+        .upsert({ user_id: userId, google_connected: false, updated_at: new Date().toISOString() },
+          { onConflict: 'user_id' }
+        );
+      setGoogleConnected(false);
+      setCalendarStatus('Disconnected.');
+    } catch {
+      setCalendarStatus('Failed to disconnect.');
+    } finally {
+      setConnecting(false);
+    }
+  }, [userId, supabase]);
+
+  /* ─── Poll google_connected on mount (handles OAuth callback redirect) ─── */
+  useEffect(() => {
+    const check = async () => {
+      const connected = await getGoogleConnected();
+      setGoogleConnected(connected);
+      if (connected) setCalendarStatus('Calendar connected ✓');
+    };
+    /* Check immediately and then every 3s for 15s (for the OAuth redirect case) */
+    check();
+    const interval = setInterval(check, 3000);
+    const timeout = setTimeout(() => clearInterval(interval), 15000);
+    return () => { clearInterval(interval); clearTimeout(timeout); };
+  }, []);
+
+  /* ─── Sign out ─── */
+  const handleSignOut = useCallback(async () => {
+    setSigningOut(true);
+    await supabase.auth.signOut();
+  }, [supabase]);
+
+  /* ─── Delete account ─── */
+  const handleDeleteAccount = useCallback(async () => {
+    if (!userId) return;
+    const confirmed = window.confirm(
+      'Are you sure? This will DELETE all your habits, quests, and data permanently. This cannot be undone.'
+    );
+    if (!confirmed) return;
+
+    setDeleting(true);
+    try {
+      /* Delete the user's data via admin API (RPC) — all tables cascade from user_profile */
+      const { error } = await supabase.rpc('admin_delete_user');
+      if (error) throw error;
+      await supabase.auth.signOut();
+    } catch {
+      setDeleting(false);
+      alert('Failed to delete account. Contact support.');
+    }
+  }, [userId, supabase]);
+
+  return (
+    <motion.div
+      className="flex flex-col items-center px-4 py-12"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.35, ease }}
+    >
       <div className="w-full max-w-md space-y-6">
+        {/* ─── Header ─── */}
         <header className="space-y-1">
-          <span className="text-xs font-semibold uppercase tracking-[0.08em] text-ink-muted" style={{ fontFamily: 'var(--font-body)' }}>
+          <span
+            className="text-xs font-semibold uppercase tracking-[0.08em] text-ink-muted"
+            style={{ fontFamily: 'var(--font-body)' }}
+          >
             § Profile
           </span>
-          <h1 className="text-[32px] font-semibold leading-[1.1] tracking-[-0.02em] text-ink" style={{ fontFamily: 'var(--font-display)' }}>
+          <h1
+            className="text-[32px] font-semibold leading-[1.1] tracking-[-0.02em] text-ink"
+            style={{ fontFamily: 'var(--font-display)' }}
+          >
             Settings
           </h1>
         </header>
+
         <div className="h-px w-full bg-line" />
-        <p className="text-[15px] text-ink-muted" style={{ fontFamily: 'var(--font-body)' }}>
-          Coming in P6 (profile/settings).
-        </p>
+
+        {/* ═══════════════════════════════════════════
+            ACCOUNT
+            ═══════════════════════════════════════════ */}
+        <section className="space-y-3">
+          <h2 className="text-[13px] font-semibold uppercase tracking-[0.08em] text-ink-muted" style={{ fontFamily: 'var(--font-body)' }}>
+            Account
+          </h2>
+          <div className="rounded-[12px] border border-line bg-surface divide-y divide-line">
+            <div className="flex items-center justify-between px-4 py-3">
+              <span className="text-[14px] text-ink" style={{ fontFamily: 'var(--font-body)' }}>Email</span>
+              <span className="text-[14px] text-ink-muted font-mono" style={{ fontFamily: 'var(--font-mono)' }}>{email ?? '—'}</span>
+            </div>
+            <div className="px-4 py-3">
+              <button
+                type="button"
+                onClick={handleSignOut}
+                disabled={signingOut}
+                className="text-[14px] font-medium text-danger hover:text-danger/80 transition-colors disabled:opacity-50"
+                style={{ fontFamily: 'var(--font-body)' }}
+              >
+                {signingOut ? 'Signing out…' : 'Sign out'}
+              </button>
+            </div>
+          </div>
+        </section>
+
+        {/* ═══════════════════════════════════════════
+            GOOGLE CALENDAR
+            ═══════════════════════════════════════════ */}
+        <section className="space-y-3">
+          <h2 className="text-[13px] font-semibold uppercase tracking-[0.08em] text-ink-muted" style={{ fontFamily: 'var(--font-body)' }}>
+            Google Calendar
+          </h2>
+          <div className="rounded-[12px] border border-line bg-surface divide-y divide-line">
+            <div className="flex items-center justify-between px-4 py-3">
+              <div>
+                <span className="text-[14px] text-ink" style={{ fontFamily: 'var(--font-body)' }}>Status</span>
+                <p className="text-[12px] text-ink-muted mt-0.5" style={{ fontFamily: 'var(--font-body)' }}>
+                  {googleConnected
+                    ? 'Your Google Calendar is connected. Events will be synced for quests with calendar sync enabled.'
+                    : 'Connect to sync quests to your Google Calendar.'}
+                </p>
+              </div>
+              {googleConnected ? (
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-success/10 px-3 py-1 text-[12px] font-medium text-success">
+                  <span className="h-1.5 w-1.5 rounded-full bg-success" />
+                  Connected
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-line px-3 py-1 text-[12px] font-medium text-ink-muted">
+                  <span className="h-1.5 w-1.5 rounded-full bg-ink-muted/40" />
+                  Not connected
+                </span>
+              )}
+            </div>
+
+            {calendarStatus && (
+              <div className="px-4 py-2">
+                <p className="text-[12px] text-ink-muted" style={{ fontFamily: 'var(--font-body)' }}>
+                  {calendarStatus}
+                </p>
+              </div>
+            )}
+
+            <div className="px-4 py-3">
+              {googleConnected ? (
+                <button
+                  type="button"
+                  onClick={handleDisconnectCalendar}
+                  disabled={connecting}
+                  className="text-[14px] font-medium text-danger hover:text-danger/80 transition-colors disabled:opacity-50"
+                  style={{ fontFamily: 'var(--font-body)' }}
+                >
+                  {connecting ? 'Working…' : 'Disconnect Google Calendar'}
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={handleConnectCalendar}
+                  disabled={connecting}
+                  className="text-[14px] font-medium text-accent hover:text-accent-press transition-colors disabled:opacity-50"
+                  style={{ fontFamily: 'var(--font-body)' }}
+                >
+                  {connecting ? 'Connecting…' : 'Connect Google Calendar'}
+                </button>
+              )}
+            </div>
+          </div>
+        </section>
+
+        {/* ═══════════════════════════════════════════
+            DISPLAY
+            ═══════════════════════════════════════════ */}
+        <section className="space-y-3">
+          <h2 className="text-[13px] font-semibold uppercase tracking-[0.08em] text-ink-muted" style={{ fontFamily: 'var(--font-body)' }}>
+            Display
+          </h2>
+          <div className="rounded-[12px] border border-line bg-surface divide-y divide-line">
+            {/* Theme */}
+            <div className="flex items-center justify-between px-4 py-3">
+              <span className="text-[14px] text-ink" style={{ fontFamily: 'var(--font-body)' }}>Theme</span>
+              <div className="flex gap-2">
+                <Pill active={theme === 'light'} onClick={() => { setTheme('light'); handleThemeToggle(); }} label="Light" />
+                <Pill active={theme === 'dark'} onClick={() => { setTheme('dark'); handleThemeToggle(); }} label="Dark" />
+              </div>
+            </div>
+
+            {/* XP display mode */}
+            <div className="flex items-center justify-between px-4 py-3">
+              <span className="text-[14px] text-ink" style={{ fontFamily: 'var(--font-body)' }}>XP display</span>
+              <div className="flex gap-2">
+                <Pill active={xpMode === 'total'} onClick={() => handleXpModeToggle('total')} label="Total" />
+                <Pill active={xpMode === 'period'} onClick={() => handleXpModeToggle('period')} label="This period" />
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ═══════════════════════════════════════════
+            HABITS
+            ═══════════════════════════════════════════ */}
+        <section className="space-y-3">
+          <h2 className="text-[13px] font-semibold uppercase tracking-[0.08em] text-ink-muted" style={{ fontFamily: 'var(--font-body)' }}>
+            Habits
+          </h2>
+          <div className="rounded-[12px] border border-line bg-surface divide-y divide-line">
+            <div className="px-4 py-3">
+              <p className="text-[13px] text-ink-muted" style={{ fontFamily: 'var(--font-body)' }}>
+                Edit your habits — tap a habit below to rename or change its colour.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        {/* ═══════════════════════════════════════════
+            DANGER ZONE
+            ═══════════════════════════════════════════ */}
+        <section className="space-y-3">
+          <h2 className="text-[13px] font-semibold uppercase tracking-[0.08em] text-danger" style={{ fontFamily: 'var(--font-body)' }}>
+            Danger zone
+          </h2>
+          <div className="rounded-[12px] border border-danger/30 bg-surface divide-y divide-line">
+            <div className="px-4 py-3">
+              <p className="text-[13px] text-ink-muted mb-3" style={{ fontFamily: 'var(--font-body)' }}>
+                Permanently delete your account and all data. This cannot be undone.
+              </p>
+              <button
+                type="button"
+                onClick={handleDeleteAccount}
+                disabled={deleting}
+                className="rounded-[10px] border border-danger/50 px-4 py-2 text-[13px] font-medium text-danger hover:bg-danger/5 transition-colors disabled:opacity-50"
+                style={{ fontFamily: 'var(--font-body)' }}
+              >
+                {deleting ? 'Deleting…' : 'Delete account'}
+              </button>
+            </div>
+          </div>
+        </section>
       </div>
-    </div>
+    </motion.div>
   );
 }
