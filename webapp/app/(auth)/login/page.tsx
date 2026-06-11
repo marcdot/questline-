@@ -1,11 +1,63 @@
 "use client";
 
-import { useState } from "react";
+import { useState, Component, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { createClient } from "@/lib/supabase/client";
 
 type AuthMode = "login" | "signup";
+
+/* ─── Error boundary to catch render-phase crashes ─── */
+class LoginErrorBoundary extends Component<
+  { children: ReactNode },
+  { error: Error | null }
+> {
+  state = { error: null as Error | null };
+
+  static getDerivedStateFromError(error: Error) {
+    return { error };
+  }
+
+  render() {
+    if (this.state.error) {
+      return (
+        <div
+          style={{
+            fontFamily: "system-ui, sans-serif",
+            minHeight: "100dvh",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "24px",
+            color: "#9e2b25",
+          }}
+        >
+          <h2 style={{ fontSize: "18px", marginBottom: "8px" }}>
+            Something went wrong
+          </h2>
+          <p style={{ fontSize: "14px", maxWidth: "400px", color: "#726e66" }}>
+            {this.state.error.message}
+          </p>
+          <button
+            onClick={() => window.location.reload()}
+            style={{
+              marginTop: "16px",
+              padding: "10px 20px",
+              borderRadius: "8px",
+              border: "1px solid #e1ddd5",
+              background: "#fcfbf9",
+              cursor: "pointer",
+            }}
+          >
+            Reload page
+          </button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
 
 export default function LoginPage() {
   const router = useRouter();
@@ -76,9 +128,10 @@ export default function LoginPage() {
   }
 
   return (
+    <LoginErrorBoundary>
     <motion.main
       className="flex min-h-screen flex-col items-center justify-center px-4 py-12"
-      initial={{ opacity: 0 }}
+      initial={false}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.35, ease: [0.2, 0, 0, 1] }}
     >
@@ -248,5 +301,6 @@ export default function LoginPage() {
         </p>
       </div>
     </motion.main>
+    </LoginErrorBoundary>
   );
 }
