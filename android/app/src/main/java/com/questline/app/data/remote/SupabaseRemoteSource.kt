@@ -18,6 +18,7 @@ import io.ktor.http.isSuccess
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
@@ -244,4 +245,89 @@ class SupabaseRemoteSource @Inject constructor() {
         rpc("generate_child_quests", buildJsonObject {
             put("p_quest_id", questId)
         })
+
+    // ── Edge Functions (Google Calendar sync) ──
+
+    /**
+     * Call a Supabase Edge Function that returns a JSON response.
+     * Uses the current [accessToken] for auth.
+     * This is equivalent to POST /functions/v1/{slug} with Bearer token.
+     */
+    private suspend fun callEdgeFunction(slug: String, body: JsonObject? = null): String? {
+        val url = "$baseUrl/functions/v1/$slug"
+        val response = client.post(url) {
+            header("Authorization", "Bearer ${accessToken ?: anonKey}")
+            contentType(ContentType.Application.Json)
+            if (body != null) setBody(body.toString())
+        }
+        return response.bodyAsText().takeIf { it.isNotBlank() }
+    }
+
+    /**
+     * Get the Google OAuth consent URL for the current user.
+     * Returns the URL string or null on failure.
+     */
+    suspend fun getCalendarConsentUrl(redirectTo: String): String? {
+        val url = "$baseUrl/functions/v1/calendar_oauth/start?redirect_to=${java.net.URLEncoder.encode(redirectTo, "UTF-8")}"
+        val response = client.get(url) {
+            header("Authorization", "Bearer ${accessToken ?: anonKey}")
+        }
+        val text = response.bodyAsText()
+        if (text.isBlank()) return null
+        return try {
+            val obj = json.decodeFromString<JsonObject>(text)
+            obj["url"]?.jsonPrimitive?.content
+        } catch (_: Exception) {
+            null
+        }
+    }
+
+    /**
+     * Sync a quest to Google Calendar via the calendar_sync Edge Function.
+     */
+    suspend fun syncQuestToCalendar(questId: String, op: String): Boolean {
+        val body = buildJsonObject {
+            put("quest_id", questId)
+            put("op", op)
+        }
+        val text = callEdgeFunction("calendar_sync", body)
+        return text != null
+    }
+
+    /**
+     * Read user_settings for the current user.
+     * Returns a map of setting key -> value, or null on failure.
+     */
+    suspend fun getUserSettings(userId: String): JsonObject? {
+        val url = "$baseUrl/rest/v1/user_settings?select=google_connected,theme,xp_mode&user_id=eq.$userId"
+        val response = client.get(url) {
+            supaHeaders()
+        }
+        val text = response.bodyAsText()
+        if (text.isBlank() || text == "[]") return null
+        return try {
+            val list: List<JsonObject> = json.decodeFromString(text)
+            list.firstOrNull()
+        } catch (_: Exception) {
+            null
+        }
+    }
+
+    /**
+     * Upsert user_settings values.
+     */
+    suspend fun upsertUserSettings(userId: String, settings: JsonObject): Boolean {
+        val url = "$baseUrl/rest/v1/user_settings"
+        val body = buildJsonObject {
+            put("user_id", userId)
+            settings.forEach { (k, v) -> put(k, v) }
+            put("updated_at", java.time.Instant.now().toString())
+        }
+        val response = client.post(url) {
+            supaHeaders()
+            header("Prefer", "resolution=merge-duplicates")
+            setBody(body.toString())
+        }
+        return response.status.isSuccess()
+    }
 }

@@ -238,6 +238,15 @@ class AddViewModel @Inject constructor(
                         // Non-fatal: instances will be created on next app launch
                     }
 
+                    // If calendar sync was requested, create the Google Calendar event
+                    if (calendarSync) {
+                        try {
+                            remoteSource.syncQuestToCalendar(created.id, "create")
+                        } catch (_: Exception) {
+                            // Non-fatal: sync can be retried later from the quest edit screen
+                        }
+                    }
+
                     _uiState.update {
                         it.copy(
                             isCreatingQuest = false,
