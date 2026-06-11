@@ -28,21 +28,21 @@ export default function AppShell({
 }: {
   children: React.ReactNode;
 }) {
-  const { standalone } = useDisplayMode();
+  const { standalone, platform } = useDisplayMode();
 
-  /* In non-standalone (browser, desktop) render content directly — the
-     shell is only needed in installed-PWA / app mode. */
-  if (!standalone) {
-    return (
-      <>
-        <InstallBanner />
-        {children}
-      </>
-    );
+  /* App mode (bottom tab bar) for the installed PWA AND iPhone Safari — per
+     ios/BUILD.md §2: iPhone-Safari-not-installed gets the same app UI + the
+     install banner. Desktop / Android browser get the plain responsive layout. */
+  const appMode = standalone || platform === 'ios';
+
+  if (!appMode) {
+    return <>{children}</>;
   }
 
   return (
     <div className="app-shell">
+      {/* Install banner only when running in iOS Safari (not yet installed) */}
+      {!standalone && <InstallBanner />}
       <main className="app-shell__content">{children}</main>
 
       <nav className="app-tab-bar" role="tablist">

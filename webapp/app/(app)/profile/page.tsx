@@ -59,14 +59,15 @@ export default function ProfilePage() {
       /* Read user_settings for google_connected + theme + xp_mode */
       const { data: settings } = await supabase
         .from('user_settings')
-        .select('google_connected, theme, xp_mode')
+        .select('google_connected, theme, xp_display')
         .eq('user_id', user.id)
         .single();
 
       if (settings) {
         setGoogleConnected(settings.google_connected ?? false);
         setTheme(settings.theme ?? 'light');
-        setXpMode(settings.xp_mode ?? 'total');
+        // DB enum is xp_display: 'simple' | 'detailed'; component uses 'total' | 'period'
+        setXpMode(settings.xp_display === 'detailed' ? 'period' : 'total');
       }
 
       /* Sync theme class on <html> */
@@ -99,7 +100,7 @@ export default function ProfilePage() {
     if (userId) {
       await supabase
         .from('user_settings')
-        .upsert({ user_id: userId, xp_mode: mode, updated_at: new Date().toISOString() },
+        .upsert({ user_id: userId, xp_display: mode === 'period' ? 'detailed' : 'simple', updated_at: new Date().toISOString() },
           { onConflict: 'user_id' }
         );
     }

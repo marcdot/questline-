@@ -158,9 +158,12 @@ export default function AddSheet() {
     const colorErr = validateHexColor(habitColor);
     if (colorErr) { setError(colorErr); return; }
 
+    if (!userId) { setError('Not signed in'); return; }
+
     setLoading(true);
     try {
       const { error: insertErr } = await supabase.from('habit').insert({
+        user_id: userId,
         name: nameTrimmed,
         color: habitColor,
       });
@@ -213,11 +216,14 @@ export default function AddSheet() {
       if (wdErr) { setError(wdErr); return; }
     }
 
+    if (!userId) { setError('Not signed in'); return; }
+
     setLoading(true);
     try {
       const { data: questData, error: insertErr } = await supabase
         .from('quest')
         .insert({
+          user_id: userId,
           habit_id: questHabitId,
           title: titleTrimmed,
           cadence: questCadence,
