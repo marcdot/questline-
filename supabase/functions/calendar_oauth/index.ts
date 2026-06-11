@@ -18,22 +18,55 @@ const GOOGLE_AUTH_URL = 'https://accounts.google.com/o/oauth2/v2/auth'
 const GOOGLE_TOKEN_URL = 'https://oauth2.googleapis.com/token'
 const SCOPES = 'https://www.googleapis.com/auth/calendar.events'
 
-serve(async (req) => {
-  const url = new URL(req.url)
-  // Strip the function base path to get the route
-  const path = url.pathname.replace(/^\/functions\/v1\/calendar_oauth/, '')
+/** HMAC-SHA256 sign a string using GOOGLE_CLIENT_SECRET as the key. */
+async function hmacSign(payload: string): Promise<string> {
+  const keyData = new TextEncoder().encode(GOOGLE_CLIENT_SECRET)
+  const data = new TextEncoder().encode(payload)
+  const cryptoKey = await crypto.subtle.importKey(
+    'raw', keyData, { name: 'HMAC', hash: 'SHA-256' },
+    false, ['sign'],
+  )
+  const sig = await crypto.subtle.sign('HMAC', cryptoKey, data)
+  return btoa(String.fromCharCode(...new Uint8Array(sig)))
+    .replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
+}
 
-  // --- Route: /start (GET or POST) ---
-  if (path === '/start' || (req.method === 'POST' && (path === '/' || path === ''))) {
+/** Build a signed state string. */
+async function buildState(userId: string, redirectTo: string): Promise<string> {
+  const payload = JSON.stringify({ user_id: userId, redirect_to: redirectTo })
+  const sig = await hmacSign(payload)
+  return btoa(JSON.stringify({ payload, sig }))
+}
+
+/** Verify a state string. Returns decoded payload or null if forged. */
+async function verifyState(stateParam: string): Promise<{ user_id: string; redirect_to: string } | null> {
+  try {
+    const outer = JSON.parse(atob(stateParam))
+    if (!outer.payload || !outer.sig) return null
+    const expectedSig = await hmacSign(outer.payload)
+    if (outer.sig !== expectedSig) return null
+    return JSON.parse(outer.payload)
+  } catch { return null }
+}
+
+serve(async (req) => {
+  // Log real URL to diagnose route matching on Supabase Edge
+  console.log('[calendar_oauth] req.url:', req.url)
+
+  // Match on the last path segment (works regardless of base path)
+  const url = new URL(req.url)
+  const segments = url.pathname.split('/').filter(Boolean)
+  const route = segments[segments.length - 1]
+
+  if (route === 'start') {
     return handleStart(req)
   }
 
-  // --- Route: /callback (GET only) ---
-  if (path === '/callback' && req.method === 'GET') {
+  if (route === 'callback' && req.method === 'GET') {
     return handleCallback(req)
   }
 
-  return new Response(JSON.stringify({ error: 'Not Found' }), {
+  return new Response(JSON.stringify({ error: `Not Found — route: ${route}`, path: url.pathname }), {
     status: 404,
     headers: { 'Content-Type': 'application/json' },
   })
@@ -59,11 +92,10 @@ async function handleStart(req: Request): Promise<Response> {
   }
 
   // State carries the user_id so /callback knows who to attach the token to.
-  // Also carry an optional redirect target from the client.
+  // HMAC-signed to prevent forgery (FIX 1 — security).
   const reqUrl = new URL(req.url)
   const redirectTo = reqUrl.searchParams.get('redirect_to') || APP_URL
-  const statePayload = JSON.stringify({ user_id: user.id, redirect_to: redirectTo })
-  const encodedState = btoa(statePayload)
+  const encodedState = await buildState(user.id, redirectTo)
 
   const consentUrl = new URL(GOOGLE_AUTH_URL)
   consentUrl.searchParams.set('client_id', GOOGLE_CLIENT_ID)
@@ -92,16 +124,10 @@ async function handleCallback(req: Request): Promise<Response> {
     return new Response('Missing code or state parameter', { status: 400 })
   }
 
-  // Decode and validate state
-  let state: { user_id: string; redirect_to: string }
-  try {
-    state = JSON.parse(atob(stateParam))
-  } catch {
-    return new Response('Invalid state parameter', { status: 400 })
-  }
-
-  if (!state.user_id) {
-    return new Response('State missing user_id', { status: 400 })
+  // Validate state (HMAC-signed — reject forgeries)
+  const state = await verifyState(stateParam)
+  if (!state) {
+    return new Response('Forged or invalid state parameter — rejected', { status: 403 })
   }
 
   // 1. Exchange authorization code for tokens
