@@ -260,7 +260,7 @@ export default function QuestCard({
 
   return (
     <motion.div
-      className="relative overflow-hidden rounded-[16px] border border-line bg-surface shadow-sm"
+      className="relative overflow-hidden rounded-[20px] bg-surface"
       initial={{ opacity: 0, y: 8 }}
       animate={{
         opacity: 1,
@@ -274,17 +274,22 @@ export default function QuestCard({
       onPointerDown={handlePointerDown}
       onPointerUp={handlePointerUp}
       onPointerLeave={handlePointerLeave}
-      style={{ touchAction: 'manipulation', cursor: 'pointer', userSelect: 'none' }}
+      style={{
+        touchAction: 'manipulation',
+        cursor: 'pointer',
+        userSelect: 'none',
+        boxShadow: 'var(--shadow-card)',
+      }}
     >
       {/* ─── Leading habit-colour bar (4px) ─── */}
       <div
-        className="absolute left-0 top-0 bottom-0 w-[4px] rounded-l-[16px]"
+        className="absolute left-0 top-0 bottom-0 w-[4px] rounded-l-[20px]"
         style={{ backgroundColor: habitColor, opacity: isCompleted ? 0.5 : 1 }}
       />
 
       {/* ─── Ember Fill — radial gradient from left (design.html §6) ─── */}
       <div
-        className="absolute inset-0 rounded-[16px] origin-left pointer-events-none"
+        className="absolute inset-0 rounded-[20px] origin-left pointer-events-none"
         style={{
           background: `radial-gradient(120% 140% at 12% 50%, ${accentColor}, ${habitColor})`,
           transform: `scaleX(${fillDisplay})`,
@@ -297,7 +302,7 @@ export default function QuestCard({
       <AnimatePresence>
         {showBurst && (
           <motion.div
-            className="absolute inset-0 rounded-[16px] pointer-events-none z-10"
+            className="absolute inset-0 rounded-[20px] pointer-events-none z-10"
             style={{ backgroundColor: habitColor }}
             initial={{ opacity: 0.5, scale: 0.95 }}
             animate={{ opacity: 0, scale: 1.05 }}
@@ -386,9 +391,9 @@ export default function QuestCard({
         )}
 
         {/* ─── Progress bar (bottom strip) ─── */}
-        <div className="absolute bottom-0 left-[4px] right-0 h-[3px] bg-line/40 rounded-br-[16px] overflow-hidden pointer-events-none">
+        <div className="absolute bottom-0 left-[4px] right-0 h-[3px] bg-line/40 rounded-br-[20px] overflow-hidden pointer-events-none">
           <motion.div
-            className="h-full rounded-br-[16px]"
+            className="h-full rounded-br-[20px]"
             style={{
               backgroundColor: habitColor,
               opacity: isCompleted ? 0.5 : 0.8,

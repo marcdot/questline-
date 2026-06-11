@@ -22,9 +22,9 @@ export interface DashboardProps {
   sleepData?: Array<{ nightOf: string; hours: number }>;
 }
 
-/* ─── Stat pill ─── */
+/* ─── Metric (one column of the strip) ─── */
 
-function StatPill({
+function Metric({
   label,
   value,
   color,
@@ -34,25 +34,20 @@ function StatPill({
   color: string;
 }) {
   return (
-    <motion.div
-      className="flex items-center gap-2 rounded-[12px] border border-line bg-surface px-3 py-2"
-      initial={{ opacity: 0, y: 6 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.2, ease }}
-    >
+    <div className="flex flex-1 flex-col items-start gap-1 px-4 py-3.5 first:pl-5 last:pr-5">
       <span
-        className="text-[22px] font-bold leading-none tabular-nums"
+        className="text-[26px] font-bold leading-none tracking-[-0.02em] tabular-nums"
         style={{ color, fontFamily: 'var(--font-display)' }}
       >
         {value}
       </span>
       <span
-        className="text-[11px] font-medium leading-tight text-ink-muted"
+        className="text-[10px] font-semibold uppercase tracking-[0.07em] leading-tight text-ink-muted"
         style={{ fontFamily: 'var(--font-body)' }}
       >
         {label}
       </span>
-    </motion.div>
+    </div>
   );
 }
 
@@ -113,43 +108,57 @@ export default function MiniDashboard({
 
   return (
     <div className="space-y-3">
-      {/* ─── Stats row ─── */}
-      <div className="flex flex-wrap gap-2">
-        <StatPill
-          label={totalToday === 1 ? 'quest today' : 'quests today'}
-          value={`${completedToday}/${totalToday}`}
-          color="var(--color-ink)"
-        />
-        <StatPill
-          label="streak"
-          value={streak}
-          color="var(--color-accent)"
-        />
-        <StatPill
-          label={xpToday > 0 ? `+${xpToday} today` : 'total XP'}
-          value={xpTotal}
-          color="var(--color-xp)"
-        />
-      </div>
-
-      {/* ─── Progress bar (today) ─── */}
-      {totalToday > 0 && (
-        <div className="relative h-[4px] rounded-full bg-line/40 overflow-hidden">
-          <motion.div
-            className="absolute left-0 top-0 h-full rounded-full"
-            style={{ backgroundColor: 'var(--color-success)' }}
-            initial={{ width: 0 }}
-            animate={{ width: `${todayRatio}%` }}
-            transition={{ duration: 0.4, ease }}
+      {/* ─── Metric strip (one card, hairline-divided) ─── */}
+      <motion.div
+        className="overflow-hidden rounded-[20px] bg-surface"
+        style={{ boxShadow: 'var(--shadow-card)' }}
+        initial={{ opacity: 0, y: 6 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.25, ease }}
+      >
+        <div className="flex divide-x divide-line/70">
+          <Metric
+            label={totalToday === 1 ? 'quest today' : 'quests today'}
+            value={`${completedToday}/${totalToday}`}
+            color="var(--color-ink)"
+          />
+          <Metric
+            label="streak"
+            value={streak}
+            color="var(--color-accent)"
+          />
+          <Metric
+            label={xpToday > 0 ? `+${xpToday} today` : 'total XP'}
+            value={xpTotal}
+            color="var(--color-xp)"
           />
         </div>
-      )}
+
+        {/* Today's progress — integrated baseline of the strip */}
+        {totalToday > 0 && (
+          <div className="relative h-[3px] bg-line/40 overflow-hidden">
+            <motion.div
+              className="absolute left-0 top-0 h-full"
+              style={{
+                background:
+                  'linear-gradient(90deg, var(--color-success), color-mix(in srgb, var(--color-success) 70%, var(--color-xp)))',
+              }}
+              initial={{ width: 0 }}
+              animate={{ width: `${todayRatio}%` }}
+              transition={{ duration: 0.4, ease }}
+            />
+          </div>
+        )}
+      </motion.div>
 
       {/* ─── Compact sleep chart ─── */}
-      <div className="rounded-[12px] border border-line bg-surface p-3">
-        <div className="flex items-center justify-between mb-2">
+      <div
+        className="rounded-[20px] bg-surface p-4"
+        style={{ boxShadow: 'var(--shadow-card)' }}
+      >
+        <div className="flex items-center justify-between mb-2.5">
           <span
-            className="text-[11px] font-semibold uppercase tracking-[0.06em] text-ink-muted"
+            className="text-[10px] font-semibold uppercase tracking-[0.07em] text-ink-muted"
             style={{ fontFamily: 'var(--font-body)' }}
           >
             Sleep this month

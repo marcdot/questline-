@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { useDisplayMode } from '@/lib/platform';
 import InstallBanner from '@/components/InstallBanner';
 
@@ -29,6 +30,7 @@ export default function AppShell({
   children: React.ReactNode;
 }) {
   const { standalone, platform } = useDisplayMode();
+  const pathname = usePathname();
 
   /* App mode (bottom tab bar) for the installed PWA AND iPhone Safari — per
      ios/BUILD.md §2: iPhone-Safari-not-installed gets the same app UI + the
@@ -51,9 +53,12 @@ export default function AppShell({
             key={tab.href}
             href={tab.href}
             className={
-              'app-tab' + (tab.highlight ? ' app-tab--highlight' : '')
+              'app-tab' +
+              (tab.highlight ? ' app-tab--highlight' : '') +
+              (!tab.highlight && pathname === tab.href ? ' app-tab--active' : '')
             }
             role="tab"
+            aria-current={pathname === tab.href ? 'page' : undefined}
             aria-label={tab.label || 'Create new'}
           >
             {tab.highlight ? (

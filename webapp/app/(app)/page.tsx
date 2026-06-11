@@ -603,28 +603,34 @@ export default function Home() {
 
 function Header({ userInitial }: { userInitial: string }) {
   return (
-    <header className="space-y-1">
+    <header className="space-y-2">
       <div className="flex items-center justify-between">
         <span
-          className="text-xs font-semibold uppercase tracking-[0.08em] text-ink-muted"
+          className="text-[11px] font-semibold uppercase tracking-[0.1em] text-ink-muted"
           style={{ fontFamily: 'var(--font-body)' }}
         >
           § Questline
         </span>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2.5">
           <span
-            className="text-[11px] text-ink-muted"
+            className="text-[11px] font-medium text-ink-muted"
             style={{ fontFamily: 'var(--font-body)' }}
           >
             {formatDate(new Date())}
           </span>
-          <div className="flex h-7 w-7 items-center justify-center rounded-full bg-accent/10 text-[11px] font-semibold text-accent">
+          <div
+            className="flex h-8 w-8 items-center justify-center rounded-full bg-surface text-[12px] font-semibold text-accent"
+            style={{
+              boxShadow:
+                '0 0 0 1px color-mix(in srgb, var(--accent) 30%, transparent), inset 0 1px 0 rgba(255,255,255,0.5)',
+            }}
+          >
             {userInitial}
           </div>
         </div>
       </div>
       <h1
-        className="text-[32px] font-semibold leading-[1.1] tracking-[-0.02em] text-ink"
+        className="text-[38px] font-semibold leading-[1.02] tracking-[-0.035em] text-ink"
         style={{ fontFamily: 'var(--font-display)' }}
       >
         Good{new Date().getHours() < 12 ? ' morning' : new Date().getHours() < 18 ? ' afternoon' : ' evening'}
