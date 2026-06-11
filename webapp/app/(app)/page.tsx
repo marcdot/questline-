@@ -322,6 +322,25 @@ export default function Home() {
     };
   }, [user]);
 
+  /* ─── Quiet reconcile: re-pull authoritative XP totals after a server sync.
+     The optimistic handlers update progress/streak instantly; XP is granted
+     server-side by apply_quest_event, so we re-read it here (no loading flash). */
+  const reconcileXp = useCallback(async () => {
+    if (!user) return;
+    const { data: xpAll } = await supabase
+      .from('xp_event').select('amount').eq('user_id', user.id);
+    const totalXp = (xpAll ?? []).reduce(
+      (sum: number, e: { amount: number }) => sum + e.amount, 0);
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+    const { data: xpToday } = await supabase
+      .from('xp_event').select('amount').eq('user_id', user.id)
+      .gte('created_at', todayStart.toISOString());
+    const todayXp = (xpToday ?? []).reduce(
+      (sum: number, e: { amount: number }) => sum + e.amount, 0);
+    setData((prev) => (prev ? { ...prev, totalXp, todayXp } : prev));
+  }, [user, supabase]);
+
   /* ─── Handlers for quest interaction ─── */
   const handleIncrement = useCallback(
     async (instanceId: string, delta: number) => {
@@ -370,12 +389,13 @@ export default function Home() {
       // Enqueue event for server sync
       await enqueueEvent(user.id, instanceId, 'increment', delta);
 
-      // Try flushing
+      // Try flushing, then reconcile XP from the server (apply_quest_event grants it)
       if (navigator.onLine) {
         await flushQueue(user.id);
+        await reconcileXp();
       }
     },
-    [user],
+    [user, reconcileXp],
   );
 
   const handleComplete = useCallback(
@@ -422,12 +442,13 @@ export default function Home() {
       // Enqueue event
       await enqueueEvent(user.id, instanceId, 'complete', delta);
 
-      // Flush
+      // Flush, then reconcile XP from the server
       if (navigator.onLine) {
         await flushQueue(user.id);
+        await reconcileXp();
       }
     },
-    [user],
+    [user, reconcileXp],
   );
 
   /* ─── Loading state ─── */
