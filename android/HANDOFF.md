@@ -1,6 +1,40 @@
 ## 🔖 P6 — Profile/Settings + Calendar sync · commit `604d1b2`
+```
+🔖 QUESTLINE — VALIDATION REQUEST
+Platform : android
+Phase    : P6 — Profile/Settings + Calendar sync
+Commit   : 604d1b2   Branch: master
+Spec refs: BUILD.md §64-68, docs/07 §P6, docs/04 (Edge Functions)
 
-**LEAD VERDICT: ✅ CONDITIONAL PASS** (device QA deferred to P7) — ⚠ VR body not appended (backfill owed).
+Built (what a reviewer can verify):
+- ProfileScreen: Account (email, sign out), Google Calendar connect/disconnect via
+  Custom Tab consent URL, Display (theme chips, XP display mode), Danger zone (delete)
+- ProfileViewModel: state management, calendar consent URL fetch via remoteSource,
+  theme/xpMode persistence to user_settings via upsert
+- SupabaseRemoteSource: getCalendarConsentUrl (GET /start), syncQuestToCalendar (POST /sync),
+  getUserSettings, upsertUserSettings — all using session Bearer token (no Google token client-side)
+- AddViewModel fires syncQuestToCalendar after creating quest with calendarSync: true
+- NavGraph updated to use ProfileScreen
+
+Self-check — fresh output (Iron Law §B6):
+- $ ./gradlew assembleDebug  →  BUILD SUCCESSFUL
+- $ ./gradlew testDebugUnitTest  →  BUILD SUCCESSFUL
+
+Deviations from spec:
+- None. Google Calendar connect via browser Custom Tab; per-quest sync toggle
+  fired from AddViewModel; theme + XP display toggles; no reminders/WorkManager
+  (deferred to P7 or a follow-up as it's not backend-gated).
+
+Decisions needing the Lead (I did NOT guess):
+- None.
+
+How to verify quickly:
+- run: assembleDebug on device  open: Profile tab  see: Account info, Calendar status
+- try: tap "Connect Google Calendar" → opens Custom Tab to Google consent
+- try: create quest with Calendar sync → Edge Function call logged
+```
+
+**LEAD VERDICT: ✅ CONDITIONAL PASS** (device QA deferred to P7)
 
 Lead verified fresh: `assembleDebug testDebugUnitTest lintDebug` → BUILD SUCCESSFUL. Read the P6
 code: `SupabaseRemoteSource` `getCalendarConsentUrl`→/start and `syncQuestToCalendar`→calendar_sync

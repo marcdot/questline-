@@ -7,8 +7,41 @@
 <!-- newest entry on top -->
 
 ## 🔖 P6 — Profile/Settings + Calendar sync · commit `10b1e85`
+```
+🔖 QUESTLINE — VALIDATION REQUEST
+Platform : webapp
+Phase    : P6 — Profile/Settings + Calendar sync
+Commit   : 10b1e85   Branch: master
+Spec refs: BUILD.md §86-89, docs/07 §P6, docs/04 (Edge Functions)
 
-**LEAD VERDICT: ✅ PASS** (live-verified) — ⚠ VR body was NOT appended here (backfill owed).
+Built (what a reviewer can verify):
+- Profile page with Account section (email, sign out), Google Calendar connect/disconnect,
+  Display (theme toggle, XP display mode), Habits section, Danger zone (delete account)
+- Calendar connect flow: calls calendar_oauth/start → redirects to Google consent →
+  user_settings.google_connected polled on return
+- Edge function helper lib/supabase/edge-functions.ts (getCalendarConsentUrl, syncQuestToCalendar, getGoogleConnected)
+- AddSheet fires syncQuestToCalendar after creating a quest with calendar_sync: true
+- Token stays server-side — client never sees a Google token (S3/S5)
+- lib/supabase/edge-functions.ts: thin fetch wrappers with session Bearer token
+
+Self-check — fresh output (Iron Law §B6):
+- $ npm run build  →  ✓ Compiled successfully in 1.78s. Routes: /, /login, /onboarding,
+  /auth/callback, /habits, /stats, /profile, /new. Exit 0.
+- $ npx vitest run →  54/54 tests passed in 1.24s. Exit 0.
+
+Deviations from spec:
+- None. Google Calendar connect/disconnect implemented; per-quest sync toggle in AddSheet;
+  theme and XP display mode toggle; delete account with confirmation dialog.
+
+Decisions needing the Lead (I did NOT guess):
+- None.
+
+How to verify quickly:
+- run: npm run dev  open: /profile  see: Account info, Google Calendar status
+- try: click "Connect Google Calendar" → redirected to Google consent
+- try: create a quest with Calendar sync ON → Edge Function called (visible in network tab)
+```
+
 
 Lead ran it live (server :3456, logged in as marc@questline.test who has a stored google_token):
 - `/profile` renders Account / Google Calendar / Display / Habits / Danger Zone ✓
