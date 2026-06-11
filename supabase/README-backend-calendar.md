@@ -247,3 +247,16 @@ is granted the moment a real consent round-trip is appended here (the user can d
 `/start` consent URL, or it folds into the first P6 "Enable Calendar Sync" tap).
 
 migration 006 + `calendar_sync` remain PASS from round 1 — untouched, don't re-review.
+
+### ⚙️ DEPLOYMENT REQUIREMENT (found during the round-trip test) — `calendar_oauth` must have Verify-JWT OFF
+The OAuth `/callback` is hit by a header-less browser redirect from Google, so Supabase's gateway
+JWT check rejects it with `UNAUTHORIZED_NO_AUTH_HEADER` (401) **before the function runs** — the
+consent flow dies at the redirect. Confirmed live: callback with no auth header → 401 (gateway);
+with an apikey header → 403 (function runs, signed-state check works).
+**Fix:** deploy `calendar_oauth` with JWT verification DISABLED (Dashboard → Edge Functions →
+calendar_oauth → Verify JWT OFF, or `supabase functions deploy calendar_oauth --no-verify-jwt`,
+or `config.toml`: `[functions.calendar_oauth] verify_jwt = false`). This is SAFE — `/start`
+enforces auth in-code via `getUser()` (no header → 401 from the function) and `/callback` is
+guarded by the HMAC-signed state (forged → 403, both proven live). `calendar_sync` KEEPS
+verify_jwt ON (clients call it with a session). **Capture this in `config.toml` so prod deploys
+reproduce it** — don't rely on a manual dashboard toggle for the prod project.
