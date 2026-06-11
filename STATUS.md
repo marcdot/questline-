@@ -31,14 +31,18 @@
   - webapp: ✅ **P0–P5 ALL PASS** (P5 binning fixed at `1cd0f97`, week-year-correct rebinning).
     webapp P6 waits on the calendar backend.
   - android: ✅ P0–P5 ALL PASS. P6 client work waits on the calendar backend.
-  - ✅ **Backend calendar mini-phase: CONDITIONAL PASS** (`ef96dd0`). Both blockers cleared,
-    live-proven: forged & unsigned state → 403 (S5 account-takeover vector closed); `/start`
-    reachable (401 auth-gated). `/start` consent URL verified end-to-end — client_id/redirect/
-    scope all match the user's GCP config (Edge secret = correct `559386…` client). Only the
-    human Google-consent round-trip remains for FULL pass. **webapp P6 + android P6 UNBLOCKED.**
-  - ✅ User GCP steps DONE (redirect URI + calendar.events scope). Android web client ID already
-    set. Nothing pending from the user except (optional) the one real consent tap to close the
-    round-trip, and (later) the iP3 iPhone session.
+  - 🔶 **Backend calendar mini-phase: OAuth half PROVEN, calendar_sync has 1 FIX** (round-trip
+    run live 2026-06-11). OAuth start→consent→callback→token-stored works end-to-end (token row
+    under correct user, google_connected=true). **calendar_sync FIX:** its client uses the
+    service-role key but pins the user's Authorization header → all DB calls run as the user, so
+    the policy-less `google_token` read returns empty → false "not connected" 401. Fix = split
+    auth client (getUser) from a header-less service-role client (privileged reads/writes). See
+    `supabase/README-backend-calendar.md` ROUND-TRIP TEST. S5/security all still good.
+  - Deploy/config facts now baked in: calendar_oauth verify_jwt=OFF (done in dashboard; capture
+    in config.toml for prod); migration 006 APPLIED to questline-dev (user ran it).
+  - ✅ User GCP steps DONE (redirect URI + scope). Consent round-trip DONE (token stored).
+    Nothing pending from the user on calendar until the calendar_sync fix lands (then one more
+    re-test, which the lead can drive). iP3 iPhone session still pending whenever convenient.
   - Next: webapp P6 (profile/settings + calendar UI) and android P6 client work — both clear to
     start against the proven backend. iP3 device session whenever convenient. Then P7 both.
   - Lead env note: headless preview has no rAF — frame animation can't be verified remotely;

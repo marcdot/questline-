@@ -248,6 +248,37 @@ is granted the moment a real consent round-trip is appended here (the user can d
 
 migration 006 + `calendar_sync` remain PASS from round 1 — untouched, don't re-review.
 
+---
+
+## ROUND-TRIP TEST (2026-06-11, lead-driven) — OAuth half ✅ PROVEN · sync half 🔶 FIX
+
+Lead drove the live consent flow with `marc@questline.test`. Pre-reqs found & fixed along the way:
+verify_jwt toggled OFF on calendar_oauth (header-less Google callback), and **migration 006 had
+never been APPLIED** (table missing, PGRST205) — user ran it in SQL editor.
+
+**✅ OAuth flow PROVEN end-to-end:** consent (cutomonster@gmail.com) → `/callback` →
+`google_token` row stored under the CORRECT user (`0796f515…`, 2026-06-11T08:10:17Z) →
+`user_settings.google_connected = true`. The whole start→consent→token-storage path works, signed
+state and all.
+
+**🔶 FIX (calendar_sync) — service-role client subverted by the user's Authorization header.**
+Live: `calendar_sync {op:create}` on a real owned quest → **401 "Google Calendar not connected"**
+even though the token IS stored. Root cause (`calendar_sync/index.ts:48-51`): the client is built
+with the service-role KEY but also `global.headers.Authorization = <user JWT>`. PostgREST honours
+the Bearer JWT for role resolution, so every DB call runs as the **authenticated user**, not
+service-role — and `google_token` (RLS on, NO policies) is invisible to that role → read returns
+empty → false "not connected". (My round-1 static review missed this; only the runtime test against
+the policy-less table exposes it.)
+**Fix:** split the clients (as `calendar_oauth/callback` already does):
+```ts
+const authClient = createClient(URL, SERVICE_KEY, { global:{ headers:{ Authorization: authHeader }}})
+const { data:{ user } } = await authClient.auth.getUser()        // identity only
+const admin = createClient(URL, SERVICE_KEY, { auth:{ persistSession:false }})  // NO user header
+// use `admin` for google_token read + calendar_link write; keep quest reads scoped by .eq('user_id', user.id)
+```
+Re-test evidence required: `calendar_sync {create}` → 200 + a real event on the test calendar +
+`calendar_link` row written. The OAuth half does NOT need re-testing (proven above).
+
 ### ⚙️ DEPLOYMENT REQUIREMENT (found during the round-trip test) — `calendar_oauth` must have Verify-JWT OFF
 The OAuth `/callback` is hit by a header-less browser redirect from Google, so Supabase's gateway
 JWT check rejects it with `UNAUTHORIZED_NO_AUTH_HEADER` (401) **before the function runs** — the
