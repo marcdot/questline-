@@ -1,3 +1,31 @@
+## 🔖 iP3 — Device debugging (lead-as-worker) · 2026-06-11
+
+**Symptom:** real iPhone reached the login screen but tapping "Sign in" did nothing — "phone
+thinks for a sec, then nothing" (no error, no reload, no navigation).
+
+**Root cause (found by lead, fixed):** **Next 16 blocks cross-origin requests to dev-only assets
+and endpoints by default** (`node_modules/next/dist/docs/.../allowedDevOrigins.md`: "Next.js blocks
+cross-origin requests to dev-only assets and endpoints during development"). The iPhone hits the
+machine's **LAN IP** (`10.0.0.3:<port>`), not `localhost`, so the initial HTML loads but the
+post-login client navigation (`router.push('/')` → RSC fetch + proxy) is blocked → silent hang.
+Not a Supabase/cookie/crypto issue (verified: @supabase/ssr cookies are sameSite=lax, NOT Secure,
+so they store fine over HTTP; getClaims degrades gracefully without crypto.subtle).
+
+**Fix (`<commit>`):** added `allowedDevOrigins: ["10.0.0.3", "*.trycloudflare.com", "*.loca.lt",
+"*.ngrok-free.app"]` to `webapp/next.config.ts` (dev-only, ignored in prod). Also removed Hermes's
+inert band-aid `auth: { skipAutoInitialize: true }` from `lib/supabase/client.ts` (not a real
+GoTrue option). Build + 54 tests clean.
+
+**⚠ Requires dev-server RESTART** (next.config changes don't hot-reload). After restart, iPhone
+login over `http://10.0.0.3:<port>` should work.
+
+**Still owed for FULL iP3 (separate from login):** Add-to-Home-Screen, standalone display mode,
+and the iP5 service worker REQUIRE a secure context (HTTPS) — HTTP-over-LAN can't install the PWA
+or register a service worker. Next step for true standalone testing: an HTTPS tunnel
+(cloudflared/ngrok/localtunnel) — the allowedDevOrigins list already whitelists those tunnel hosts.
+The Safari-tab login + Ember feel can be verified over HTTP now; the installed-app parts need the
+tunnel.
+
 ## 🔖 iP1 — App-shell wiring · commit `4cf5ef6` · 2026-06-10
 ```
 🔖 QUESTLINE — VALIDATION REQUEST
