@@ -250,7 +250,26 @@ migration 006 + `calendar_sync` remain PASS from round 1 — untouched, don't re
 
 ---
 
-## ROUND-TRIP TEST (2026-06-11, lead-driven) — OAuth half ✅ PROVEN · sync half 🔶 FIX
+## ✅ FULL PASS (2026-06-11) — complete round-trip proven live after the dual-client fix
+
+`calendar_sync` redeployed at `e35ce02` (dual-client split: `userClient.getUser()` for identity,
+header-less `svc` service-role client for `google_token` read + `calendar_link` writes).
+config.toml `9ff139f` captures `verify_jwt=false` (calendar_oauth) / `true` (calendar_sync).
+Lead re-fired against the live deployed function with `marc@questline.test`:
+- CREATE → **200** `google_event_id: m4bms7uato8l5mgvajmndd0geg`, real event on the test Google
+  Calendar, `calendar_link.state='synced'` written ✅
+- UPDATE → **200** (same event patched) ✅
+- DELETE → **200** event removed + `calendar_link` row gone ✅
+Test event + seed data cleaned up afterward.
+
+**Backend calendar mini-phase = COMPLETE.** OAuth (consent→token, signed-state, forged→403) and
+sync CRUD all proven end-to-end. S3/S5 gates hold. webapp P6 + android P6 client work build on a
+fully-working backend. Reminder for PROD: `config.toml` makes a CLI `supabase functions deploy`
+reproduce code + verify_jwt together; custom SMTP + re-enabled email confirmations per docs/08 §2.
+
+---
+
+## ROUND-TRIP TEST (2026-06-11, lead-driven) — OAuth half ✅ PROVEN · sync half 🔶 FIX (now resolved above)
 
 Lead drove the live consent flow with `marc@questline.test`. Pre-reqs found & fixed along the way:
 verify_jwt toggled OFF on calendar_oauth (header-less Google callback), and **migration 006 had
