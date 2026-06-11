@@ -155,3 +155,20 @@ tokens:
 races across the card on `motion.easing.ember_fill`, crests into a spring burst, and leaves a streak
 flame. The bespoke `ember_fill` curve (slow ignite → fast crest → settle) is Questline's recognizable
 motion. See `DESIGN-SYSTEM.md §Signature` and `design.html §6`.
+
+## Liquid-glass layer (2026-06 — refinement, NOT a redesign)
+Research direction: Apple's "Liquid Glass" (2025) — translucent, blurred, light-refracting surfaces
+with a top sheen — adapted to our **Spring/Summer restraint + warm undertone**. The rule that keeps
+it tasteful: **glass is for floating/elevated chrome ONLY** (bottom tab bar, modal sheets, banners,
+toasts) — **never** flat content cards (those stay matte paper, so data stays legible and the ground
+keeps its restraint). Tokens (`globals.css`): `--glass` (translucent warm surface), `--glass-highlight`
+(inset top sheen — the liquid light-catch), `--glass-blur` 16px, `backdrop-filter: blur() saturate(1.6)`.
+Utility: `.glass`. Applied: `.app-tab-bar`. Light = brighter sheen; dark = deeper translucency, fainter
+sheen ("dark is earned").
+
+## Numerals & mobile (correctness)
+- **Hero/dashboard numbers use the display font** (Bricolage Grotesque, `tabular-nums`), NOT mono —
+  JetBrains Mono's dotted zero reads as an 8 at display sizes. Mono stays for small inline data only.
+- **Mobile:** form inputs are ≥16px (iOS auto-zooms on focus below that); `text-size-adjust:100%` +
+  `overflow-x:hidden` on the root stop Safari's rotate-inflation and zoom-out. `viewport-fit=cover`
+  with safe-area insets on the app shell.

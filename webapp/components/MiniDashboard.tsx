@@ -42,7 +42,7 @@ function StatPill({
     >
       <span
         className="text-[22px] font-bold leading-none tabular-nums"
-        style={{ color, fontFamily: 'var(--font-mono)' }}
+        style={{ color, fontFamily: 'var(--font-display)' }}
       >
         {value}
       </span>
