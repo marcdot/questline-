@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { motion } from "framer-motion";
 import { createClient } from "@/lib/supabase/client";
 
 type AuthMode = "login" | "signup";
@@ -32,7 +31,6 @@ export default function LoginPage() {
           },
         });
         if (error) throw error;
-        // Sign-up with email confirmation — tell user to check email
         setError("Check your email for the confirmation link.");
         setLoading(false);
         return;
@@ -76,30 +74,43 @@ export default function LoginPage() {
   }
 
   return (
-    <motion.main
-      className="flex min-h-screen flex-col items-center justify-center px-4 py-12"
-      initial={false}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.35, ease: [0.2, 0, 0, 1] }}
-    >
-      <div className="w-full max-w-sm space-y-8">
+    <main className="flex min-h-screen flex-col items-center justify-center px-4 py-12" style={{ backgroundColor: 'var(--page-bg)', color: 'var(--ink)', fontFamily: 'var(--font-body)' }}>
+      <div className="w-full max-w-sm" style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
         {/* ─── Header ─── */}
-        <header className="space-y-2 text-center">
+        <header style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', gap: '8px' }}>
           <span
-            className="text-xs font-semibold uppercase tracking-[0.08em] text-ink-muted"
-            style={{ fontFamily: "var(--font-body)" }}
+            style={{
+              fontSize: '12px',
+              fontWeight: 600,
+              letterSpacing: '0.08em',
+              textTransform: 'uppercase',
+              color: 'var(--ink-muted)',
+              fontFamily: 'var(--font-body)',
+            }}
           >
             § Questline
           </span>
           <h1
-            className="text-[32px] font-semibold leading-[1.05] tracking-[-0.02em] text-ink"
-            style={{ fontFamily: "var(--font-display)" }}
+            style={{
+              fontSize: '32px',
+              fontWeight: 600,
+              lineHeight: 1.05,
+              letterSpacing: '-0.02em',
+              color: 'var(--ink)',
+              fontFamily: 'var(--font-display)',
+              margin: 0,
+            }}
           >
             {mode === "login" ? "Welcome back" : "Begin your quest"}
           </h1>
           <p
-            className="text-[15px] leading-[1.55] text-ink-muted"
-            style={{ fontFamily: "var(--font-body)" }}
+            style={{
+              fontSize: '15px',
+              lineHeight: 1.55,
+              color: 'var(--ink-muted)',
+              fontFamily: 'var(--font-body)',
+              margin: 0,
+            }}
           >
             {mode === "login"
               ? "Sign in to continue your journey."
@@ -109,23 +120,32 @@ export default function LoginPage() {
 
         {/* ─── Error message ─── */}
         {error && (
-          <motion.div
-            className="rounded-[12px] border border-danger/30 bg-danger/5 p-3 text-[13px] text-danger"
-            initial={{ opacity: 0, y: -8 }}
-            animate={{ opacity: 1, y: 0 }}
-            style={{ fontFamily: "var(--font-body)" }}
+          <div
+            style={{
+              borderRadius: '12px',
+              border: '1px solid rgba(158, 43, 37, 0.3)',
+              backgroundColor: 'rgba(158, 43, 37, 0.05)',
+              padding: '12px',
+              fontSize: '13px',
+              color: 'var(--danger)',
+              fontFamily: 'var(--font-body)',
+            }}
           >
             {error}
-          </motion.div>
+          </div>
         )}
 
         {/* ─── Email form ─── */}
-        <form onSubmit={handleEmailAuth} className="space-y-4">
-          <div className="space-y-1.5">
+        <form onSubmit={handleEmailAuth} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
             <label
               htmlFor="email"
-              className="text-[13px] font-medium text-ink-muted"
-              style={{ fontFamily: "var(--font-body)" }}
+              style={{
+                fontSize: '13px',
+                fontWeight: 500,
+                color: 'var(--ink-muted)',
+                fontFamily: 'var(--font-body)',
+              }}
             >
               Email
             </label>
@@ -136,16 +156,30 @@ export default function LoginPage() {
               onChange={(e) => setEmail(e.target.value)}
               placeholder="you@example.com"
               required
-              className="w-full rounded-[12px] border border-line bg-surface px-4 py-3 text-[15px] text-ink placeholder:text-ink-disabled outline-none transition-colors focus:border-accent"
-              style={{ fontFamily: "var(--font-body)" }}
+              style={{
+                width: '100%',
+                borderRadius: '12px',
+                border: '1px solid var(--line)',
+                backgroundColor: 'var(--surface)',
+                padding: '12px 16px',
+                fontSize: '15px',
+                color: 'var(--ink)',
+                outline: 'none',
+                boxSizing: 'border-box',
+                fontFamily: 'var(--font-body)',
+              }}
             />
           </div>
 
-          <div className="space-y-1.5">
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
             <label
               htmlFor="password"
-              className="text-[13px] font-medium text-ink-muted"
-              style={{ fontFamily: "var(--font-body)" }}
+              style={{
+                fontSize: '13px',
+                fontWeight: 500,
+                color: 'var(--ink-muted)',
+                fontFamily: 'var(--font-body)',
+              }}
             >
               Password
             </label>
@@ -157,16 +191,37 @@ export default function LoginPage() {
               placeholder="••••••••"
               required
               minLength={6}
-              className="w-full rounded-[12px] border border-line bg-surface px-4 py-3 text-[15px] text-ink placeholder:text-ink-disabled outline-none transition-colors focus:border-accent"
-              style={{ fontFamily: "var(--font-body)" }}
+              style={{
+                width: '100%',
+                borderRadius: '12px',
+                border: '1px solid var(--line)',
+                backgroundColor: 'var(--surface)',
+                padding: '12px 16px',
+                fontSize: '15px',
+                color: 'var(--ink)',
+                outline: 'none',
+                boxSizing: 'border-box',
+                fontFamily: 'var(--font-body)',
+              }}
             />
           </div>
 
           <button
             type="submit"
             disabled={loading}
-            className="w-full rounded-[12px] bg-accent px-4 py-3 text-[15px] font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-50"
-            style={{ fontFamily: "var(--font-body)" }}
+            style={{
+              width: '100%',
+              borderRadius: '12px',
+              backgroundColor: 'var(--accent)',
+              padding: '12px 16px',
+              fontSize: '15px',
+              fontWeight: 600,
+              color: '#fff',
+              border: 'none',
+              cursor: loading ? 'not-allowed' : 'pointer',
+              opacity: loading ? 0.5 : 1,
+              fontFamily: 'var(--font-body)',
+            }}
           >
             {loading
               ? "Please wait…"
@@ -177,25 +232,47 @@ export default function LoginPage() {
         </form>
 
         {/* ─── Divider ─── */}
-        <div className="flex items-center gap-3">
-          <div className="h-px flex-1 bg-line" />
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <div style={{ height: '1px', flex: 1, backgroundColor: 'var(--line)' }} />
           <span
-            className="text-[11px] font-semibold uppercase tracking-[0.08em] text-ink-muted"
-            style={{ fontFamily: "var(--font-body)" }}
+            style={{
+              fontSize: '11px',
+              fontWeight: 600,
+              letterSpacing: '0.08em',
+              textTransform: 'uppercase',
+              color: 'var(--ink-muted)',
+              fontFamily: 'var(--font-body)',
+            }}
           >
             or
           </span>
-          <div className="h-px flex-1 bg-line" />
+          <div style={{ height: '1px', flex: 1, backgroundColor: 'var(--line)' }} />
         </div>
 
         {/* ─── Google sign-in ─── */}
         <button
           onClick={handleGoogleSignIn}
           disabled={loading}
-          className="flex w-full items-center justify-center gap-3 rounded-[12px] border border-line bg-surface px-4 py-3 text-[15px] font-medium text-ink transition-colors hover:bg-surface-2 disabled:opacity-50"
-          style={{ fontFamily: "var(--font-body)" }}
+          type="button"
+          style={{
+            width: '100%',
+            borderRadius: '12px',
+            border: '1px solid var(--line)',
+            backgroundColor: 'var(--surface)',
+            padding: '12px 16px',
+            fontSize: '15px',
+            fontWeight: 500,
+            color: 'var(--ink)',
+            cursor: loading ? 'not-allowed' : 'pointer',
+            opacity: loading ? 0.5 : 1,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '12px',
+            fontFamily: 'var(--font-body)',
+          }}
         >
-          <svg className="h-5 w-5" viewBox="0 0 24 24" aria-hidden="true">
+          <svg className="h-5 w-5" viewBox="0 0 24 24" aria-hidden="true" style={{ width: 20, height: 20, flexShrink: 0 }}>
             <path
               d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"
               fill="#4285F4"
@@ -217,7 +294,7 @@ export default function LoginPage() {
         </button>
 
         {/* ─── Toggle mode ─── */}
-        <p className="text-center text-[13px] text-ink-muted">
+        <p style={{ textAlign: 'center', fontSize: '13px', color: 'var(--ink-muted)', fontFamily: 'var(--font-body)' }}>
           {mode === "login" ? (
             <>
               No account?{" "}
@@ -226,7 +303,17 @@ export default function LoginPage() {
                   setMode("signup");
                   setError(null);
                 }}
-                className="font-medium text-accent underline"
+                style={{
+                  fontWeight: 500,
+                  color: 'var(--accent)',
+                  textDecoration: 'underline',
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                  fontFamily: 'var(--font-body)',
+                  fontSize: '13px',
+                  padding: 0,
+                }}
               >
                 Sign up
               </button>
@@ -239,7 +326,17 @@ export default function LoginPage() {
                   setMode("login");
                   setError(null);
                 }}
-                className="font-medium text-accent underline"
+                style={{
+                  fontWeight: 500,
+                  color: 'var(--accent)',
+                  textDecoration: 'underline',
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                  fontFamily: 'var(--font-body)',
+                  fontSize: '13px',
+                  padding: 0,
+                }}
               >
                 Sign in
               </button>
@@ -247,6 +344,6 @@ export default function LoginPage() {
           )}
         </p>
       </div>
-    </motion.main>
+    </main>
   );
 }
