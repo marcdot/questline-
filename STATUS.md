@@ -31,16 +31,16 @@
   - webapp: ✅ **P0–P5 ALL PASS** (P5 binning fixed at `1cd0f97`, week-year-correct rebinning).
     webapp P6 waits on the calendar backend.
   - android: ✅ P0–P5 ALL PASS. P6 client work waits on the calendar backend.
-  - 🔶 **Backend calendar mini-phase: FIX (1 CRITICAL + 1 routing)** — code at `fe43877`/`d00bf0d`,
-    deployed. `calendar_sync` + migration 006 are good (live: anon→401). Blockers in
-    `supabase/README-backend-calendar.md` LEAD VERDICT: (1) **CRITICAL S5** — `calendar_oauth`
-    `state` is unsigned, attacker can inject their refresh token under a victim's user_id
-    (account-takeover); fix = HMAC-signed state or one-time nonce table, never trust user_id from
-    the URL. (2) `/start` route 404s live (path-strip mismatch). NOT passed — no client may call
-    these in a real flow until fixed + round-trip + forged-state-rejected evidence.
-  - Next: fix the 2 calendar blockers → redeploy. Then (after user GCP redirect-URI step) the
-    round-trip evidence. THEN webapp P6 + android P6 client work unblock. iP3 device session
-    whenever the user has iPhone time.
+  - ✅ **Backend calendar mini-phase: CONDITIONAL PASS** (`ef96dd0`). Both blockers cleared,
+    live-proven: forged & unsigned state → 403 (S5 account-takeover vector closed); `/start`
+    reachable (401 auth-gated). `/start` consent URL verified end-to-end — client_id/redirect/
+    scope all match the user's GCP config (Edge secret = correct `559386…` client). Only the
+    human Google-consent round-trip remains for FULL pass. **webapp P6 + android P6 UNBLOCKED.**
+  - ✅ User GCP steps DONE (redirect URI + calendar.events scope). Android web client ID already
+    set. Nothing pending from the user except (optional) the one real consent tap to close the
+    round-trip, and (later) the iP3 iPhone session.
+  - Next: webapp P6 (profile/settings + calendar UI) and android P6 client work — both clear to
+    start against the proven backend. iP3 device session whenever convenient. Then P7 both.
   - Lead env note: headless preview has no rAF — frame animation can't be verified remotely;
     computed-style + network + code-read checks stand in; subjective feel = user's call.
   - 📧 Supabase bounce warning (2026-06-10, handled): caused by ~26 fake-address public signups

@@ -212,3 +212,38 @@ $ curl -s https://oovismpmhcmytforydfe.supabase.co/functions/v1/calendar_oauth/s
 **Deviations from spec:**
 - None. Both FIX items addressed as specified.
 - Round-trip evidence (consent → token stored → event created + forged-state rejection test) deferred pending GCP redirect URI entry (user action).
+
+---
+
+## LEAD VERDICT (re-submit): ✅ CONDITIONAL PASS — both blockers cleared, live-proven
+
+Lead read `ef96dd0` in full AND ran live probes against the deployed function (user completed
+GCP redirect-URI + scope steps this round):
+
+**FIX 1 (CRITICAL/S5) — CLEARED, live negative test passed.** `verifyState` HMAC-SHA256s the
+payload with the client secret and rejects on `sig` mismatch. Proven against the deployed fn:
+- forged state (bogus sig) → **403 "Forged or invalid state"** ✅
+- unsigned state (the exact original account-takeover shape `{user_id}`) → **403** ✅
+The token-injection vector is closed. (Minor hardening nit, NOT blocking: `outer.sig !==
+expectedSig` is a non-constant-time compare — a timing oracle on an HMAC over HTTP is
+impractical, but use a constant-time equal when convenient.)
+
+**FIX 2 — CLEARED.** Last-path-segment routing works: `/start` no-auth → **401** (reachable,
+auth-gated), not 404. ✅
+
+**Bonus — full `/start` path verified end-to-end** (minted a real session for `marc@questline.test`,
+called `/start`): consent URL is well-formed and CONSISTENT with the user's GCP config —
+`client_id 559386499305-…` (matches the registered web client, so the Edge secret is the right
+client), `redirect_uri …/calendar_oauth/callback` (matches registered URI → no
+redirect_uri_mismatch), `scope calendar.events`, `access_type=offline&prompt=consent` (refresh
+token guaranteed), signed `state` present. The one un-inspectable gap (Edge secret = correct
+client) is now closed.
+
+**Why CONDITIONAL, not full PASS:** the only un-proven step is the human Google consent click →
+`google_token` row written → real event created. That requires an interactive Google login the
+lead can't drive headlessly. Everything leading to and from it is verified. **This UNBLOCKS
+webapp P6 + android P6 client work** (build against a proven-correct, secure backend). Full PASS
+is granted the moment a real consent round-trip is appended here (the user can do this now via the
+`/start` consent URL, or it folds into the first P6 "Enable Calendar Sync" tap).
+
+migration 006 + `calendar_sync` remain PASS from round 1 — untouched, don't re-review.
