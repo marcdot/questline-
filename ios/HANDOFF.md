@@ -19,6 +19,29 @@ GoTrue option). Build + 54 tests clean.
 **⚠ Requires dev-server RESTART** (next.config changes don't hot-reload). After restart, iPhone
 login over `http://10.0.0.3:<port>` should work.
 
+**Device bugs found & fixed after login worked (`7169647`):**
+1. **Can't create habit/quest — "Failed to create habit" (RLS 403).** `AddSheet` habit & quest
+   inserts OMITTED `user_id` (NOT NULL + RLS `user_id=auth.uid()`). Added `user_id`. Verified live:
+   "Read daily" → created. (Sleep was fine — uses `log_sleep` RPC.)
+2. **No nav bar / `+` in iPhone Safari.** `AppShell` only rendered the bottom tabs when
+   `standalone` — but ios/BUILD.md §2 says iPhone-Safari-not-installed gets the app shell + install
+   banner. Now renders when `standalone || platform==='ios'`.
+3. **Profile theme/XP settings broken + reconnect confusion.** Profile read/wrote `xp_mode`, which
+   doesn't exist (column is `xp_display` enum `simple|detailed`) → settings read 42703-errored.
+   Fixed read+write, mapping total↔simple / period↔detailed at the DB boundary.
+
+**Still-open / needs device re-test (not yet fixed):**
+- **Footer not pinned in installed app ("scroll to see it"):** CSS is `position:fixed; bottom:0`
+  with NO transform/filter ancestor found (root layout clean, grain is a `body::before` sibling).
+  Likely was the Safari-no-shell bug (#2). RE-TEST after #2 fix; if it still floats in standalone,
+  send a screenshot — may be an iOS `dvh`/safe-area quirk.
+- **Calendar reconnect in the INSTALLED PWA:** known iOS limitation (ios/BUILD.md §3.8 — OAuth in
+  standalone bounces through Safari and may not return to the PWA). Works in Safari tab. Also the
+  Disconnect button is cosmetic (flips `google_connected` flag but does NOT delete the
+  `google_token` row — needs a small Edge Function `disconnect` op; FOLLOW-UP).
+- **~2s route change:** dev-only Turbopack on-demand compilation (each route compiles on first
+  visit). Not a bug — a production build navigates instantly. Verify with `npm run build && npm start`.
+
 **Still owed for FULL iP3 (separate from login):** Add-to-Home-Screen, standalone display mode,
 and the iP5 service worker REQUIRE a secure context (HTTPS) — HTTP-over-LAN can't install the PWA
 or register a service worker. Next step for true standalone testing: an HTTPS tunnel
