@@ -45,12 +45,13 @@ serve(async (req) => {
 
   // --- Authenticate via session token ---
   const authHeader = req.headers.get('Authorization') || ''
-  const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
+  // User-scoped client: for auth only (getUser uses the user's session)
+  const userClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
     auth: { persistSession: false },
     global: { headers: { Authorization: authHeader } },
   })
 
-  const { data: { user }, error: authError } = await supabase.auth.getUser()
+  const { data: { user }, error: authError } = await userClient.auth.getUser()
   if (authError || !user) {
     return new Response(JSON.stringify({ error: 'Unauthorized' }), {
       status: 401,
@@ -59,6 +60,12 @@ serve(async (req) => {
   }
 
   const userId = user.id
+
+  // Service-role client (no user auth headers): bypasses RLS for google_token
+  // and calendar_link writes. Matches the pattern used in calendar_oauth/callback.
+  const svc = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
+    auth: { persistSession: false },
+  })
 
   // --- Parse and validate body ---
   let body: SyncRequest
@@ -79,7 +86,7 @@ serve(async (req) => {
   }
 
   // --- Fetch quest details ---
-  const { data: quest, error: questError } = await supabase
+  const { data: quest, error: questError } = await userClient
     .from('quest')
     .select('id, title, cadence, weekdays, habit_id, calendar_sync')
     .eq('id', body.quest_id)
@@ -94,7 +101,8 @@ serve(async (req) => {
   }
 
   // --- Read refresh token from google_token ---
-  const { data: tokenRow, error: tokenError } = await supabase
+  // Uses svc client (service-role, no RLS) because google_token has NO policies.
+  const { data: tokenRow, error: tokenError } = await svc
     .from('google_token')
     .select('refresh_token')
     .eq('user_id', userId)
@@ -111,7 +119,7 @@ serve(async (req) => {
   const accessToken = await getAccessToken(tokenRow.refresh_token)
   if (!accessToken) {
     // Token is invalid/revoked — clean up and return 409
-    await handleInvalidGrant(supabase, userId)
+    await handleInvalidGrant(svc, userId)
     return new Response(
       JSON.stringify({ error: 'Google Calendar access revoked — re-connect required' }),
       {
@@ -129,8 +137,8 @@ serve(async (req) => {
     switch (body.op) {
       case 'create': {
         const googleEventId = await createEvent(accessToken, event)
-        // Write calendar_link row
-        const { error: linkError } = await supabase
+        // Write calendar_link row (svc bypasses RLS)
+        const { error: linkError } = await svc
           .from('calendar_link')
           .upsert(
             {
@@ -157,7 +165,7 @@ serve(async (req) => {
 
       case 'update': {
         // Read existing link to get the google_event_id
-        const { data: link } = await supabase
+        const { data: link } = await svc
           .from('calendar_link')
           .select('google_event_id')
           .eq('quest_id', body.quest_id)
@@ -173,7 +181,7 @@ serve(async (req) => {
 
         await updateEvent(accessToken, link.google_event_id, event)
 
-        const { error: linkError } = await supabase
+        const { error: linkError } = await svc
           .from('calendar_link')
           .upsert(
             {
@@ -196,7 +204,7 @@ serve(async (req) => {
       }
 
       case 'delete': {
-        const { data: link } = await supabase
+        const { data: link } = await svc
           .from('calendar_link')
           .select('google_event_id')
           .eq('quest_id', body.quest_id)
@@ -208,7 +216,7 @@ serve(async (req) => {
         }
 
         // Remove the calendar_link row
-        await supabase
+        await svc
           .from('calendar_link')
           .delete()
           .eq('quest_id', body.quest_id)
@@ -265,11 +273,11 @@ async function getAccessToken(refreshToken: string): Promise<string | null> {
   return data.access_token
 }
 
-async function handleInvalidGrant(supabase: ReturnType<typeof createClient>, userId: string) {
+async function handleInvalidGrant(svc: ReturnType<typeof createClient>, userId: string) {
   // Delete the revoked token
-  await supabase.from('google_token').delete().eq('user_id', userId)
+  await svc.from('google_token').delete().eq('user_id', userId)
   // Update the connection flag
-  await supabase
+  await svc
     .from('user_settings')
     .update({ google_connected: false, updated_at: new Date().toISOString() })
     .eq('user_id', userId)
