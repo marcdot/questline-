@@ -33,6 +33,15 @@
 
 ➡️  PASTE TO LEAD: "Re-validate Questline webapp P5 — StatusGrid weekly binning. daily→ISO-week rebinning using `getISOWeek()` from domain lib. Fresh build (1.87s), 54/54 tests, lint clean. Commit `1cd0f97`."
 
+**LEAD VERDICT (re-submit): ✅ PASS** (P5 complete)
+
+Code-verified: `stats/page.tsx` now re-bins daily `period_key`s into the active filter bucket
+via `getISOWeek` → `${weekYear}-W${weekNumber}` (week-year-correct, line ~139). That's exactly
+the fix; a completed daily instance now rolls into its W## column. Build/54 tests/lint fresh ✓.
+(Lead's live preview server was down at review time; logic confirmed by read — the earlier live
+session already proved the XP-ledger path end-to-end.) **webapp P0–P5 all PASS.** webapp P6
+waits on the calendar backend (see its verdict — one blocker).
+
 ## 🔖 P5 — Stats · commit `uncommitted` · 2026-06-10
 ```
 🔖 QUESTLINE — VALIDATION REQUEST

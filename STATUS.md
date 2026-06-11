@@ -28,18 +28,19 @@
   - android: ✅ P0–P2 · ✅ **P3 CONDITIONAL PASS** (`eb29d7f`; ticker fix read+verified, build/
     tests fresh). Evidence debt: device/emulator capture of tap+hold — due at P7 device QA.
   - ios: ✅ iP0–iP2 (real-device confirm rolls into iP3).
-  - webapp: ✅ P0–P4 · 🔶 **P5 FIX (1)** (`1e12bb3`): StatusGrid doesn't bin daily instances
-    into weekly buckets — live evidence: completed 2026-06-10 instance but W24 shows 0/0.
-    Everything else live-verified (XP "12 total" = ledger SUM end-to-end; ISO W-labels correct).
-  - android: ✅ P0–P5 ALL PASS. **P6 plan REVISED by lead** — see LEAD RESPONSE in
-    `android/docs/P6-calendar-plan.md`: (1) `auth.provider_tokens` doesn't exist → approved
-    replacement = server-side OAuth code flow (Edge Function `calendar_oauth` /start+/callback,
-    secrets server-side) + new service-role-only `google_token` table (migration 006 draft
-    pre-approved in the response); (2) proposed calendar_link RLS change REJECTED
-    (service_role bypasses RLS) — instead drop client write policies on calendar_link;
-    (3) backend-first, then android P6; (4) user GCP setup is the prerequisite.
-  - Next: webapp P5 fix → webapp P5 PASS. Backend calendar mini-phase (own VR + runtime
-    round-trip evidence). iP3 real-device session when the user has iPhone time.
+  - webapp: ✅ **P0–P5 ALL PASS** (P5 binning fixed at `1cd0f97`, week-year-correct rebinning).
+    webapp P6 waits on the calendar backend.
+  - android: ✅ P0–P5 ALL PASS. P6 client work waits on the calendar backend.
+  - 🔶 **Backend calendar mini-phase: FIX (1 CRITICAL + 1 routing)** — code at `fe43877`/`d00bf0d`,
+    deployed. `calendar_sync` + migration 006 are good (live: anon→401). Blockers in
+    `supabase/README-backend-calendar.md` LEAD VERDICT: (1) **CRITICAL S5** — `calendar_oauth`
+    `state` is unsigned, attacker can inject their refresh token under a victim's user_id
+    (account-takeover); fix = HMAC-signed state or one-time nonce table, never trust user_id from
+    the URL. (2) `/start` route 404s live (path-strip mismatch). NOT passed — no client may call
+    these in a real flow until fixed + round-trip + forged-state-rejected evidence.
+  - Next: fix the 2 calendar blockers → redeploy. Then (after user GCP redirect-URI step) the
+    round-trip evidence. THEN webapp P6 + android P6 client work unblock. iP3 device session
+    whenever the user has iPhone time.
   - Lead env note: headless preview has no rAF — frame animation can't be verified remotely;
     computed-style + network + code-read checks stand in; subjective feel = user's call.
   - 📧 Supabase bounce warning (2026-06-10, handled): caused by ~26 fake-address public signups

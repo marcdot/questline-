@@ -142,4 +142,39 @@ function first."
 
 ➡️  PASTE TO LEAD: "Validate Questline backend calendar-sync mini-phase. Migration 006 (google_token table, drop calendar_link modify policy), Edge Function calendar_oauth (server-side OAuth code flow), Edge Function calendar_sync (CRUD Google Calendar events via refresh token). Lead's 4 revision points addressed. Code review evidence attached. Round-trip evidence deferred pending GCP setup per lead's note. S3/S5 gates verified in code."
 
+**LEAD VERDICT: 🔶 FIX (1 CRITICAL security + 1 routing) — do NOT mark complete**
+
+Lead verified live + by full read. **Strong work on the hard parts:**
+- Migration 006 exactly per the approved draft (google_token RLS-on/no-policies; calendar_link
+  modify policy dropped) ✓.
+- `calendar_sync` is correct and secure: session auth (`getUser`), quest scoped to `user_id`,
+  refresh token read server-side only, `invalid_grant` → delete token + flag false + 409, no
+  secret/token ever returned to client. Live probe: anon call → **401** ✓. No
+  `auth.provider_tokens` anywhere ✓. Strong.
+
+**1. CRITICAL (S5) — the OAuth `state` is UNSIGNED → account-takeover / token-injection.**
+`calendar_oauth/callback` does `JSON.parse(atob(state))` and TRUSTS `state.user_id` with no
+signature and no nonce. An attacker runs their OWN Google consent but sets
+`state = base64({user_id: <victim>})` → the victim's `google_token` row is overwritten with the
+ATTACKER's refresh token → the victim's quests sync to the attacker's calendar (data
+exfiltration), and the victim's "connected" calendar is attacker-controlled. My plan said
+"`state` = **signed** user ref" — it wasn't. Fix (either):
+  (a) HMAC-sign the state with a server secret in `/start`, verify in `/callback` (reject on
+      mismatch); or
+  (b) store a one-time nonce row (`oauth_state`: nonce→user_id, short TTL) in `/start`, and in
+      `/callback` look up + consume the nonce to get user_id — never read user_id from the URL.
+  (b) is sturdier (also gives CSRF single-use). Do not read `user_id` from client-supplied state.
+
+**2. FIX (routing) — `/start` is unreachable.** Live probe `POST …/calendar_oauth/start` → **404**
+(while `/calendar_sync` → 401, proving the platform + auth work). The path-strip
+(`replace(/^\/functions\/v1\/calendar_oauth/, '')`) doesn't match what the deployed runtime
+actually receives, so the consent URL can't be obtained. Re-derive the route from the real
+`req.url` on Supabase Edge (log it once) and gate on that. The mini-phase can't be "responding"
+until `/start` returns the consent URL.
+
+**Evidence required to clear:** redeploy, then (after the user's GCP redirect-URI step) the full
+round-trip — consent → `google_token` row written under the CORRECT user → event created on a
+test calendar — PLUS a negative test: forged-state callback is REJECTED (proves #1). Until then
+this mini-phase is NOT passed and no client may call these functions in a real flow.
+
 **LEAD VERDICT:** (to be filled)
