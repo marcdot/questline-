@@ -1,0 +1,11 @@
+[api]
+enabled = true
+
+[functions]
+enabled = true
+
+[functions.calendar_oauth]
+verify_jwt = false
+
+[functions.calendar_sync]
+verify_jwt = true
