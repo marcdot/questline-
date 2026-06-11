@@ -10,7 +10,7 @@ export default function NewPage() {
   return (
     <motion.main
       className="flex min-h-screen flex-col items-center px-4 py-12"
-      initial={{ opacity: 0 }}
+      initial={false}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.35, ease }}
     >

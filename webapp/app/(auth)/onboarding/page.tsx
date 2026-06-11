@@ -142,7 +142,7 @@ export default function OnboardingPage() {
   return (
     <motion.main
       className="flex min-h-screen flex-col items-center justify-center px-4 py-12"
-      initial={{ opacity: 0 }}
+      initial={false}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.35, ease: [0.2, 0, 0, 1] }}
     >

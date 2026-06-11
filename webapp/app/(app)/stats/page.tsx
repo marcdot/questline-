@@ -572,12 +572,11 @@ export default function StatsPage() {
   return (
     <motion.main
       className="flex min-h-screen flex-col items-center px-4 py-12"
-      initial={{ opacity: 0 }}
+      initial={false}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.35, ease }}
     >
       <div className="w-full max-w-md space-y-6">
-        {/* ─── Header ─── */}
         <header className="space-y-1">
           <span
             className="text-xs font-semibold uppercase tracking-[0.08em] text-ink-muted"
@@ -589,10 +588,10 @@ export default function StatsPage() {
             className="text-[32px] font-semibold leading-[1.1] tracking-[-0.02em] text-ink"
             style={{ fontFamily: 'var(--font-display)' }}
           >
-            Analytics
+            Statistics
           </h1>
         </header>
-
+        <div className="h-px w-full bg-line" />
         <div className="h-px w-full bg-line" />
 
         {/* ─── Period filter pills ─── */}

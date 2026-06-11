@@ -192,12 +192,11 @@ export default function ProfilePage() {
   return (
     <motion.div
       className="flex flex-col items-center px-4 py-12"
-      initial={{ opacity: 0 }}
+      initial={false}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.35, ease }}
     >
       <div className="w-full max-w-md space-y-6">
-        {/* ─── Header ─── */}
         <header className="space-y-1">
           <span
             className="text-xs font-semibold uppercase tracking-[0.08em] text-ink-muted"
