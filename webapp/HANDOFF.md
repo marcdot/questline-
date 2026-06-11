@@ -6,6 +6,23 @@
 
 <!-- newest entry on top -->
 
+## 🔖 P6 — Profile/Settings + Calendar sync · commit `10b1e85`
+
+**LEAD VERDICT: ✅ PASS** (live-verified) — ⚠ VR body was NOT appended here (backfill owed).
+
+Lead ran it live (server :3456, logged in as marc@questline.test who has a stored google_token):
+- `/profile` renders Account / Google Calendar / Display / Habits / Danger Zone ✓
+- Calendar status reads LIVE from backend → **"Connected ✓"** (real `google_connected=true`) ✓
+- `lib/supabase/edge-functions.ts`: session-auth only, **no Google token ever client-side**
+  (S3/S5 ✓); `getCalendarConsentUrl`→/start, `syncQuestToCalendar`→/calendar_sync.
+- Verified the client's Authorization-only fetch shape passes the gateway for calendar_sync
+  (verify_jwt ON): bogus quest → 404 "Quest not found" = auth layer passed ✓.
+- Build + 54 tests + lint clean (lead re-ran).
+
+Protocol slip (fix, don't re-review): the actual Validation Request was relayed in chat but never
+written to this file. Backfill the standard VR entry above this verdict — durable-record rule
+(docs/06 §B7). **webapp P6 PASS → P7 (polish/a11y/acceptance) may start.**
+
 ## 🔖 P5 — Stats (re-submit) · commit `fe43877` · 2026-06-10
 
 **FIX 1 — StatusGrid bins daily instances into weekly/monthly/yearly buckets:**

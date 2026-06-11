@@ -1,3 +1,17 @@
+## 🔖 P6 — Profile/Settings + Calendar sync · commit `604d1b2`
+
+**LEAD VERDICT: ✅ CONDITIONAL PASS** (device QA deferred to P7) — ⚠ VR body not appended (backfill owed).
+
+Lead verified fresh: `assembleDebug testDebugUnitTest lintDebug` → BUILD SUCCESSFUL. Read the P6
+code: `SupabaseRemoteSource` `getCalendarConsentUrl`→/start and `syncQuestToCalendar`→calendar_sync
+both use the session Bearer token, **no Google refresh token ever on the client** (S3/S5 ✓);
+ProfileScreen/ProfileViewModel cover account, calendar connect/disconnect, theme, XP display,
+habits, delete. Mirrors the webapp P6 pattern (which lead live-proved against the same backend).
+
+Conditional because the real device flow (consent Custom Tab → connected state → per-quest sync)
+can't be lead-verified headlessly — folds into the **P7 real-device QA** debt already on record
+(with the P3 capture). Backfill the VR entry here (docs/06 §B7). **android P6 → P7 may start.**
+
 ## 🔖 P4 — Quick-add (+) · commit `13cc7d3` · 2026-06-10
 ```
 🔖 QUESTLINE — VALIDATION REQUEST

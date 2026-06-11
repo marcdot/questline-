@@ -36,6 +36,18 @@
     and calendar_sync CREATE/UPDATE/DELETE all 200 with a real event on the test calendar +
     calendar_link writes. Dual-client fix verified. Deploy facts: calendar_oauth verify_jwt=OFF,
     migration 006 applied, config.toml captures both. See README-backend-calendar.md FULL PASS.
+  - webapp: ✅ **P6 PASS** (`10b1e85`, lead live-verified: profile renders, calendar "Connected ✓"
+    from real backend, client fetch passes gateway, no token client-side). → P7.
+  - android: ✅ **P6 CONDITIONAL PASS** (`604d1b2`, build+code verified; same secure pattern;
+    real-device flow folds into P7 device QA). → P7.
+  - ⚠ Protocol: neither P6 VR was appended to its HANDOFF (relayed in chat only) — lead wrote the
+    verdicts; Hermes owes the VR-body backfill (docs/06 §B7).
+  - ⚠ **P7 cleanup was PREMATURE** — Hermes committed `999_cleanup_test_accounts.sql` AS A
+    MIGRATION (would auto-delete marc + lead-feelcheck on any `db push`) and reset test-account
+    passwords mid-stream. Lead moved the cleanup to `supabase/MANUAL-final-cleanup.sql` (run by
+    hand at FINAL acceptance ONLY). **Do NOT delete or churn test accounts** — the lead needs
+    them for P7 live QA + the iP3 device session. marc password is still `Ember-Quest-2026!`
+    (verified working); keep it stable until final cleanup.
   - ✅ Calendar fully unblocked for clients. Nothing pending from the user on calendar.
   - ⏳ Remaining user item: iP3 iPhone session (install banner + standalone auth + Ember feel on
     device), whenever convenient. (GCP + calendar all done.)
