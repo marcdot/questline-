@@ -1,7 +1,43 @@
 # Questline — STATUS (resume anchor)
 
 > Read this first to resume the project in any new session. The plan is designed so a fresh agent
-> needs **only the repo + these docs** — no prior chat memory. Last updated: 2026-06-07.
+> needs **only the repo + these docs** — no prior chat memory. Last updated: 2026-06-11.
+
+## ✅ CURRENT (2026-06-11) — feature-complete, in polish/QA
+
+**All feature phases done & verified.** webapp **P0–P6 PASS**, android **P0–P6 PASS** (P3 + P6
+device flows are conditional-on-device-capture), ios **iP0–iP2 PASS**, backend **+ Calendar
+mini-phase FULL PASS** (live OAuth round-trip proven). The app builds clean, 54/54 webapp tests
+pass, and the core loop (tap=+1, hold=complete, XP, streaks, calendar sync) works end-to-end
+against the real backend.
+
+**Since the verdict board below, additional work landed (see git log):**
+- **iP3 real-device debugging** (lead-as-worker): fixed iPhone login (Next 16 `allowedDevOrigins`
+  cross-origin block), create-habit/quest RLS 403 (missing `user_id`), profile `xp_mode`→
+  `xp_display` column, AppShell now shows nav in iPhone Safari (not just standalone).
+- **XP UI fix:** server XP was always correct; UI now reconciles after sync (verified 12→24 live).
+- **Design passes:** dotted-zero fix (hero numbers → display font), mobile zoom fixes
+  (16px inputs, text-size-adjust, overflow-x), **liquid-glass chrome**, and a **next-gen UI pass**
+  (aurora ground, metric strip, liquid ember-orb CTA, active-tab states, layered card depth,
+  editorial header). `docs/10-animation-plan.md` written (animations DEFERRED — token budget).
+- `PORTFOLIO.md` exists in the tree (job-application handoff) — **intentionally NOT committed**;
+  leave it untracked.
+
+**What's left to ship (the real runway):**
+1. **P7 polish / a11y / acceptance** on webapp + android (run `docs/07 §P7` checklist).
+2. **Real-device QA debt:** android tap/hold capture (owed since P3); full iP3 iPhone session
+   (install-to-home-screen, standalone auth, Ember feel) — needs the user's iPhone + an HTTPS
+   tunnel for the installed-PWA parts.
+3. **Open follow-ups (code):** (a) *Disconnect Calendar* is cosmetic — it flips
+   `google_connected` but does NOT delete the `google_token` row; needs a small Edge Function
+   `disconnect` op + redeploy. (b) Footer "scroll-to-see-it" in the installed app — re-test after
+   the AppShell fix; screenshot if it persists. (c) Calendar reconnect inside the installed PWA is
+   a known iOS standalone-OAuth limitation (works in Safari tab).
+4. **Pre-prod:** custom SMTP (Resend/Postmark) + re-enable email confirmation on prod; create a
+   `questline-prod` Supabase project; delete test accounts via `supabase/MANUAL-final-cleanup.sql`.
+
+**Dev server:** `npm run dev` in `webapp/` serves `http://localhost:3456` and
+`http://10.0.0.3:3456` (LAN, for iPhone). Test login: `marc@questline.test` / `Ember-Quest-2026!`.
 
 ## Where we are
 - ✅ Full plan written & committed (`docs/00–09`, `PLAN.md`, `README.md`).
@@ -71,16 +107,21 @@
 - Order in `webapp/`: (1) P2 fixes → P2 PASS, (2) webapp P3 (core loop, hard gate), (3) iP2.
   android: P2 fixes → P3. Email auth is the gate; Google device-verify may trail to P7.
 
-## The next step (do this)
-1. Tell Hermes: *"P2 round-2 verdicts in webapp/android HANDOFF.md. Webapp: rpc param `date` →
-   `p_date` in onboarding. Android: load local.properties into gradle props (snippet in the
-   verdict) — your BuildConfig values have been empty since P0. BOTH: the runtime evidence
-   requirement keeps being dropped — it is the P2 gate: real signup vs questline-dev + RLS
-   cross-account check (webapp), signup/login round-trip + token-scoped read (android). Also
-   adopt docs/06 §B7: end every task with the `🔁 RELAY → lead` block (ready-lines + asks) —
-   that's the only thing the user pastes between us from now on."*
-2. From here: one phase → one commit → one VR per stream; hard gates (P2 re-submits, P3 feel,
-   P6 calendar security) get prompt review; additive phases may batch. Relay via docs/06 §B7.
+## The next step (do this) — updated 2026-06-11
+The app is feature-complete; remaining work is P7 + device QA + the follow-ups above. Pick by
+who's available:
+
+1. **Lead/worker can do now (no user/device needed):** the *Disconnect Calendar* token-deletion
+   fix — add a `disconnect` op to the `calendar_sync` Edge Function (delete `google_token` row +
+   set `google_connected=false` via service role), wire the profile button to it. (Verifying needs
+   a user redeploy via dashboard, since deploys are manual.) Then re-test live.
+2. **Needs the user (real device):** the iP3 iPhone session — stand up an HTTPS tunnel
+   (cloudflared/ngrok; tunnel hosts already whitelisted in `next.config.ts` `allowedDevOrigins`),
+   install to Home Screen, verify standalone auth + the footer + Ember feel. Capture android
+   tap/hold on emulator/device (the P3/P6 evidence debt).
+3. **Then P7:** run `docs/07 §P7` (a11y — VoiceOver/Dynamic Type/reduce-motion/contrast, empty &
+   error states, dependency audit) on both clients → final acceptance PASS.
+4. **Pre-prod** (when shipping): see "What's left to ship" item 4 above.
 
 ## How to resume in a FRESH session (paste this)
 > "You are the Questline project lead. The product lives in `C:\Users\Cutom\Desktop\app\questline`.
