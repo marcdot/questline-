@@ -3,27 +3,31 @@
 > Read this first to resume the project in any new session. The plan is designed so a fresh agent
 > needs **only the repo + these docs** — no prior chat memory. Last updated: 2026-06-11.
 
-## 🔜 START HERE NEXT SESSION (2026-06-11)
+## 🔜 START HERE NEXT SESSION (updated 2026-06-14)
 
-**1. Redeploy `calendar_sync` (the only thing gating the Disconnect fix).** The code is committed
-(`c384886`) — it adds an `op: 'disconnect'` that revokes the Google grant + deletes the stored
-`google_token` (the button was previously cosmetic). Deploys are MANUAL via the Supabase dashboard:
-Dashboard → Edge Functions → `calendar_sync` → paste current
-`supabase/functions/calendar_sync/index.ts` → Deploy (keep Verify-JWT ON for this one).
+**One Supabase deploy batch activates everything queued (Disconnect fix + rate limiting).**
+Deploys are MANUAL via the dashboard. Do all three, in order:
 
-**2. Verify it live (lead can run this):**
-```python
-# auth as marc, call disconnect → expect 200 {"disconnected": true}, then google_token row gone.
-# POST {url}/functions/v1/calendar_sync  body {"op":"disconnect"}  Bearer <marc session>
-# then GET google_token?user_id=eq.<marc> (service role) → expect []
-```
-NOTE: this deletes marc's Google token, so calendar tests after this need a fresh consent
-(re-run the `/start` consent URL flow — see `supabase/README-backend-calendar.md`).
-Until redeployed, the Disconnect button returns 400 "invalid op" (expected; not a regression to chase).
+1. **Apply migration 007** (rate limiter): Dashboard → SQL Editor → run
+   `supabase/migrations/007_rate_limit.sql`.
+2. **Redeploy `calendar_sync`**: paste `supabase/functions/calendar_sync/index.ts` (now has the
+   `disconnect` op **and** the 20/min rate limit). Keep **Verify-JWT ON**.
+3. **Redeploy `calendar_oauth`**: paste `supabase/functions/calendar_oauth/index.ts` (now has the
+   10/min rate limit on `/start`). Keep **Verify-JWT OFF**.
 
-**3. Then resume the runway:** P7 (a11y + acceptance, `docs/07 §P7`) on both clients · real-device
-QA (iP3 iPhone session via HTTPS tunnel; android tap/hold capture) · pre-prod (SMTP, prod project,
-test-account cleanup). Full detail below.
+**Then verify live (lead can run):**
+- Disconnect: POST `calendar_sync` `{"op":"disconnect"}` as marc → expect `200 {"disconnected":true}`,
+  then `google_token` row gone. (This deletes marc's token → re-consent needed for later calendar
+  tests, see `supabase/README-backend-calendar.md`.)
+- Rate limit: fire `calendar_sync` >20× in a minute as marc → expect a `429`.
+- Headers are already live (config-only, no deploy): `curl -sI <site>/login` shows CSP/HSTS/etc.
+
+Until redeployed, the Disconnect button returns 400 and no rate limit is active (expected — not a
+regression to chase). Full security posture: **`SECURITY.md`**.
+
+**Then resume the runway:** P7 (a11y + acceptance, `docs/07 §P7`) on both clients · real-device QA
+(iP3 iPhone session via HTTPS tunnel; android tap/hold capture) · pre-prod (Turnstile on signup,
+custom SMTP + email-confirm ON, prod project, test-account cleanup). Detail below + in SECURITY.md.
 
 ---
 
