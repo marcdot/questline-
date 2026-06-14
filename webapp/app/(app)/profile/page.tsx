@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { createClient } from '@/lib/supabase/client';
-import { getCalendarConsentUrl, getGoogleConnected } from '@/lib/supabase/edge-functions';
+import { getCalendarConsentUrl, getGoogleConnected, disconnectCalendar } from '@/lib/supabase/edge-functions';
 
 /* ─── Motion tokens ─── */
 const ease = [0.2, 0, 0, 1] as const;
@@ -131,16 +131,13 @@ export default function ProfilePage() {
     if (!userId) return;
     setConnecting(true);
     try {
-      /* Delete the google_token row (service-role via RPC — use Edge Function endpoint) */
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.access_token) return;
-
-      /* We don't have a dedicated disconnect endpoint yet — just clear the user_settings flag */
-      await supabase
-        .from('user_settings')
-        .upsert({ user_id: userId, google_connected: false, updated_at: new Date().toISOString() },
-          { onConflict: 'user_id' }
-        );
+      /* Edge Function revokes the grant at Google + deletes the stored refresh
+         token server-side (not just the flag). The client never sees a token. */
+      const { ok, error } = await disconnectCalendar();
+      if (!ok) {
+        setCalendarStatus(error ?? 'Failed to disconnect.');
+        return;
+      }
       setGoogleConnected(false);
       setCalendarStatus('Disconnected.');
     } catch {
@@ -148,7 +145,7 @@ export default function ProfilePage() {
     } finally {
       setConnecting(false);
     }
-  }, [userId, supabase]);
+  }, [userId]);
 
   /* ─── Poll google_connected on mount (handles OAuth callback redirect) ─── */
   useEffect(() => {

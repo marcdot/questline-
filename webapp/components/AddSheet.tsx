@@ -178,7 +178,7 @@ export default function AddSheet() {
     } finally {
       setLoading(false);
     }
-  }, [habitName, habitColor, supabase, clearFeedback, refreshHabits]);
+  }, [habitName, habitColor, userId, supabase, clearFeedback, refreshHabits]);
 
   /* ═══════════════════════════════════════════
      NEW QUEST
@@ -281,7 +281,7 @@ export default function AddSheet() {
     } finally {
       setLoading(false);
     }
-  }, [questTitle, questHabitId, questCadence, questTarget, questUnit, questWeekdays, questCalendar, supabase, clearFeedback]);
+  }, [questTitle, questHabitId, questCadence, questTarget, questUnit, questWeekdays, questCalendar, userId, supabase, clearFeedback]);
 
   /* ═══════════════════════════════════════════
      LOG SLEEP

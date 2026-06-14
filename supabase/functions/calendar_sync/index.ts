@@ -20,11 +20,12 @@ const GOOGLE_CLIENT_ID = Deno.env.get('GOOGLE_CLIENT_ID')!
 const GOOGLE_CLIENT_SECRET = Deno.env.get('GOOGLE_CLIENT_SECRET')!
 
 const GOOGLE_TOKEN_URL = 'https://oauth2.googleapis.com/token'
+const GOOGLE_REVOKE_URL = 'https://oauth2.googleapis.com/revoke'
 const GOOGLE_CALENDAR_URL = 'https://www.googleapis.com/calendar/v3'
 
 interface SyncRequest {
-  quest_id: string
-  op: 'create' | 'update' | 'delete'
+  quest_id?: string
+  op: 'create' | 'update' | 'delete' | 'disconnect'
 }
 
 interface GoogleEvent {
@@ -78,8 +79,44 @@ serve(async (req) => {
     })
   }
 
-  if (!body.quest_id || !['create', 'update', 'delete'].includes(body.op)) {
-    return new Response(JSON.stringify({ error: 'Missing or invalid quest_id or op' }), {
+  if (!['create', 'update', 'delete', 'disconnect'].includes(body.op)) {
+    return new Response(JSON.stringify({ error: 'Invalid op' }), {
+      status: 400,
+      headers: { 'Content-Type': 'application/json' },
+    })
+  }
+
+  // --- op: disconnect (user-level; no quest_id) ---
+  // Truly disconnects: best-effort REVOKES the grant at Google, then deletes
+  // the google_token row and clears google_connected. This is what "Disconnect
+  // Google Calendar" must do — flipping the flag alone leaves the refresh token
+  // stored server-side (a privacy gap).
+  if (body.op === 'disconnect') {
+    const { data: tok } = await svc
+      .from('google_token').select('refresh_token').eq('user_id', userId).single()
+    if (tok?.refresh_token) {
+      try {
+        await fetch(`${GOOGLE_REVOKE_URL}?token=${encodeURIComponent(tok.refresh_token)}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        })
+      } catch {
+        // Revoke is best-effort — even if Google is unreachable we still purge our copy.
+      }
+    }
+    await svc.from('google_token').delete().eq('user_id', userId)
+    await svc.from('user_settings')
+      .update({ google_connected: false, updated_at: new Date().toISOString() })
+      .eq('user_id', userId)
+    return new Response(JSON.stringify({ disconnected: true }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
+    })
+  }
+
+  // --- create/update/delete require a quest_id ---
+  if (!body.quest_id) {
+    return new Response(JSON.stringify({ error: 'Missing quest_id' }), {
       status: 400,
       headers: { 'Content-Type': 'application/json' },
     })

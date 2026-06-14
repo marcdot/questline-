@@ -69,13 +69,9 @@ export async function getGoogleConnected(): Promise<boolean> {
   return data?.google_connected ?? false;
 }
 
-/**
- * Sync a quest to Google Calendar (create, update, or delete event).
- * Call this AFTER the quest is created/updated/deleted.
- */
-export async function syncQuestToCalendar(
-  questId: string,
-  op: 'create' | 'update' | 'delete'
+/** POST helper to the calendar_sync Edge Function with the user's session. */
+async function callCalendarSync(
+  payload: Record<string, unknown>
 ): Promise<{ ok: boolean; error?: string }> {
   const supabase = createClient();
   const {
@@ -87,17 +83,14 @@ export async function syncQuestToCalendar(
   }
 
   try {
-    const res = await fetch(
-      `${SUPABASE_URL}/functions/v1/calendar_sync`,
-      {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${session.access_token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ quest_id: questId, op }),
-      }
-    );
+    const res = await fetch(`${SUPABASE_URL}/functions/v1/calendar_sync`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${session.access_token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload),
+    });
     const data: SyncResponse = await res.json();
     if (!res.ok) {
       return { ok: false, error: data.error ?? `HTTP ${res.status}` };
@@ -106,4 +99,24 @@ export async function syncQuestToCalendar(
   } catch (err) {
     return { ok: false, error: err instanceof Error ? err.message : 'Network error' };
   }
+}
+
+/**
+ * Sync a quest to Google Calendar (create, update, or delete event).
+ * Call this AFTER the quest is created/updated/deleted.
+ */
+export async function syncQuestToCalendar(
+  questId: string,
+  op: 'create' | 'update' | 'delete'
+): Promise<{ ok: boolean; error?: string }> {
+  return callCalendarSync({ quest_id: questId, op });
+}
+
+/**
+ * Fully disconnect Google Calendar: revokes the grant at Google (best-effort),
+ * deletes the stored refresh token server-side, and clears google_connected.
+ * The client never holds a Google token — the Edge Function does the work.
+ */
+export async function disconnectCalendar(): Promise<{ ok: boolean; error?: string }> {
+  return callCalendarSync({ op: 'disconnect' });
 }
