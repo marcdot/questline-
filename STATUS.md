@@ -3,6 +3,30 @@
 > Read this first to resume the project in any new session. The plan is designed so a fresh agent
 > needs **only the repo + these docs** — no prior chat memory. Last updated: 2026-06-11.
 
+## 🔜 START HERE NEXT SESSION (2026-06-11)
+
+**1. Redeploy `calendar_sync` (the only thing gating the Disconnect fix).** The code is committed
+(`c384886`) — it adds an `op: 'disconnect'` that revokes the Google grant + deletes the stored
+`google_token` (the button was previously cosmetic). Deploys are MANUAL via the Supabase dashboard:
+Dashboard → Edge Functions → `calendar_sync` → paste current
+`supabase/functions/calendar_sync/index.ts` → Deploy (keep Verify-JWT ON for this one).
+
+**2. Verify it live (lead can run this):**
+```python
+# auth as marc, call disconnect → expect 200 {"disconnected": true}, then google_token row gone.
+# POST {url}/functions/v1/calendar_sync  body {"op":"disconnect"}  Bearer <marc session>
+# then GET google_token?user_id=eq.<marc> (service role) → expect []
+```
+NOTE: this deletes marc's Google token, so calendar tests after this need a fresh consent
+(re-run the `/start` consent URL flow — see `supabase/README-backend-calendar.md`).
+Until redeployed, the Disconnect button returns 400 "invalid op" (expected; not a regression to chase).
+
+**3. Then resume the runway:** P7 (a11y + acceptance, `docs/07 §P7`) on both clients · real-device
+QA (iP3 iPhone session via HTTPS tunnel; android tap/hold capture) · pre-prod (SMTP, prod project,
+test-account cleanup). Full detail below.
+
+---
+
 ## ✅ CURRENT (2026-06-11) — feature-complete, in polish/QA
 
 **All feature phases done & verified.** webapp **P0–P6 PASS**, android **P0–P6 PASS** (P3 + P6
@@ -28,11 +52,11 @@ against the real backend.
 2. **Real-device QA debt:** android tap/hold capture (owed since P3); full iP3 iPhone session
    (install-to-home-screen, standalone auth, Ember feel) — needs the user's iPhone + an HTTPS
    tunnel for the installed-PWA parts.
-3. **Open follow-ups (code):** (a) *Disconnect Calendar* is cosmetic — it flips
-   `google_connected` but does NOT delete the `google_token` row; needs a small Edge Function
-   `disconnect` op + redeploy. (b) Footer "scroll-to-see-it" in the installed app — re-test after
-   the AppShell fix; screenshot if it persists. (c) Calendar reconnect inside the installed PWA is
-   a known iOS standalone-OAuth limitation (works in Safari tab).
+3. **Open follow-ups (code):** (a) ✅ *Disconnect Calendar* token-deletion — **code DONE**
+   (`c384886`, `op:'disconnect'` revokes + deletes); **needs redeploy + live verify** (see
+   START HERE above). (b) Footer "scroll-to-see-it" in the installed app — re-test after the
+   AppShell fix; screenshot if it persists. (c) Calendar reconnect inside the installed PWA is a
+   known iOS standalone-OAuth limitation (works in Safari tab).
 4. **Pre-prod:** custom SMTP (Resend/Postmark) + re-enable email confirmation on prod; create a
    `questline-prod` Supabase project; delete test accounts via `supabase/MANUAL-final-cleanup.sql`.
 
