@@ -86,6 +86,20 @@ serve(async (req) => {
     })
   }
 
+  // --- Rate limit (per user): this function calls the Google Calendar API, so
+  //     cap it to stop quota-burn abuse. 20 calls / 60s is generous for real use. ---
+  const { data: allowed } = await svc.rpc('check_rate_limit', {
+    p_key: `${userId}:calendar_sync`,
+    p_max: 20,
+    p_window_secs: 60,
+  })
+  if (allowed === false) {
+    return new Response(JSON.stringify({ error: 'Rate limit exceeded — slow down.' }), {
+      status: 429,
+      headers: { 'Content-Type': 'application/json', 'Retry-After': '60' },
+    })
+  }
+
   // --- op: disconnect (user-level; no quest_id) ---
   // Truly disconnects: best-effort REVOKES the grant at Google, then deletes
   // the google_token row and clears google_connected. This is what "Disconnect

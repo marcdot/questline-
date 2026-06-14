@@ -91,6 +91,21 @@ async function handleStart(req: Request): Promise<Response> {
     })
   }
 
+  // Rate limit consent-URL minting (per user) — header-less service-role client
+  // so the limiter call runs as service_role (check_rate_limit is locked to it).
+  const svc = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, { auth: { persistSession: false } })
+  const { data: allowed } = await svc.rpc('check_rate_limit', {
+    p_key: `${user.id}:calendar_oauth_start`,
+    p_max: 10,
+    p_window_secs: 60,
+  })
+  if (allowed === false) {
+    return new Response(JSON.stringify({ error: 'Rate limit exceeded — slow down.' }), {
+      status: 429,
+      headers: { 'Content-Type': 'application/json', 'Retry-After': '60' },
+    })
+  }
+
   // State carries the user_id so /callback knows who to attach the token to.
   // HMAC-signed to prevent forgery (FIX 1 — security).
   const reqUrl = new URL(req.url)
