@@ -165,6 +165,8 @@ export default function ProfilePage() {
   const handleSignOut = useCallback(async () => {
     setSigningOut(true);
     await supabase.auth.signOut();
+    // Full reload to /login so middleware re-runs with the cleared session.
+    window.location.assign('/login');
   }, [supabase]);
 
   /* ─── Delete account ─── */
@@ -181,6 +183,7 @@ export default function ProfilePage() {
       const { error } = await supabase.rpc('admin_delete_user');
       if (error) throw error;
       await supabase.auth.signOut();
+      window.location.assign('/login');
     } catch {
       setDeleting(false);
       alert('Failed to delete account. Contact support.');
