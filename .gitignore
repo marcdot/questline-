@@ -13,6 +13,7 @@ PORTFOLIO.md
 
 # Build artifacts
 *.tsbuildinfo
+*.log
 
 # OS files
 .DS_Store
