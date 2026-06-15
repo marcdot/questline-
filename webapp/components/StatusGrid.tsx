@@ -91,7 +91,7 @@ function StatusColumn({ entry, index }: { entry: StatusEntry; index: number }) {
 
   return (
     <motion.div
-      className="rounded-[12px] border border-line bg-surface p-3"
+      className="liquid-card rounded-[16px] p-3"
       initial={{ opacity: 0, y: 6 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.2, ease, delay: index * 0.03 }}
@@ -139,9 +139,15 @@ function StatusColumn({ entry, index }: { entry: StatusEntry; index: number }) {
 
 export default function StatusGrid(props: StatusGridProps) {
   const { data } = props;
-  if (!data || data.length === 0) {
+
+  // Trim leading periods with no quests so the grid starts at first activity
+  // (avoids a long run of empty "0/0" columns for new/sparse accounts).
+  const firstActive = data.findIndex((e) => e.items.length > 0);
+  const trimmed = firstActive > 0 ? data.slice(firstActive) : data;
+
+  if (!trimmed || trimmed.length === 0 || firstActive === -1) {
     return (
-      <div className="flex items-center justify-center h-[80px] rounded-[12px] border border-line bg-surface">
+      <div className="liquid-card flex items-center justify-center h-[80px] rounded-[16px]">
         <span className="text-[13px] text-ink-muted" style={{ fontFamily: 'var(--font-body)' }}>
           No status data for this period
         </span>
@@ -153,8 +159,8 @@ export default function StatusGrid(props: StatusGridProps) {
     <div className="space-y-3">
       {/* Column layout — scrollable horizontally */}
       <div className="overflow-x-auto -mx-1 pb-1">
-        <div className="flex gap-3" style={{ minWidth: Math.max(data.length * 200, 300) }}>
-          {data.map((entry, i) => (
+        <div className="flex gap-3" style={{ minWidth: Math.max(trimmed.length * 200, 300) }}>
+          {trimmed.map((entry, i) => (
             <div key={entry.periodKey} className="w-[200px] shrink-0">
               <StatusColumn entry={entry} index={i} />
             </div>

@@ -23,6 +23,15 @@ const GOOGLE_TOKEN_URL = 'https://oauth2.googleapis.com/token'
 const GOOGLE_REVOKE_URL = 'https://oauth2.googleapis.com/revoke'
 const GOOGLE_CALENDAR_URL = 'https://www.googleapis.com/calendar/v3'
 
+// CORS — the browser preflights this POST (it carries Authorization + JSON).
+// Without these headers the browser blocks the call before it reaches the function.
+const CORS = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+}
+const JSON_HEADERS = { ...CORS, 'Content-Type': 'application/json' }
+
 interface SyncRequest {
   quest_id?: string
   op: 'create' | 'update' | 'delete' | 'disconnect'
@@ -36,11 +45,16 @@ interface GoogleEvent {
 }
 
 serve(async (req) => {
+  // Answer the CORS preflight before anything else.
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { status: 204, headers: CORS })
+  }
+
   // Only POST
   if (req.method !== 'POST') {
     return new Response(JSON.stringify({ error: 'Method not allowed' }), {
       status: 405,
-      headers: { 'Content-Type': 'application/json' },
+      headers: JSON_HEADERS,
     })
   }
 
@@ -56,7 +70,7 @@ serve(async (req) => {
   if (authError || !user) {
     return new Response(JSON.stringify({ error: 'Unauthorized' }), {
       status: 401,
-      headers: { 'Content-Type': 'application/json' },
+      headers: JSON_HEADERS,
     })
   }
 
@@ -75,14 +89,14 @@ serve(async (req) => {
   } catch {
     return new Response(JSON.stringify({ error: 'Invalid JSON body' }), {
       status: 400,
-      headers: { 'Content-Type': 'application/json' },
+      headers: JSON_HEADERS,
     })
   }
 
   if (!['create', 'update', 'delete', 'disconnect'].includes(body.op)) {
     return new Response(JSON.stringify({ error: 'Invalid op' }), {
       status: 400,
-      headers: { 'Content-Type': 'application/json' },
+      headers: JSON_HEADERS,
     })
   }
 
@@ -96,7 +110,7 @@ serve(async (req) => {
   if (allowed === false) {
     return new Response(JSON.stringify({ error: 'Rate limit exceeded — slow down.' }), {
       status: 429,
-      headers: { 'Content-Type': 'application/json', 'Retry-After': '60' },
+      headers: { ...JSON_HEADERS, 'Retry-After': '60' },
     })
   }
 
@@ -124,7 +138,7 @@ serve(async (req) => {
       .eq('user_id', userId)
     return new Response(JSON.stringify({ disconnected: true }), {
       status: 200,
-      headers: { 'Content-Type': 'application/json' },
+      headers: JSON_HEADERS,
     })
   }
 
@@ -132,7 +146,7 @@ serve(async (req) => {
   if (!body.quest_id) {
     return new Response(JSON.stringify({ error: 'Missing quest_id' }), {
       status: 400,
-      headers: { 'Content-Type': 'application/json' },
+      headers: JSON_HEADERS,
     })
   }
 
@@ -147,7 +161,7 @@ serve(async (req) => {
   if (questError || !quest) {
     return new Response(JSON.stringify({ error: 'Quest not found' }), {
       status: 404,
-      headers: { 'Content-Type': 'application/json' },
+      headers: JSON_HEADERS,
     })
   }
 
@@ -162,7 +176,7 @@ serve(async (req) => {
   if (tokenError || !tokenRow) {
     return new Response(JSON.stringify({ error: 'Google Calendar not connected' }), {
       status: 401,
-      headers: { 'Content-Type': 'application/json' },
+      headers: JSON_HEADERS,
     })
   }
 
@@ -175,7 +189,7 @@ serve(async (req) => {
       JSON.stringify({ error: 'Google Calendar access revoked — re-connect required' }),
       {
         status: 409,
-        headers: { 'Content-Type': 'application/json' },
+        headers: JSON_HEADERS,
       },
     )
   }
@@ -205,12 +219,12 @@ serve(async (req) => {
           console.error('Failed to write calendar_link:', linkError)
           return new Response(JSON.stringify({ error: 'Failed to save calendar link' }), {
             status: 500,
-            headers: { 'Content-Type': 'application/json' },
+            headers: JSON_HEADERS,
           })
         }
         return new Response(JSON.stringify({ google_event_id: googleEventId }), {
           status: 200,
-          headers: { 'Content-Type': 'application/json' },
+          headers: JSON_HEADERS,
         })
       }
 
@@ -226,7 +240,7 @@ serve(async (req) => {
         if (!link?.google_event_id) {
           return new Response(JSON.stringify({ error: 'No existing calendar event to update' }), {
             status: 404,
-            headers: { 'Content-Type': 'application/json' },
+            headers: JSON_HEADERS,
           })
         }
 
@@ -250,7 +264,7 @@ serve(async (req) => {
 
         return new Response(JSON.stringify({ google_event_id: link.google_event_id }), {
           status: 200,
-          headers: { 'Content-Type': 'application/json' },
+          headers: JSON_HEADERS,
         })
       }
 
@@ -275,21 +289,21 @@ serve(async (req) => {
 
         return new Response(JSON.stringify({ deleted: true }), {
           status: 200,
-          headers: { 'Content-Type': 'application/json' },
+          headers: JSON_HEADERS,
         })
       }
 
       default:
         return new Response(JSON.stringify({ error: 'Unknown operation' }), {
           status: 400,
-          headers: { 'Content-Type': 'application/json' },
+          headers: JSON_HEADERS,
         })
     }
   } catch (err) {
     console.error(`Calendar sync (${body.op}) failed:`, err)
     return new Response(JSON.stringify({ error: 'Calendar sync failed' }), {
       status: 502,
-      headers: { 'Content-Type': 'application/json' },
+      headers: JSON_HEADERS,
     })
   }
 })

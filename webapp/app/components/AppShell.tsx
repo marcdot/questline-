@@ -40,7 +40,10 @@ export default function AppShell({
       {platform === 'ios' && !standalone && <InstallBanner />}
       <main className="app-shell__content">{children}</main>
 
-      <nav className="app-tab-bar" role="tablist">
+      <nav
+        className={'app-tab-bar' + (standalone ? ' app-tab-bar--docked' : '')}
+        role="tablist"
+      >
         {tabs.map((tab) => (
           <Link
             key={tab.href}

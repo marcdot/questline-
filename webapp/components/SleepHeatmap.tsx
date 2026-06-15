@@ -76,10 +76,15 @@ function WeekColumn({ days, weekLabel }: { days: SleepDay[]; weekLabel: string }
 
 /* ─── Main component ─── */
 
-export default function SleepHeatmap({ weeks }: SleepHeatmapProps) {
-  if (!weeks || weeks.length === 0) {
+export default function SleepHeatmap({ weeks: rawWeeks }: SleepHeatmapProps) {
+  // Trim leading weeks with no logged nights so the heatmap starts at the
+  // first night with data (avoids the empty grey gap for sparse accounts).
+  const firstWeek = (rawWeeks ?? []).findIndex((w) => w.some((d) => d.hasData));
+  const weeks = firstWeek > 0 ? rawWeeks.slice(firstWeek) : rawWeeks;
+
+  if (!weeks || weeks.length === 0 || firstWeek === -1) {
     return (
-      <div className="flex items-center justify-center h-[160px] rounded-[12px] border border-line bg-surface">
+      <div className="liquid-card flex items-center justify-center h-[160px] rounded-[16px]">
         <span className="text-[13px] text-ink-muted" style={{ fontFamily: 'var(--font-body)' }}>
           No sleep data
         </span>
@@ -95,7 +100,7 @@ export default function SleepHeatmap({ weeks }: SleepHeatmapProps) {
     : '—';
 
   return (
-    <div className="rounded-[12px] border border-line bg-surface p-3">
+    <div className="liquid-card rounded-[16px] p-3">
       {/* Header */}
       <div className="flex items-center justify-between mb-3">
         <span

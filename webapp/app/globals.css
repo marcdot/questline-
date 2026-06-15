@@ -83,6 +83,10 @@
   --glass: color-mix(in srgb, var(--surface) 72%, transparent);
   --glass-highlight: rgba(255, 255, 255, 0.55);
   --glass-edge: rgba(255, 255, 255, 0.25);
+  /* content-card glass: more opaque than chrome (text legibility) but still
+     lets the aurora ground refract through the edges */
+  --card-glass: color-mix(in srgb, var(--surface) 84%, transparent);
+  --card-edge: color-mix(in srgb, #ffffff 60%, transparent);
 }
 
 /* ─── DARK theme (earned drama) ─── */
@@ -105,6 +109,8 @@
   --glass: color-mix(in srgb, var(--surface) 58%, transparent);
   --glass-highlight: rgba(255, 255, 255, 0.10);
   --glass-edge: rgba(255, 255, 255, 0.06);
+  --card-glass: color-mix(in srgb, var(--surface) 72%, transparent);
+  --card-edge: rgba(255, 255, 255, 0.08);
 }
 
 /* ─── Base body styling ─── */
@@ -144,6 +150,62 @@ body {
     var(--shadow-md),
     inset 0 1px 0 var(--glass-highlight),
     inset 0 0 0 0.5px var(--glass-edge);
+}
+
+/* ─── Liquid card (content surfaces) ───
+   The glass language extended from chrome to content: a translucent warm
+   surface that refracts the aurora ground, a bright specular top edge, a
+   light-catching hairline, and a layered lift. This is what makes the UI
+   read as "liquid glass" rather than flat pastel cards. */
+.liquid-card {
+  position: relative;
+  background-color: var(--card-glass);
+  /* Top-down gloss band baked into the surface (paints under all content) —
+     the "wet" sheen catching light. */
+  background-image: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.14) 0%,
+    rgba(255, 255, 255, 0) 40%
+  );
+  -webkit-backdrop-filter: blur(20px) saturate(1.7);
+  backdrop-filter: blur(20px) saturate(1.7);
+  border: 1px solid var(--card-edge);
+  box-shadow:
+    0 0 0 0.5px var(--line),
+    inset 0 1px 0 var(--glass-highlight),
+    inset 0 -1px 1px rgba(58, 44, 30, 0.02),
+    0 1px 2px rgba(58, 44, 30, 0.04),
+    0 14px 34px -18px rgba(58, 44, 30, 0.30);
+}
+.dark .liquid-card {
+  background-image: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.05) 0%,
+    rgba(255, 255, 255, 0) 40%
+  );
+}
+/* Habit-tinted glass tile (set --tint to the habit colour). Used for
+   completed quests: a lit pane of coloured glass, not flat paint. */
+.liquid-card--tint {
+  background-image:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.14) 0%, rgba(255, 255, 255, 0) 40%),
+    linear-gradient(135deg,
+      color-mix(in srgb, var(--tint) 18%, transparent),
+      color-mix(in srgb, var(--tint) 5%, transparent) 58%,
+      transparent 100%);
+  box-shadow:
+    0 0 0 0.5px color-mix(in srgb, var(--tint) 30%, var(--line)),
+    inset 0 1px 0 var(--glass-highlight),
+    0 1px 2px rgba(58, 44, 30, 0.04),
+    0 16px 36px -16px color-mix(in srgb, var(--tint) 40%, transparent);
+}
+.dark .liquid-card--tint {
+  background-image:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0) 40%),
+    linear-gradient(135deg,
+      color-mix(in srgb, var(--tint) 24%, transparent),
+      color-mix(in srgb, var(--tint) 7%, transparent) 58%,
+      transparent 100%);
 }
 
 /* ─── Aurora ground (Stripe-style ambient warmth — barely-there) ───
@@ -254,6 +316,28 @@ body::before {
   user-select: none;
 }
 
+/* ─── Docked variant — installed PWA (standalone) ───
+   No Safari toolbar to dodge, so the bar anchors to the bottom edge as a
+   native-feeling tab bar: full-width, extends into the home-indicator safe
+   area, square sides, gently rounded top. Still glass. */
+.app-tab-bar--docked {
+  left: 0;
+  right: 0;
+  transform: none;
+  bottom: 0;
+  width: 100%;
+  max-width: none;
+  height: calc(60px + env(safe-area-inset-bottom, 0px));
+  padding: 0 6px env(safe-area-inset-bottom, 0px);
+  border-radius: 22px 22px 0 0;
+  border-left: none;
+  border-right: none;
+  border-bottom: none;
+  box-shadow:
+    0 -8px 24px -12px rgba(58, 44, 30, 0.18),
+    inset 0 1px 0 var(--glass-highlight);
+}
+
 .app-tab {
   position: relative;
   display: flex;
@@ -360,18 +444,4 @@ body::before {
 }
 .install-banner__dismiss:hover {
   opacity: 1;
-}
-
-.app-tab__icon--plus {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
-  background-color: var(--accent);
-  color: #fff;
-  font-size: 22px;
-  font-weight: 300;
-  box-shadow: 0 2px 8px rgba(217, 84, 43, 0.3);
 }

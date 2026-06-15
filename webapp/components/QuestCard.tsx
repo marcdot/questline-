@@ -260,7 +260,10 @@ export default function QuestCard({
 
   return (
     <motion.div
-      className="relative overflow-hidden rounded-[20px] bg-surface"
+      className={
+        'liquid-card relative overflow-hidden rounded-[20px]' +
+        (isCompleted ? ' liquid-card--tint' : '')
+      }
       initial={{ opacity: 0, y: 8 }}
       animate={{
         opacity: 1,
@@ -278,7 +281,7 @@ export default function QuestCard({
         touchAction: 'manipulation',
         cursor: 'pointer',
         userSelect: 'none',
-        boxShadow: 'var(--shadow-card)',
+        ['--tint' as string]: habitColor,
       }}
     >
       {/* ─── Leading habit-colour bar (4px) ─── */}
@@ -287,14 +290,17 @@ export default function QuestCard({
         style={{ backgroundColor: habitColor, opacity: isCompleted ? 0.5 : 1 }}
       />
 
-      {/* ─── Ember Fill — radial gradient from left (design.html §6) ─── */}
+      {/* ─── Ember Fill — radial gradient from left (design.html §6) ───
+          Live ignition glow during a hold. When complete the tinted-glass
+          card carries the colour, so the wash fades out (no muddy paint). */}
       <div
         className="absolute inset-0 rounded-[20px] origin-left pointer-events-none"
         style={{
           background: `radial-gradient(120% 140% at 12% 50%, ${accentColor}, ${habitColor})`,
           transform: `scaleX(${fillDisplay})`,
-          opacity: phase === 'complete' ? 0.28 : 0.18,
+          opacity: phase === 'complete' ? 0 : 0.18,
           transition: 'none',
+          zIndex: 1,
         }}
       />
 

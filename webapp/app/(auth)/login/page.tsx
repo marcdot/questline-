@@ -4,8 +4,14 @@ import { useState, Component, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { createClient } from "@/lib/supabase/client";
+import Turnstile from "@/components/Turnstile";
 
 type AuthMode = "login" | "signup";
+
+/* Cloudflare Turnstile site key (public, safe to expose). When set, Supabase
+   enforces the captcha server-side, so the widget must supply a token on every
+   email login/signup. When unset (local dev without captcha), auth runs as before. */
+const TURNSTILE_SITE_KEY = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
 
 /* ─── Error boundary to catch render-phase crashes ─── */
 class LoginErrorBoundary extends Component<
@@ -68,10 +74,24 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const [captchaResetKey, setCaptchaResetKey] = useState(0);
+
+  // Reset the Turnstile challenge (tokens are single-use, so refresh after each attempt).
+  function resetCaptcha() {
+    setCaptchaToken(null);
+    setCaptchaResetKey((k) => k + 1);
+  }
 
   async function handleEmailAuth(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
+
+    if (TURNSTILE_SITE_KEY && !captchaToken) {
+      setError("Please complete the verification challenge.");
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -81,17 +101,20 @@ export default function LoginPage() {
           password,
           options: {
             emailRedirectTo: `${window.location.origin}/auth/callback`,
+            captchaToken: captchaToken ?? undefined,
           },
         });
         if (error) throw error;
         // Sign-up with email confirmation — tell user to check email
         setError("Check your email for the confirmation link.");
         setLoading(false);
+        resetCaptcha();
         return;
       } else {
         const { error } = await supabase.auth.signInWithPassword({
           email,
           password,
+          options: { captchaToken: captchaToken ?? undefined },
         });
         if (error) throw error;
       }
@@ -102,6 +125,7 @@ export default function LoginPage() {
       const message =
         err instanceof Error ? err.message : "An unexpected error occurred.";
       setError(message);
+      resetCaptcha();
     } finally {
       setLoading(false);
     }
@@ -215,9 +239,17 @@ export default function LoginPage() {
             />
           </div>
 
+          {TURNSTILE_SITE_KEY && (
+            <Turnstile
+              siteKey={TURNSTILE_SITE_KEY}
+              onToken={setCaptchaToken}
+              resetKey={captchaResetKey}
+            />
+          )}
+
           <button
             type="submit"
-            disabled={loading}
+            disabled={loading || (!!TURNSTILE_SITE_KEY && !captchaToken)}
             className="w-full rounded-[12px] bg-accent px-4 py-3 text-[15px] font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-50"
             style={{ fontFamily: "var(--font-body)" }}
           >

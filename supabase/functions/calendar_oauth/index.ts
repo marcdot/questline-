@@ -18,6 +18,16 @@ const GOOGLE_AUTH_URL = 'https://accounts.google.com/o/oauth2/v2/auth'
 const GOOGLE_TOKEN_URL = 'https://oauth2.googleapis.com/token'
 const SCOPES = 'https://www.googleapis.com/auth/calendar.events'
 
+// CORS — the browser sends a preflight (OPTIONS) before /start because the call
+// carries an Authorization header. Without these headers the browser blocks the
+// request and the client sees "Failed to fetch".
+const CORS = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+}
+const JSON_HEADERS = { ...CORS, 'Content-Type': 'application/json' }
+
 /** HMAC-SHA256 sign a string using GOOGLE_CLIENT_SECRET as the key. */
 async function hmacSign(payload: string): Promise<string> {
   const keyData = new TextEncoder().encode(GOOGLE_CLIENT_SECRET)
@@ -50,6 +60,11 @@ async function verifyState(stateParam: string): Promise<{ user_id: string; redir
 }
 
 serve(async (req) => {
+  // Answer the CORS preflight before anything else.
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { status: 204, headers: CORS })
+  }
+
   // Log real URL to diagnose route matching on Supabase Edge
   console.log('[calendar_oauth] req.url:', req.url)
 
@@ -68,7 +83,7 @@ serve(async (req) => {
 
   return new Response(JSON.stringify({ error: `Not Found — route: ${route}`, path: url.pathname }), {
     status: 404,
-    headers: { 'Content-Type': 'application/json' },
+    headers: JSON_HEADERS,
   })
 })
 
@@ -87,7 +102,7 @@ async function handleStart(req: Request): Promise<Response> {
   if (error || !user) {
     return new Response(JSON.stringify({ error: 'Unauthorized' }), {
       status: 401,
-      headers: { 'Content-Type': 'application/json' },
+      headers: JSON_HEADERS,
     })
   }
 
@@ -102,7 +117,7 @@ async function handleStart(req: Request): Promise<Response> {
   if (allowed === false) {
     return new Response(JSON.stringify({ error: 'Rate limit exceeded — slow down.' }), {
       status: 429,
-      headers: { 'Content-Type': 'application/json', 'Retry-After': '60' },
+      headers: { ...JSON_HEADERS, 'Retry-After': '60' },
     })
   }
 
@@ -123,7 +138,7 @@ async function handleStart(req: Request): Promise<Response> {
 
   return new Response(JSON.stringify({ url: consentUrl.toString() }), {
     status: 200,
-    headers: { 'Content-Type': 'application/json' },
+    headers: JSON_HEADERS,
   })
 }
 
@@ -164,7 +179,7 @@ async function handleCallback(req: Request): Promise<Response> {
     console.error('Token exchange failed:', tokenData)
     return new Response(JSON.stringify({ error: 'Token exchange failed', details: tokenData }), {
       status: 502,
-      headers: { 'Content-Type': 'application/json' },
+      headers: JSON_HEADERS,
     })
   }
 
@@ -175,7 +190,7 @@ async function handleCallback(req: Request): Promise<Response> {
     console.error('No refresh_token in response:', tokenData)
     return new Response(JSON.stringify({ error: 'No refresh_token received — revoke app access and try again' }), {
       status: 400,
-      headers: { 'Content-Type': 'application/json' },
+      headers: JSON_HEADERS,
     })
   }
 
@@ -199,7 +214,7 @@ async function handleCallback(req: Request): Promise<Response> {
     console.error('Failed to store token in google_token:', upsertError)
     return new Response(JSON.stringify({ error: 'Failed to store token' }), {
       status: 500,
-      headers: { 'Content-Type': 'application/json' },
+      headers: JSON_HEADERS,
     })
   }
 

@@ -110,13 +110,12 @@ export default function MiniDashboard({
     <div className="space-y-3">
       {/* ─── Metric strip (one card, hairline-divided) ─── */}
       <motion.div
-        className="overflow-hidden rounded-[20px] bg-surface"
-        style={{ boxShadow: 'var(--shadow-card)' }}
+        className="liquid-card overflow-hidden rounded-[20px]"
         initial={{ opacity: 0, y: 6 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.25, ease }}
       >
-        <div className="flex divide-x divide-line/70">
+        <div className="relative z-[1] flex divide-x divide-line/70">
           <Metric
             label={totalToday === 1 ? 'quest today' : 'quests today'}
             value={`${completedToday}/${totalToday}`}
@@ -152,11 +151,8 @@ export default function MiniDashboard({
       </motion.div>
 
       {/* ─── Compact sleep chart ─── */}
-      <div
-        className="rounded-[20px] bg-surface p-4"
-        style={{ boxShadow: 'var(--shadow-card)' }}
-      >
-        <div className="flex items-center justify-between mb-2.5">
+      <div className="liquid-card rounded-[20px] p-4">
+        <div className="relative z-[1] flex items-center justify-between mb-2.5">
           <span
             className="text-[10px] font-semibold uppercase tracking-[0.07em] text-ink-muted"
             style={{ fontFamily: 'var(--font-body)' }}
