@@ -258,10 +258,14 @@ export default function AddSheet() {
         }
       }
 
-      /* Also ensure instances for non-weekly quests */
+      /* Also ensure instances for non-weekly quests.
+         NOTE: a Supabase query/rpc builder is awaitable but is NOT a Promise —
+         it has no .catch(). Chaining .catch threw "catch is not a function" and
+         crashed quest creation. Use await + the returned { error }. */
       if (!(questCadence === 'weekly' && weekdaysSorted.length > 0)) {
         const today = periodKeyFor('daily');
-        await supabase.rpc('ensure_instances', { p_date: today }).catch(console.error);
+        const { error: ensureErr } = await supabase.rpc('ensure_instances', { p_date: today });
+        if (ensureErr) console.error('ensure_instances after quest create failed:', ensureErr);
       }
 
       setSuccess(`Quest "${titleTrimmed}" created`);

@@ -115,7 +115,7 @@ export default function Home() {
   const supabase = createClient();
   const [data, setData] = useState<HomeData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [user, setUser] = useState<{ id: string } | null>(null);
+  const [user, setUser] = useState<{ id: string; email: string | null } | null>(null);
   const [online, setOnline] = useState(true);
   const unsubscribeRef = useRef<(() => void) | null>(null);
   const todayStr = periodKeyFor('daily');
@@ -125,7 +125,7 @@ export default function Home() {
     const init = async () => {
       const { data: { user: authUser } } = await supabase.auth.getUser();
       if (authUser) {
-        setUser({ id: authUser.id });
+        setUser({ id: authUser.id, email: authUser.email ?? null });
       }
     };
     init();
@@ -489,7 +489,7 @@ export default function Home() {
         transition={{ duration: 0.35, ease }}
       >
         <div className="w-full max-w-md space-y-6">
-          <Header userInitial={user?.id?.charAt(0)?.toUpperCase() ?? '?'} />
+          <Header userInitial={(user?.email ?? '?').charAt(0).toUpperCase()} />
 
           <MiniDashboard
             completedToday={0}
@@ -531,7 +531,7 @@ export default function Home() {
     >
       <div className="w-full max-w-md space-y-6">
         {/* ─── Header ─── */}
-        <Header userInitial={user?.id?.charAt(0)?.toUpperCase() ?? '?'} />
+        <Header userInitial={(user?.email ?? '?').charAt(0).toUpperCase()} />
 
         {/* ─── Offline banner ─── */}
         {!online && (

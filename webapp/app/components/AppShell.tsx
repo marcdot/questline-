@@ -32,19 +32,12 @@ export default function AppShell({
   const { standalone, platform } = useDisplayMode();
   const pathname = usePathname();
 
-  /* App mode (bottom tab bar) for the installed PWA AND iPhone Safari — per
-     ios/BUILD.md §2: iPhone-Safari-not-installed gets the same app UI + the
-     install banner. Desktop / Android browser get the plain responsive layout. */
-  const appMode = standalone || platform === 'ios';
-
-  if (!appMode) {
-    return <>{children}</>;
-  }
-
+  /* The floating dock nav renders on EVERY surface (desktop, mobile browser,
+     installed PWA) so navigation always works. The install banner shows only
+     in iPhone Safari (not yet installed). */
   return (
     <div className="app-shell">
-      {/* Install banner only when running in iOS Safari (not yet installed) */}
-      {!standalone && <InstallBanner />}
+      {platform === 'ios' && !standalone && <InstallBanner />}
       <main className="app-shell__content">{children}</main>
 
       <nav className="app-tab-bar" role="tablist">

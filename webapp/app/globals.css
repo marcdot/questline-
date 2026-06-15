@@ -219,29 +219,37 @@ body::before {
 
 .app-shell__content {
   flex: 1;
-  /* Leave room for the fixed tab bar + safe-area inset */
-  padding-bottom: calc(64px + env(safe-area-inset-bottom, 0px));
+  /* Clear the floating dock (dock height + its bottom offset + safe area) */
+  padding-bottom: calc(96px + env(safe-area-inset-bottom, 0px));
 }
 
-/* ─── Bottom tab bar ─── */
+/* ─── Floating glass dock (nav) — detached pill, centered, all surfaces ───
+   Floats above the bottom edge so it never collides with the mobile-Safari
+   toolbar, reads as an intentional dock on desktop, and is the liquid-glass
+   centerpiece. */
 .app-tab-bar {
   position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: calc(14px + env(safe-area-inset-bottom, 0px));
+  width: calc(100% - 28px);
+  max-width: 420px;
+  height: 62px;
   display: flex;
   align-items: center;
   justify-content: space-around;
-  height: 64px;
-  padding-bottom: env(safe-area-inset-bottom, 0px);
-  /* Liquid-glass chrome: translucent warm surface + saturated blur + sheen */
+  padding: 0 6px;
+  border-radius: 999px;
+  /* Liquid glass: deep blur + saturation + a bright top sheen + soft lift */
   background-color: var(--glass);
-  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(1.6);
-  backdrop-filter: blur(var(--glass-blur)) saturate(1.6);
-  border-top: 1px solid var(--line);
-  box-shadow: inset 0 1px 0 var(--glass-highlight);
+  -webkit-backdrop-filter: blur(22px) saturate(1.8);
+  backdrop-filter: blur(22px) saturate(1.8);
+  border: 1px solid var(--glass-edge);
+  box-shadow:
+    var(--shadow-lg),
+    inset 0 1px 0 var(--glass-highlight),
+    inset 0 -1px 1px rgba(0, 0, 0, 0.02);
   z-index: 50;
-  /* Prevent iOS text-selection / callout on tap */
   -webkit-touch-callout: none;
   user-select: none;
 }

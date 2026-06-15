@@ -592,7 +592,6 @@ export default function StatsPage() {
           </h1>
         </header>
         <div className="h-px w-full bg-line" />
-        <div className="h-px w-full bg-line" />
 
         {/* ─── Period filter pills ─── */}
         <div className="flex gap-2 flex-wrap">
