@@ -7,6 +7,11 @@
  */
 import AppShell from "@/app/components/AppShell";
 
+// Authed, per-user pages — render on demand, never statically prerender at
+// build (no SEO value, and prerendering would run the Supabase client before
+// runtime env exists). Keeps the build independent of build-time env inlining.
+export const dynamic = "force-dynamic";
+
 export default function AppLayout({
   children,
 }: {
