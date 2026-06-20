@@ -33,6 +33,8 @@ export interface QuestCardProps {
   isOptimistic?: boolean;
   optimisticXp?: number;
   optimisticStreak?: number;
+  /** kcal burned, shown on completed walk quests (Q-002). */
+  caloriesBurned?: number;
 }
 
 /* ─── Local state machine ───
@@ -53,6 +55,7 @@ export default function QuestCard({
   onUncomplete,
   optimisticXp,
   optimisticStreak,
+  caloriesBurned,
 }: QuestCardProps) {
   const isCompleted = instance.completed || instance.progress >= instance.target_count;
   const habitColor = habit?.color ?? '#8A8F98';
@@ -385,6 +388,21 @@ export default function QuestCard({
             )}
           </div>
         </div>
+
+        {/* ─── Calories burned pill — completed walks (Q-002) ─── */}
+        {isCompleted && (caloriesBurned ?? 0) > 0 && (
+          <motion.div
+            className="flex items-center gap-1 shrink-0 rounded-full bg-accent/10 px-2.5 py-1"
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={springPop}
+          >
+            <span className="text-[11px] font-semibold text-accent" style={{ fontFamily: 'var(--font-mono)' }}>
+              {caloriesBurned}
+            </span>
+            <span className="text-[10px] text-accent/70">kcal</span>
+          </motion.div>
+        )}
 
         {/* ─── Tap-to-undo affordance (Q-003) ───
             Shown on completed cards once the burst settles, when the XP/streak

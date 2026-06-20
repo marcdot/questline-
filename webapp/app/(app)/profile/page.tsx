@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { createClient } from '@/lib/supabase/client';
 import { getCalendarConsentUrl, getGoogleConnected, disconnectCalendar } from '@/lib/supabase/edge-functions';
+import { WALK_PACE_LABELS, type WalkPace } from '@/lib/domain';
 
 /* ─── Motion tokens ─── */
 const ease = [0.2, 0, 0, 1] as const;
@@ -45,6 +46,11 @@ export default function ProfilePage() {
   /* ─── XP display ─── */
   const [xpMode, setXpMode] = useState<'total' | 'period'>('total');
 
+  /* ─── Health (Q-002): weight + default walk pace ─── */
+  const [weightKg, setWeightKg] = useState('');
+  const [walkPace, setWalkPace] = useState<WalkPace>('moderate');
+  const [weightSaved, setWeightSaved] = useState(false);
+
   /* ─── Account ─── */
   const [deleting, setDeleting] = useState(false);
 
@@ -59,7 +65,7 @@ export default function ProfilePage() {
       /* Read user_settings for google_connected + theme + xp_mode */
       const { data: settings } = await supabase
         .from('user_settings')
-        .select('google_connected, theme, xp_display')
+        .select('google_connected, theme, xp_display, weight_kg, walk_pace')
         .eq('user_id', user.id)
         .single();
 
@@ -68,6 +74,8 @@ export default function ProfilePage() {
         setTheme(settings.theme ?? 'light');
         // DB enum is xp_display: 'simple' | 'detailed'; component uses 'total' | 'period'
         setXpMode(settings.xp_display === 'detailed' ? 'period' : 'total');
+        setWeightKg(settings.weight_kg != null ? String(settings.weight_kg) : '');
+        setWalkPace((settings.walk_pace as WalkPace) ?? 'moderate');
       }
 
       /* Sync theme class on <html> */
@@ -104,6 +112,31 @@ export default function ProfilePage() {
           { onConflict: 'user_id' }
         );
     }
+  }, [userId, supabase]);
+
+  /* ─── Health: save weight (Q-002) ─── */
+  const handleSaveWeight = useCallback(async () => {
+    if (!userId) return;
+    const w = parseFloat(weightKg);
+    // Empty clears it; otherwise validate the DB check range (0 < w < 1000).
+    const value = weightKg.trim() === '' ? null : w;
+    if (value !== null && (!Number.isFinite(value) || value <= 0 || value >= 1000)) return;
+    await supabase
+      .from('user_settings')
+      .upsert({ user_id: userId, weight_kg: value, updated_at: new Date().toISOString() },
+        { onConflict: 'user_id' });
+    setWeightSaved(true);
+    setTimeout(() => setWeightSaved(false), 1500);
+  }, [userId, weightKg, supabase]);
+
+  /* ─── Health: save default walk pace (Q-002) ─── */
+  const handlePaceChange = useCallback(async (pace: WalkPace) => {
+    setWalkPace(pace);
+    if (!userId) return;
+    await supabase
+      .from('user_settings')
+      .upsert({ user_id: userId, walk_pace: pace, updated_at: new Date().toISOString() },
+        { onConflict: 'user_id' });
   }, [userId, supabase]);
 
   /* ─── Google Calendar connect ─── */
@@ -338,6 +371,55 @@ export default function ProfilePage() {
               <div className="flex gap-2">
                 <Pill active={xpMode === 'total'} onClick={() => handleXpModeToggle('total')} label="Total" />
                 <Pill active={xpMode === 'period'} onClick={() => handleXpModeToggle('period')} label="This period" />
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ═══════════════════════════════════════════
+            HEALTH (Q-002)
+            ═══════════════════════════════════════════ */}
+        <section className="space-y-3">
+          <h2 className="text-[13px] font-semibold uppercase tracking-[0.08em] text-ink-muted" style={{ fontFamily: 'var(--font-body)' }}>
+            Health
+          </h2>
+          <div className="rounded-[12px] border border-line bg-surface divide-y divide-line">
+            {/* Weight — used to estimate calories burned on walks */}
+            <div className="flex items-center justify-between gap-3 px-4 py-3">
+              <div className="min-w-0">
+                <span className="text-[14px] text-ink" style={{ fontFamily: 'var(--font-body)' }}>Weight</span>
+                <p className="text-[12px] text-ink-muted mt-0.5" style={{ fontFamily: 'var(--font-body)' }}>
+                  Used to estimate calories burned on walks.
+                </p>
+              </div>
+              <div className="flex items-center gap-1.5 shrink-0">
+                <input
+                  type="number"
+                  inputMode="decimal"
+                  value={weightKg}
+                  onChange={(e) => setWeightKg(e.target.value)}
+                  onBlur={handleSaveWeight}
+                  placeholder="—"
+                  min={1}
+                  max={999}
+                  step={0.1}
+                  aria-label="Weight in kilograms"
+                  className="w-20 rounded-[10px] border border-line bg-surface-2 px-3 py-2 text-right text-[15px] text-ink focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent"
+                  style={{ fontFamily: 'var(--font-mono)' }}
+                />
+                <span className="text-[13px] text-ink-muted" style={{ fontFamily: 'var(--font-body)' }}>
+                  {weightSaved ? '✓' : 'kg'}
+                </span>
+              </div>
+            </div>
+
+            {/* Default walk pace — selects the MET value for the estimate */}
+            <div className="px-4 py-3 space-y-2">
+              <span className="text-[14px] text-ink" style={{ fontFamily: 'var(--font-body)' }}>Default walk pace</span>
+              <div className="flex flex-wrap gap-2">
+                {(Object.keys(WALK_PACE_LABELS) as WalkPace[]).map((p) => (
+                  <Pill key={p} active={walkPace === p} onClick={() => handlePaceChange(p)} label={WALK_PACE_LABELS[p]} />
+                ))}
               </div>
             </div>
           </div>

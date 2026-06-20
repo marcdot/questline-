@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { createClient } from '@/lib/supabase/client';
-import { periodKeyFor } from '@/lib/domain';
+import { periodKeyFor, isWalkQuest, walkCalories, type WalkPace } from '@/lib/domain';
 import { enqueueEvent, flushQueue, setupAutoFlush } from '@/lib/sync/offline-queue';
 import QuestCard from '@/components/QuestCard';
 import MiniDashboard from '@/components/MiniDashboard';
@@ -33,6 +33,8 @@ interface HomeData {
   todayTotal: number;
   maxStreak: number;
   sleepData: Array<{ nightOf: string; hours: number }>;
+  weightKg: number | null;
+  walkPace: WalkPace;
 }
 
 /* ─── Raw Supabase shapes (implicit from joins) ─── */
@@ -201,6 +203,15 @@ export default function Home() {
 
       const rawSleep = (sleepLogs ?? []) as RawSleepLog[];
 
+      // 6b. Fetch weight + walk pace for calorie estimates (Q-002)
+      const { data: settingsRow } = await supabase
+        .from('user_settings')
+        .select('weight_kg, walk_pace')
+        .eq('user_id', user.id)
+        .single();
+      const weightKg = (settingsRow?.weight_kg as number | null) ?? null;
+      const walkPace = ((settingsRow?.walk_pace as WalkPace) ?? 'moderate');
+
       // 7. Compute dashboard stats
       const questsWithHabit: QuestWithHabit[] = rawInstances.map((inst: RawInstance) => {
         const questData = inst.quest as RawQuestWithHabit | null;
@@ -286,6 +297,8 @@ export default function Home() {
           nightOf: s.night_of,
           hours: s.hours,
         })),
+        weightKg,
+        walkPace,
       });
     } catch (err) {
       console.error('Failed to fetch home data:', err);
@@ -626,6 +639,14 @@ export default function Home() {
                 }
                 optimisticStreak={
                   qw.streak?.current ?? 0
+                }
+                caloriesBurned={
+                  // kcal for completed walks; target_count taken as minutes
+                  // (no timer in the app). ponytail: planned-duration estimate.
+                  (qw.instance.completed || qw.instance.progress >= qw.instance.target_count)
+                  && isWalkQuest(qw.quest.title, qw.habit?.name)
+                    ? walkCalories(data.weightKg, qw.quest.target_count, data.walkPace)
+                    : undefined
                 }
               />
             ))}

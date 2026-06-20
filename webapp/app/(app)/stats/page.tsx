@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { createClient } from '@/lib/supabase/client';
-import { periodKeyFor, getISOWeek, mondayOfISOWeek } from '@/lib/domain';
+import { periodKeyFor, getISOWeek, mondayOfISOWeek, isWalkQuest, walkCalories, type WalkPace } from '@/lib/domain';
 import XpChart, { type XpDataPoint } from '@/components/XpChart';
 import StreakDisplay, { type StreakEntry } from '@/components/StreakDisplay';
 import StatusGrid, { type StatusEntry, type StatusItem } from '@/components/StatusGrid';
@@ -289,6 +289,15 @@ export default function StatsPage() {
       const allHabits = (rawHabits ?? []) as unknown as Habit[];
       setHabits(allHabits);
 
+      // Weight + pace for walk-calorie totals (Q-002)
+      const { data: settingsRow } = await supabase
+        .from('user_settings')
+        .select('weight_kg, walk_pace')
+        .eq('user_id', user.id)
+        .single();
+      const weightKg = (settingsRow?.weight_kg as number | null) ?? null;
+      const walkPace = ((settingsRow?.walk_pace as WalkPace) ?? 'moderate');
+
       // 2. Fetch all quests (for mapping habit_id to quests)
       const { data: rawQuests } = await supabase
         .from('quest')
@@ -516,18 +525,28 @@ export default function StatsPage() {
       // visible range, for quests that carry a unit. Uses the same instances
       // already fetched (no extra query). Respects the habit filter.
       const totalsByUnit = new Map<string, number>();
+      let kcalTotal = 0;
       for (const inst of instances) {
         if (habitFilter && questHabitMap.get(inst.quest_id) !== habitFilter) continue;
         const unit = inst.quest?.unit?.trim();
-        if (!unit) continue;
-        totalsByUnit.set(unit, (totalsByUnit.get(unit) ?? 0) + (inst.progress ?? 0));
+        if (unit) {
+          totalsByUnit.set(unit, (totalsByUnit.get(unit) ?? 0) + (inst.progress ?? 0));
+        }
+        // Q-002: kcal burned on completed walks (target_count as minutes)
+        if (inst.completed) {
+          const title = inst.quest?.title ?? questNameMap.get(inst.quest_id) ?? '';
+          const habitName = habitMap.get(questHabitMap.get(inst.quest_id) ?? '')?.name;
+          if (isWalkQuest(title, habitName)) {
+            kcalTotal += walkCalories(weightKg, inst.target_count, walkPace);
+          }
+        }
       }
-      setUnitTotals(
-        [...totalsByUnit.entries()]
-          .filter(([, total]) => total > 0)
-          .map(([unit, total]) => ({ unit, total }))
-          .sort((a, b) => b.total - a.total),
-      );
+      const totals = [...totalsByUnit.entries()]
+        .filter(([, total]) => total > 0)
+        .map(([unit, total]) => ({ unit, total }))
+        .sort((a, b) => b.total - a.total);
+      if (kcalTotal > 0) totals.unshift({ unit: 'kcal', total: kcalTotal });
+      setUnitTotals(totals);
 
       // 7. Fetch sleep data (last 12 weeks = ~84 days for heatmap)
       const ninetyDaysAgo = new Date();
