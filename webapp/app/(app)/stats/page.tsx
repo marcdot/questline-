@@ -258,6 +258,8 @@ export default function StatsPage() {
   const [streakEntries, setStreakEntries] = useState<StreakEntry[]>([]);
   const [statusData, setStatusData] = useState<StatusEntry[]>([]);
   const [sleepWeeks, setSleepWeeks] = useState<SleepDay[][]>([]);
+  // Q-001: summed measurement totals by unit over the visible range
+  const [unitTotals, setUnitTotals] = useState<{ unit: string; total: number }[]>([]);
 
   /* ─── Initialize: get user ─── */
   useEffect(() => {
@@ -510,6 +512,23 @@ export default function StatsPage() {
       });
       setStatusData(statusEntries);
 
+      // 6b. Q-001 — measurement totals: sum logged progress by unit across the
+      // visible range, for quests that carry a unit. Uses the same instances
+      // already fetched (no extra query). Respects the habit filter.
+      const totalsByUnit = new Map<string, number>();
+      for (const inst of instances) {
+        if (habitFilter && questHabitMap.get(inst.quest_id) !== habitFilter) continue;
+        const unit = inst.quest?.unit?.trim();
+        if (!unit) continue;
+        totalsByUnit.set(unit, (totalsByUnit.get(unit) ?? 0) + (inst.progress ?? 0));
+      }
+      setUnitTotals(
+        [...totalsByUnit.entries()]
+          .filter(([, total]) => total > 0)
+          .map(([unit, total]) => ({ unit, total }))
+          .sort((a, b) => b.total - a.total),
+      );
+
       // 7. Fetch sleep data (last 12 weeks = ~84 days for heatmap)
       const ninetyDaysAgo = new Date();
       ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
@@ -650,6 +669,34 @@ export default function StatsPage() {
           </h2>
           <XpChart data={xpData} periodLabel={PERIOD_LABELS[periodFilter]} />
         </section>
+
+        {/* ─── Measurement totals (Q-001) ─── */}
+        {unitTotals.length > 0 && (
+          <section className="space-y-2">
+            <h2
+              className="text-[15px] font-semibold text-ink"
+              style={{ fontFamily: 'var(--font-display)' }}
+            >
+              Totals this {PERIOD_LABELS[periodFilter]}
+            </h2>
+            <div className="grid grid-cols-2 gap-2">
+              {unitTotals.map(({ unit, total }) => (
+                <div
+                  key={unit}
+                  className="rounded-[12px] border border-line bg-surface px-3 py-2.5"
+                >
+                  <p
+                    className="text-[20px] font-semibold leading-none text-ink tabular-nums"
+                    style={{ fontFamily: 'var(--font-mono)' }}
+                  >
+                    {total.toLocaleString()}
+                    <span className="text-[13px] font-medium text-ink-muted"> {unit}</span>
+                  </p>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
 
         {/* ─── Streaks ─── */}
         <section className="space-y-2">
