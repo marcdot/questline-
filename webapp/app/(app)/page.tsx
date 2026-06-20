@@ -451,6 +451,42 @@ export default function Home() {
     [user, reconcileXp],
   );
 
+  /* ─── Tap-to-undo a completed quest (Q-003) ─── */
+  const handleUncomplete = useCallback(
+    async (instanceId: string, delta: number) => {
+      if (!user) return;
+
+      // Optimistic UI: revert completion immediately
+      setData((prev) => {
+        if (!prev) return prev;
+        const updated = prev.quests.map((q: QuestWithHabit) => {
+          if (q.instance.id !== instanceId) return q;
+          return {
+            ...q,
+            instance: { ...q.instance, progress: 0, completed: false },
+            streak: q.streak
+              ? { ...q.streak, current: Math.max(q.streak.current - 1, 0) }
+              : q.streak,
+          };
+        });
+
+        const completedCount = updated.filter((q: QuestWithHabit) => q.instance.completed).length;
+        const maxStreak = Math.max(...updated.map((q: QuestWithHabit) => q.streak?.current ?? 0), 0);
+
+        return { ...prev, quests: updated, todayCompleted: completedCount, maxStreak };
+      });
+
+      // Enqueue the uncomplete event (server already supports this kind)
+      await enqueueEvent(user.id, instanceId, 'uncomplete', delta);
+
+      if (navigator.onLine) {
+        await flushQueue(user.id);
+        await reconcileXp();
+      }
+    },
+    [user, reconcileXp],
+  );
+
   /* ─── Loading state ─── */
   if (loading || !data) {
     return (
@@ -582,6 +618,7 @@ export default function Home() {
                 habit={qw.habit}
                 onIncrement={handleIncrement}
                 onComplete={handleComplete}
+                onUncomplete={handleUncomplete}
                 optimisticXp={
                   qw.instance.completed || qw.instance.progress >= qw.instance.target_count
                     ? 0

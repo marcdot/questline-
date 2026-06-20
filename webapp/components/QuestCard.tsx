@@ -28,6 +28,8 @@ export interface QuestCardProps {
   onIncrement?: (instanceId: string, delta: number) => void;
   /** Called on hold complete. Return true if the event was accepted. */
   onComplete?: (instanceId: string, delta: number) => void;
+  /** Called on tap-to-undo of an already-completed quest (Q-003). */
+  onUncomplete?: (instanceId: string, delta: number) => void;
   isOptimistic?: boolean;
   optimisticXp?: number;
   optimisticStreak?: number;
@@ -48,6 +50,7 @@ export default function QuestCard({
   habit,
   onIncrement,
   onComplete,
+  onUncomplete,
   optimisticXp,
   optimisticStreak,
 }: QuestCardProps) {
@@ -79,12 +82,14 @@ export default function QuestCard({
   // Stable prop refs for animation callbacks
   const onCompleteRef = useRef(onComplete);
   const onIncrementRef = useRef(onIncrement);
+  const onUncompleteRef = useRef(onUncomplete);
   const instanceIdRef = useRef(instance.id);
   const instanceProgressRef = useRef(instance.progress);
   const instanceTargetRef = useRef(instance.target_count);
   // Keep refs in sync with latest props
   useEffect(() => { onCompleteRef.current = onComplete; }, [onComplete]);
   useEffect(() => { onIncrementRef.current = onIncrement; }, [onIncrement]);
+  useEffect(() => { onUncompleteRef.current = onUncomplete; }, [onUncomplete]);
   useEffect(() => { instanceIdRef.current = instance.id; }, [instance.id]);
   useEffect(() => { instanceProgressRef.current = instance.progress; }, [instance.progress]);
   useEffect(() => { instanceTargetRef.current = instance.target_count; }, [instance.target_count]);
@@ -147,6 +152,19 @@ export default function QuestCard({
     // Optimistic: call onIncrement
     onIncrement?.(instance.id, 1);
   }, [phase, isCompleted, instance.id, onIncrement]);
+
+  /* ─── Tap-to-undo a completed quest (Q-003) ───
+   * A plain tap on a completed card reverts the completion. Reversible (hold to
+   * re-complete) and the card is visually distinct, so accidental taps are
+   * low-cost. delta = current progress so the server clamps progress back to 0. */
+  const handleUndo = useCallback(() => {
+    if (!(phase === 'complete' || isCompleted)) return;
+    completedRef.current = false;
+    fillRef.current = 0;
+    setFillDisplay(0);
+    setPhase('idle');
+    onUncompleteRef.current?.(instanceIdRef.current, Math.max(instanceProgressRef.current, 1));
+  }, [phase, isCompleted]);
 
   /* ─── Pointer handlers ─── */
   const handlePointerDown = useCallback(() => {
@@ -277,6 +295,7 @@ export default function QuestCard({
       onPointerDown={handlePointerDown}
       onPointerUp={handlePointerUp}
       onPointerLeave={handlePointerLeave}
+      onClick={handleUndo}
       style={{
         touchAction: 'manipulation',
         cursor: 'pointer',
@@ -366,6 +385,28 @@ export default function QuestCard({
             )}
           </div>
         </div>
+
+        {/* ─── Tap-to-undo affordance (Q-003) ───
+            Shown on completed cards once the burst settles, when the XP/streak
+            pills aren't occupying the slot. Signals the card is tappable to
+            undo; the whole 44px+ card is the hit target. */}
+        {phase === 'complete' && isCompleted && !((optimisticXp ?? 0) > 0) && (
+          <motion.div
+            className="flex items-center gap-1 shrink-0 rounded-full px-2.5 py-1"
+            style={{ color: 'var(--color-ink-muted)' }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: base, ease, delay: 0.1 }}
+          >
+            <svg className="w-3.5 h-3.5" viewBox="0 0 16 16" fill="none" aria-hidden>
+              <path d="M6 4L2.5 7.5L6 11" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+              <path d="M2.5 7.5H10a3.5 3.5 0 0 1 0 7H7" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+            <span className="text-[11px] font-medium" style={{ fontFamily: 'var(--font-body)' }}>
+              Undo
+            </span>
+          </motion.div>
+        )}
 
         {/* ─── XP + Streak pills ─── */}
         {(phase === 'completing' || isCompleted) && (optimisticXp ?? 0) > 0 && (
