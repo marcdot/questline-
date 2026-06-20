@@ -271,13 +271,23 @@ export default function ProfilePage() {
               )}
             </div>
 
-            {calendarStatus && (
-              <div className="px-4 py-2">
-                <p className="text-[12px] text-ink-muted" style={{ fontFamily: 'var(--font-body)' }}>
-                  {calendarStatus}
-                </p>
-              </div>
-            )}
+            {calendarStatus && (() => {
+              // Semantic colour by outcome, not flat muted (Q-004). Failure
+              // copy ("Failed", "wrong", "try…") → danger; otherwise success.
+              const isError = /failed|wrong|try/i.test(calendarStatus);
+              return (
+                <div className="px-4 py-2">
+                  <p
+                    role="status"
+                    className={`text-[12px] ${isError ? 'text-danger' : 'text-success'}`}
+                    style={{ fontFamily: 'var(--font-body)' }}
+                  >
+                    <span aria-hidden className="select-none">{isError ? '⚠ ' : '✓ '}</span>
+                    {calendarStatus}
+                  </p>
+                </div>
+              );
+            })()}
 
             <div className="px-4 py-3">
               {googleConnected ? (

@@ -73,6 +73,9 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
+  // Instructional/success message (e.g. "check your email") — semantically NOT
+  // an error, so it renders in the success colour, not danger red (Q-004).
+  const [notice, setNotice] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
   const [captchaResetKey, setCaptchaResetKey] = useState(0);
@@ -86,6 +89,7 @@ export default function LoginPage() {
   async function handleEmailAuth(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
+    setNotice(null);
 
     if (TURNSTILE_SITE_KEY && !captchaToken) {
       setError("Please complete the verification challenge.");
@@ -105,8 +109,9 @@ export default function LoginPage() {
           },
         });
         if (error) throw error;
-        // Sign-up with email confirmation — tell user to check email
-        setError("Check your email for the confirmation link.");
+        // Sign-up with email confirmation — this is an instruction, not an
+        // error: show it as a success notice (green), not danger red (Q-004).
+        setNotice("Check your email for the confirmation link.");
         setLoading(false);
         resetCaptcha();
         return;
@@ -184,15 +189,32 @@ export default function LoginPage() {
           </p>
         </header>
 
-        {/* ─── Error message ─── */}
+        {/* ─── Error message (semantic: danger red) ─── */}
         {error && (
           <motion.div
-            className="rounded-[12px] border border-danger/30 bg-danger/5 p-3 text-[13px] text-danger"
+            role="alert"
+            className="flex items-start gap-2 rounded-[12px] border border-danger/30 bg-danger/5 p-3 text-[13px] text-danger"
             initial={{ opacity: 0, y: -8 }}
             animate={{ opacity: 1, y: 0 }}
             style={{ fontFamily: "var(--font-body)" }}
           >
-            {error}
+            {/* Icon + colour, not colour alone (Q-004 accessibility) */}
+            <span aria-hidden className="select-none">⚠</span>
+            <span>{error}</span>
+          </motion.div>
+        )}
+
+        {/* ─── Success / instruction notice (semantic: success green) ─── */}
+        {notice && (
+          <motion.div
+            role="status"
+            className="flex items-start gap-2 rounded-[12px] border border-success/30 bg-success/5 p-3 text-[13px] text-success"
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            style={{ fontFamily: "var(--font-body)" }}
+          >
+            <span aria-hidden className="select-none">✓</span>
+            <span>{notice}</span>
           </motion.div>
         )}
 
@@ -310,6 +332,7 @@ export default function LoginPage() {
                 onClick={() => {
                   setMode("signup");
                   setError(null);
+                  setNotice(null);
                 }}
                 className="font-medium text-accent underline"
               >
@@ -323,6 +346,7 @@ export default function LoginPage() {
                 onClick={() => {
                   setMode("login");
                   setError(null);
+                  setNotice(null);
                 }}
                 className="font-medium text-accent underline"
               >
