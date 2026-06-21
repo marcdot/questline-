@@ -87,6 +87,7 @@ export default function AddSheet() {
 
   /* ─── Sleep form ─── */
   const [sleepHours, setSleepHours] = useState('');
+  const [healthConsent, setHealthConsent] = useState(false);
   const sleepNightOf = (() => {
     // Previous night by default
     const d = new Date();
@@ -113,6 +114,9 @@ export default function AddSheet() {
             setQuestHabitId(habitsData[0].id);
           }
         }
+        const { data: s } = await supabase
+          .from('user_settings').select('health_consent_at').eq('user_id', user.id).single();
+        setHealthConsent(s?.health_consent_at != null);
       }
     };
     init();
@@ -725,7 +729,23 @@ export default function AddSheet() {
           TAB 3: LOG SLEEP
           ═══════════════════════════════════════════ */}
       <AnimatePresence mode="wait">
-        {activeTab === 'sleep' && (
+        {activeTab === 'sleep' && !healthConsent && (
+          <motion.div
+            key="sleep-gate"
+            className="space-y-2"
+            initial={{ opacity: 0, x: -16 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 16 }}
+            transition={{ duration: 0.18, ease }}
+          >
+            <p className="text-[14px] text-ink" style={{ fontFamily: 'var(--font-body)' }}>Health data isn’t enabled</p>
+            <p className="text-[13px] text-ink-muted" style={{ fontFamily: 'var(--font-body)' }}>
+              Sleep is health data. Enable it with your explicit consent in{' '}
+              <span className="text-accent">Profile → Health</span> to log sleep.
+            </p>
+          </motion.div>
+        )}
+        {activeTab === 'sleep' && healthConsent && (
           <motion.form
             key="sleep-form"
             onSubmit={handleLogSleep}

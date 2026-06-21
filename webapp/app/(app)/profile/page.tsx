@@ -51,6 +51,9 @@ export default function ProfilePage() {
   const [walkPace, setWalkPace] = useState<WalkPace>('moderate');
   const [weightSaved, setWeightSaved] = useState(false);
 
+  /* ─── Health-data consent (Art. 9): explicit opt-in for sleep + weight ─── */
+  const [healthConsent, setHealthConsent] = useState(false);
+
   /* ─── Account ─── */
   const [deleting, setDeleting] = useState(false);
   const [exporting, setExporting] = useState(false);
@@ -66,7 +69,7 @@ export default function ProfilePage() {
       /* Read user_settings for google_connected + theme + xp_mode */
       const { data: settings } = await supabase
         .from('user_settings')
-        .select('google_connected, theme, xp_display, weight_kg, walk_pace')
+        .select('google_connected, theme, xp_display, weight_kg, walk_pace, health_consent_at')
         .eq('user_id', user.id)
         .single();
 
@@ -77,6 +80,7 @@ export default function ProfilePage() {
         setXpMode(settings.xp_display === 'detailed' ? 'period' : 'total');
         setWeightKg(settings.weight_kg != null ? String(settings.weight_kg) : '');
         setWalkPace((settings.walk_pace as WalkPace) ?? 'moderate');
+        setHealthConsent(settings.health_consent_at != null);
       }
 
       /* Sync theme class on <html> */
@@ -138,6 +142,29 @@ export default function ProfilePage() {
       .from('user_settings')
       .upsert({ user_id: userId, walk_pace: pace, updated_at: new Date().toISOString() },
         { onConflict: 'user_id' });
+  }, [userId, supabase]);
+
+  /* ─── Health: grant explicit consent (Art. 9) ─── */
+  const handleGrantConsent = useCallback(async () => {
+    if (!userId) return;
+    await supabase
+      .from('user_settings')
+      .upsert({ user_id: userId, health_consent_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+        { onConflict: 'user_id' });
+    setHealthConsent(true);
+  }, [userId, supabase]);
+
+  /* ─── Health: withdraw consent → deletes weight + all sleep logs ─── */
+  const handleWithdrawConsent = useCallback(async () => {
+    if (!userId) return;
+    const confirmed = window.confirm(
+      'Withdraw consent for health data? This deletes your stored weight and all your sleep logs. This cannot be undone.'
+    );
+    if (!confirmed) return;
+    const { error } = await supabase.rpc('withdraw_health_consent');
+    if (error) { alert('Failed to withdraw consent. Try again.'); return; }
+    setHealthConsent(false);
+    setWeightKg('');
   }, [userId, supabase]);
 
   /* ─── Google Calendar connect ─── */
@@ -413,6 +440,26 @@ export default function ProfilePage() {
             Health
           </h2>
           <div className="rounded-[12px] border border-line bg-surface divide-y divide-line">
+            {/* Explicit consent (Art. 9) — gate for all health data */}
+            <div className="px-4 py-3 space-y-2">
+              <span className="text-[14px] text-ink" style={{ fontFamily: 'var(--font-body)' }}>Health data (sleep &amp; weight)</span>
+              <p className="text-[12px] text-ink-muted" style={{ fontFamily: 'var(--font-body)' }}>
+                Sleep and weight are health data. We process them only with your explicit consent
+                (GDPR Art. 9), to show wellness stats and estimate calories. You can withdraw any
+                time — withdrawing deletes this data.
+              </p>
+              {healthConsent ? (
+                <button type="button" onClick={handleWithdrawConsent} className="text-[13px] font-medium text-danger hover:text-danger/80 transition-colors" style={{ fontFamily: 'var(--font-body)' }}>
+                  Withdraw consent &amp; delete health data
+                </button>
+              ) : (
+                <button type="button" onClick={handleGrantConsent} className="rounded-[10px] bg-accent px-4 py-2 text-[13px] font-semibold text-white transition-colors hover:bg-accent-press" style={{ fontFamily: 'var(--font-body)' }}>
+                  Enable health data
+                </button>
+              )}
+            </div>
+
+            {healthConsent && (<>
             {/* Weight — used to estimate calories burned on walks */}
             <div className="flex items-center justify-between gap-3 px-4 py-3">
               <div className="min-w-0">
@@ -451,6 +498,7 @@ export default function ProfilePage() {
                 ))}
               </div>
             </div>
+            </>)}
           </div>
         </section>
 
