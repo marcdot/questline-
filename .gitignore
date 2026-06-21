@@ -24,3 +24,6 @@ Thumbs.db
 .vscode/
 *.swp
 *.swo
+
+# local probe/test scripts (may load secrets) — never commit
+_*.mjs
