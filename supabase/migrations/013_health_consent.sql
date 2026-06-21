@@ -13,7 +13,17 @@ alter table public.user_settings
 create or replace function public.enforce_weight_consent()
 returns trigger language plpgsql set search_path = public as $$
 begin
-  if new.health_consent_at is null then new.weight_kg := null; end if;
+  -- Weight is allowed only if the user has consent — check the incoming row OR
+  -- the already-stored consent, so an upsert that only updates weight_kg (and
+  -- doesn't re-send health_consent_at) doesn't wrongly strip it.
+  if new.weight_kg is not null
+     and coalesce(
+           new.health_consent_at,
+           (select health_consent_at from public.user_settings where user_id = new.user_id)
+         ) is null
+  then
+    new.weight_kg := null;
+  end if;
   return new;
 end; $$;
 
