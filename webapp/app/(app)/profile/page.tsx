@@ -53,6 +53,7 @@ export default function ProfilePage() {
 
   /* ─── Account ─── */
   const [deleting, setDeleting] = useState(false);
+  const [exporting, setExporting] = useState(false);
 
   /* ─── Init ─── */
   useEffect(() => {
@@ -202,7 +203,28 @@ export default function ProfilePage() {
     window.location.assign('/login');
   }, [supabase]);
 
-  /* ─── Delete account ─── */
+  /* ─── Download my data (GDPR Art. 15/20) ─── */
+  const handleExportData = useCallback(async () => {
+    setExporting(true);
+    try {
+      /* export_user_data RPC runs under the caller's RLS — returns only own rows. */
+      const { data, error } = await supabase.rpc('export_user_data');
+      if (error) throw error;
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `questline-data-${new Date().toISOString().slice(0, 10)}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch {
+      alert('Could not export your data. Please try again.');
+    } finally {
+      setExporting(false);
+    }
+  }, [supabase]);
+
+  /* ─── Delete account (GDPR Art. 17) ─── */
   const handleDeleteAccount = useCallback(async () => {
     if (!userId) return;
     const confirmed = window.confirm(
@@ -212,7 +234,14 @@ export default function ProfilePage() {
 
     setDeleting(true);
     try {
-      /* Delete the user's data via admin API (RPC) — all tables cascade from user_profile */
+      /* Revoke the Google Calendar grant + delete the stored refresh token at
+         Google BEFORE wiping the account. The DB cascade removes our copy of the
+         token, but only Google can revoke the grant itself. Best-effort: a user
+         who never connected Calendar (or a transient failure) must not block
+         deletion. */
+      try { await disconnectCalendar(); } catch { /* non-fatal */ }
+      /* admin_delete_user deletes auth.users → cascades every table (incl.
+         google_token) via ON DELETE CASCADE. */
       const { error } = await supabase.rpc('admin_delete_user');
       if (error) throw error;
       await supabase.auth.signOut();
@@ -437,6 +466,32 @@ export default function ProfilePage() {
               <p className="text-[13px] text-ink-muted" style={{ fontFamily: 'var(--font-body)' }}>
                 Edit your habits — tap a habit below to rename or change its colour.
               </p>
+            </div>
+          </div>
+        </section>
+
+        {/* ═══════════════════════════════════════════
+            YOUR DATA (GDPR Art. 15 / 20)
+            ═══════════════════════════════════════════ */}
+        <section className="space-y-3">
+          <h2 className="text-[13px] font-semibold uppercase tracking-[0.08em] text-ink-muted" style={{ fontFamily: 'var(--font-body)' }}>
+            Your data
+          </h2>
+          <div className="rounded-[12px] border border-line bg-surface divide-y divide-line">
+            <div className="px-4 py-3">
+              <p className="text-[13px] text-ink-muted mb-3" style={{ fontFamily: 'var(--font-body)' }}>
+                Download a copy of everything Questline stores about you — habits, quests,
+                progress, sleep logs and settings — as a JSON file.
+              </p>
+              <button
+                type="button"
+                onClick={handleExportData}
+                disabled={exporting}
+                className="text-[14px] font-medium text-accent hover:text-accent-press transition-colors disabled:opacity-50"
+                style={{ fontFamily: 'var(--font-body)' }}
+              >
+                {exporting ? 'Preparing…' : 'Download my data'}
+              </button>
             </div>
           </div>
         </section>
