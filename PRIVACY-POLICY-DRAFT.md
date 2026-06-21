@@ -6,12 +6,12 @@
 
 ---
 
-**Last updated:** [DATE]
+**Last updated:** 21/06/2026
 
 ## Who we are
-Questline ("we", "the app") is operated by **[Your name / legal entity]**, based in **[Denmark]**.
+Questline ("we", "the app") is operated by Marc Andersson, based in **[Denmark]**.
 We are the **data controller** for your personal data.
-Contact: **[your email]**.
+Contact: marclandersson@gmail.com.
 
 ## What data we collect and why
 
@@ -45,20 +45,21 @@ automated decision-making in the sense of Art. 22 GDPR.
 ## Who we share data with (processors)
 We use these service providers, who process data on our behalf under data-processing agreements:
 
-- **Supabase** — database and authentication. Region: **[confirm EU / US]**.
+- **Supabase** — database and authentication. Region: EU.
 - **Vercel** — application hosting.
 - **Cloudflare** — bot protection (Turnstile).
 - **Resend** — sending account emails.
 - **Google** — Google Calendar sync and Google sign-in **(only if you use them)**.
 
 Where any provider processes data outside the EU/EEA, transfers are protected by **Standard
-Contractual Clauses** and/or the **EU–US Data Privacy Framework**. **[Confirm per provider.]**
+Contractual Clauses** and/or the **EU–US Data Privacy Framework**.
 
 ## How long we keep your data
-We keep your data for as long as your account is active. **[Decide & state your retention rule —
-e.g. "If your account is inactive for 24 months we will warn you by email and then delete it."]**
-When you delete your account, all your data is erased immediately (see below). Google refresh
-tokens are deleted when you disconnect Calendar or delete your account.
+We keep your data while your account is active. If your account is **inactive for 12 months**,
+we email you a warning; if there is still no activity about **30 days** later, we permanently
+delete your account and all associated data. When you delete your account yourself, all your
+data is erased immediately (see below). Google refresh tokens are deleted when you disconnect
+Calendar or delete your account.
 
 ## Your rights
 Under the GDPR you have the right to:
@@ -68,9 +69,9 @@ Under the GDPR you have the right to:
 - **Erasure** — use **"Delete account"** in Settings to permanently delete everything (Art. 17).
 - **Withdraw consent** — disconnect Calendar, or **[turn off health-data processing]**, at any time,
   as easily as you gave it (Art. 7(3)).
-- **Restriction / objection** — contact us at **[your email]** (Art. 18, 21).
+- **Restriction / objection** — contact us at marclandersson@gmail.com (Art. 18, 21).
 
-To exercise any right that isn't self-service, email **[your email]**. We respond within one month.
+To exercise any right that isn't self-service, email marclandersson@gmail.com. We respond within one month.
 
 ## Health data
 Sleep and weight are treated as **health-related (special-category) data**. We only process them
