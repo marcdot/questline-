@@ -14,7 +14,7 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
 /** Paths that do NOT require authentication. */
-const PUBLIC_PATHS = ['/login', '/login/', '/auth/callback', '/auth/callback/'];
+const PUBLIC_PATHS = ['/login', '/login/', '/auth/callback', '/auth/callback/', '/privacy', '/privacy/'];
 
 /** Check if a pathname is in the public list. */
 function isPublicPath(pathname: string): boolean {

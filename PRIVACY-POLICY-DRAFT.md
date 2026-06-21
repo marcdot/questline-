@@ -9,7 +9,7 @@
 **Last updated:** 21/06/2026
 
 ## Who we are
-Questline ("we", "the app") is operated by Marc Andersson, based in **[Denmark]**.
+Questline ("we", "the app") is operated by Marc Andersson, based in **Denmark**.
 We are the **data controller** for your personal data.
 Contact: marclandersson@gmail.com.
 
@@ -67,8 +67,8 @@ Under the GDPR you have the right to:
 - **Portability** — that same export is machine-readable (Art. 20).
 - **Rectification** — edit your name, habits, quests, sleep entries, and settings in the app (Art. 16).
 - **Erasure** — use **"Delete account"** in Settings to permanently delete everything (Art. 17).
-- **Withdraw consent** — disconnect Calendar, or **[turn off health-data processing]**, at any time,
-  as easily as you gave it (Art. 7(3)).
+- **Withdraw consent** — disconnect Calendar, or turn off health-data processing in Settings → Health,
+  at any time, as easily as you gave it (Art. 7(3)).
 - **Restriction / objection** — contact us at marclandersson@gmail.com (Art. 18, 21).
 
 To exercise any right that isn't self-service, email marclandersson@gmail.com. We respond within one month.

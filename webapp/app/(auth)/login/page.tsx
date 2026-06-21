@@ -79,6 +79,8 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
   const [captchaResetKey, setCaptchaResetKey] = useState(0);
+  // Art. 8 age gate — required self-declaration on signup.
+  const [ageConfirmed, setAgeConfirmed] = useState(false);
 
   // Reset the Turnstile challenge (tokens are single-use, so refresh after each attempt).
   function resetCaptcha() {
@@ -93,6 +95,11 @@ export default function LoginPage() {
 
     if (TURNSTILE_SITE_KEY && !captchaToken) {
       setError("Please complete the verification challenge.");
+      return;
+    }
+
+    if (mode === "signup" && !ageConfirmed) {
+      setError("Please confirm you are 16 or older.");
       return;
     }
 
@@ -269,9 +276,24 @@ export default function LoginPage() {
             />
           )}
 
+          {mode === "signup" && (
+            <label className="flex items-start gap-2.5 text-[13px] text-ink-muted" style={{ fontFamily: "var(--font-body)" }}>
+              <input
+                type="checkbox"
+                checked={ageConfirmed}
+                onChange={(e) => setAgeConfirmed(e.target.checked)}
+                className="mt-0.5 h-4 w-4 accent-accent"
+              />
+              <span>
+                I confirm I am 16 or older and agree to the{" "}
+                <a href="/privacy" className="text-accent underline">Privacy Policy</a>.
+              </span>
+            </label>
+          )}
+
           <button
             type="submit"
-            disabled={loading || (!!TURNSTILE_SITE_KEY && !captchaToken)}
+            disabled={loading || (!!TURNSTILE_SITE_KEY && !captchaToken) || (mode === "signup" && !ageConfirmed)}
             className="w-full rounded-[12px] bg-accent px-4 py-3 text-[15px] font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-50"
             style={{ fontFamily: "var(--font-body)" }}
           >
@@ -354,6 +376,10 @@ export default function LoginPage() {
               </button>
             </>
           )}
+        </p>
+
+        <p className="text-center text-[12px] text-ink-muted">
+          <a href="/privacy" className="underline hover:text-ink">Privacy Policy</a>
         </p>
       </div>
     </motion.main>
